@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:kultux/componentes/iconosBottom.dart';
 class BottomNav extends StatelessWidget{
   const BottomNav({super.key});
   @override
