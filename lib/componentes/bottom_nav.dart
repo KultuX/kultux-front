@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-class BottomNav extends StatelessWidget{
-  const BottomNav({super.key});
+class BottomNav extends StatefulWidget{
+  final int itemSeleccionado;
+  final ValueChanged<int> itemSeleccion;
+  const BottomNav({required this.itemSeleccionado, required this.itemSeleccion,super.key});
+  @override
+  State<BottomNav> createState() => _BottomNavState();
+}
+class _BottomNavState extends State<BottomNav>{
   @override
   Widget build(BuildContext context){
     return BottomNavigationBar(
-      //onTap: ,
+        showUnselectedLabels:false,
+        currentIndex: widget.itemSeleccionado,
+        onTap: widget.itemSeleccion,
         iconSize: 24.0,
         type: BottomNavigationBarType.fixed,
         unselectedItemColor: Colors.white,
@@ -26,7 +34,7 @@ class BottomNav extends StatelessWidget{
       icon: SvgPicture.asset(
         width: 24.0,
         height: 24.0,
-        path, // Puedes cambiar color
+        path,
         colorFilter: ColorFilter.mode(Colors.white,BlendMode.srcIn),
       ),activeIcon: SvgPicture.asset(
       path,
@@ -40,5 +48,5 @@ class BottomNav extends StatelessWidget{
       label: titulo,
     );
   }
-
 }
+
