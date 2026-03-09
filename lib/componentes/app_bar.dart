@@ -18,7 +18,7 @@ class _AppBarPersonalizadoState extends State<AppBarPersonalizado>{
       leading: Padding(
           padding: const EdgeInsets.only(left:10),
           child: Image.asset(
-            'assets/iconos/logo_kultux.png',
+            'assets/images/logo_kultux.png',
             width: 30,
             height: 30,
           )

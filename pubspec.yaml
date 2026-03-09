@@ -47,6 +47,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -61,6 +62,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/iconos/
+    - assets/images/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -75,7 +77,11 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  #  fonts:
+  fonts:
+        - family: RobotoCondensed
+          fonts:
+            - asset: assets/fonts/RobotoCondensed-Regular.ttf
+            - asset: assets/fonts/RobotoCondensed-Bold.ttf
   #     - family:
   #       fonts:
   #
