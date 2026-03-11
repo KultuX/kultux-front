@@ -149,7 +149,6 @@ class _RegistroPageState extends State<RegistroPage>{
   }
 
   Widget _desplegable({required String titulo, double ancho = 364}){
-
     final List<String> localidades = ['Mérida','Badajoz','Cáceres','Plasencia','Navalmoral de la Mata','Don Benito','Zafra','Villafranca de los Barros'];
     String? localidadSeleccionada = localidades[0];
     return SizedBox(

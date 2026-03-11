@@ -21,6 +21,7 @@ class _AppBarPersonalizadoState extends State<AppBarPersonalizado>{
             'assets/images/logo_kultux.png',
             width: 30,
             height: 30,
+
           )
       ),
       backgroundColor: Colors.black,
@@ -31,7 +32,9 @@ class _AppBarPersonalizadoState extends State<AppBarPersonalizado>{
                 icon: SvgPicture.asset(
                   _iconoActivo
                       ? 'assets/iconos/mostrar_notificacion.svg'
-                      :'assets/iconos/sin_notificaciones.svg'),
+                      :'assets/iconos/sin_notificaciones.svg',
+
+                ),
                 onPressed: (){
                   setState(() {
                     _iconoActivo = !_iconoActivo;

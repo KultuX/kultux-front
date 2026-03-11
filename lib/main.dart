@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
 import 'package:kultux/componentes/app_bar.dart';
 import 'package:kultux/componentes/asset_login.dart';
+import 'package:kultux/mapas.dart';
 import 'package:kultux/perfil.dart';
+import 'package:kultux/buscar.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -34,32 +36,29 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _logeado = false;
   int _indexActual = 0;
-  final List<Widget> _paginas = [
-    Center(child: Text('Inicio')),
-    Center(child: Text('Mapa')),
-    Center(child: Text('Buscar')),
-    Center(child: Text('Servicios')),
-    PerfilPage()
-  ];
+  void _cerrarSesion(){
+    setState(() {
+      _logeado = false;
+      _indexActual = 0;
+    });
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _paginas = [
+      _bodyInicio(),
+      MapasPage(),
+      BuscarPage(),
+      Center(child: Text('Servicios')),
+      PerfilPage(cerrarSesion: _cerrarSesion)
+    ];
     return Scaffold(
       appBar: AppBarPersonalizado(),
-      body: Stack(
+      body: _indexActual == 0  ? Stack( alignment: .center,
         children:[
-          IndexedStack(
-            index: _indexActual,
-            children: _paginas
-          ),
-          Column(mainAxisAlignment: .center,
-            children: [
-              //TARJETAS PERSONALIZADAS --> CRISTO // CREAR MODELOS DE DATOS y API
-
-
-              if (_logeado)
-                Text("Bienvenido! Ya estás logeado")
-            ],
-          ),
+          _paginas[_indexActual],
           if(!_logeado) AssetLogin(
               cerrar: () {
                 setState(() {
@@ -73,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
               }
           ),
         ]
-      ),
+      ) : _paginas[_indexActual],
       bottomNavigationBar: BottomNav(
         itemSeleccionado: _indexActual,
         itemSeleccion: (index){
@@ -82,6 +81,56 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         }
       ),
+    );
+  }
+
+  Widget _bodyInicio(){
+    return SingleChildScrollView(
+      child: Column(crossAxisAlignment: .stretch,
+        mainAxisAlignment: .center,
+        children: [
+          Text('Inicio'),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta(),
+          pruebaTarjeta()
+          //TARJETAS PERSONALIZADAS --> CRISTO // CREAR MODELOS DE DATOS y API
+
+          //MODIFICAR MAIN PARA QUE SE ENCHUFE CADA BODY CORRESPONDIENTE. --> AHORA SE SOBRESCRIBE
+          //
+
+        ],
+      ),
+    );
+  }
+
+  Widget pruebaTarjeta(){
+    return Card(
+        elevation: 4,
+        margin: const EdgeInsets.all(16),
+        child:Padding(
+          padding: const EdgeInsets.all(16),
+          child:Column(
+              children:[
+                CircleAvatar(
+                    radius: 90,
+                    backgroundImage: AssetImage("assets/images/logo_registro.png")
+                ),
+                const SizedBox(height: 8,),
+                Text('Nombre usuario', style: TextStyle(fontFamily: 'RobotoCondensed',fontSize: 20)),
+                const SizedBox(height: 8,),
+                Text('correo@correo.com')
+              ]
+          ),
+        )
     );
   }
 }

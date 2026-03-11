@@ -77,6 +77,7 @@ class _AssetLoginState extends State<AssetLogin>{
                       ),
                   const SizedBox(height: 10),
                   BotonesGenerico(titulo:"Entrar como invitado",imagen:"assets/iconos/invitado.svg", ancho:194, pulsar: widget.logeado),
+
                 ],
               ),
             ),
