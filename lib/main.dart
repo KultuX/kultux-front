@@ -36,13 +36,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _logeado = false;
   int _indexActual = 0;
-  void _cerrarSesion(){
+
+  void _cerrarSesion() {
     setState(() {
       _logeado = false;
       _indexActual = 0;
     });
   }
-
 
 
   @override
@@ -56,81 +56,46 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
     return Scaffold(
       appBar: AppBarPersonalizado(),
-      body: _indexActual == 0  ? Stack( alignment: .center,
-        children:[
-          _paginas[_indexActual],
-          if(!_logeado) AssetLogin(
-              cerrar: () {
-                setState(() {
-                  _logeado = true;
-                });
-              },
-              logeado: () {
-                setState(() {
-                  _logeado = true;
-                });
-              }
-          ),
-        ]
+      body: _indexActual == 0 ? Stack(alignment: .center,
+          children: [
+            _paginas[_indexActual],
+            if(!_logeado) AssetLogin(
+                cerrar: () {
+                  setState(() {
+                    _logeado = true;
+                  });
+                },
+                logeado: () {
+                  setState(() {
+                    _logeado = true;
+                  });
+                }
+            ),
+          ]
       ) : _paginas[_indexActual],
       bottomNavigationBar: BottomNav(
-        itemSeleccionado: _indexActual,
-        itemSeleccion: (index){
-          setState((){
-            _indexActual = index;
-          });
-        }
+          itemSeleccionado: _indexActual,
+          itemSeleccion: (index) {
+            setState(() {
+              _indexActual = index;
+            });
+          }
       ),
     );
   }
 
-  Widget _bodyInicio(){
+  Widget _bodyInicio() {
     return SingleChildScrollView(
       child: Column(crossAxisAlignment: .stretch,
         mainAxisAlignment: .center,
         children: [
-          Text('Inicio'),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta(),
-          pruebaTarjeta()
-          //TARJETAS PERSONALIZADAS --> CRISTO // CREAR MODELOS DE DATOS y API
-
-          //MODIFICAR MAIN PARA QUE SE ENCHUFE CADA BODY CORRESPONDIENTE. --> AHORA SE SOBRESCRIBE
-          //
-
+          ListView(
+            children: [
+              ListTile()
+            ],
+          )
         ],
       ),
-    );
-  }
-
-  Widget pruebaTarjeta(){
-    return Card(
-        elevation: 4,
-        margin: const EdgeInsets.all(16),
-        child:Padding(
-          padding: const EdgeInsets.all(16),
-          child:Column(
-              children:[
-                CircleAvatar(
-                    radius: 90,
-                    backgroundImage: AssetImage("assets/images/logo_registro.png")
-                ),
-                const SizedBox(height: 8,),
-                Text('Nombre usuario', style: TextStyle(fontFamily: 'RobotoCondensed',fontSize: 20)),
-                const SizedBox(height: 8,),
-                Text('correo@correo.com')
-              ]
-          ),
-        )
     );
   }
 }
