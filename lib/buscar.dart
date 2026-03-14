@@ -19,7 +19,8 @@ class _BuscarPageState extends State<BuscarPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Center(
+        child:Column(
       mainAxisAlignment: .center,
       children: [
         Container(
@@ -39,15 +40,22 @@ class _BuscarPageState extends State<BuscarPage> {
         ),
         const SizedBox(height: 20,),
         Container(
-          width: 370,
+          width: 350,
           child: Row(
             children: [
               DropdownMenu<String>(
+                width: 165,
                 initialSelection: 'Categoría',
                 label: const Text('Categoría'),
-                // Estilo gris oscuro para que combine
                 menuStyle: MenuStyle(
-                  backgroundColor: WidgetStateProperty.all(Colors.grey[850]),
+                  shape: WidgetStateProperty.resolveWith<OutlinedBorder?>(
+                      (states) =>  RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8))
+                    ),
+                  ),
+                  backgroundColor: MaterialStateProperty.resolveWith(
+                        (states) => Colors.grey.shade300,
+                  ),
                 ),
                 dropdownMenuEntries: [
                   'Gastronomía',
@@ -60,30 +68,19 @@ class _BuscarPageState extends State<BuscarPage> {
                     .map((cat) => DropdownMenuEntry(value: cat, label: cat))
                     .toList(),
                 onSelected: (value) => print(value),
-              ), Expanded(child: _selectorLocalidad())
-
-              /* DropdownMenu<String>(
-                initialSelection: 'Localidad',
-                label: const Text('Localidad'),
-                // Estilo gris oscuro para que combine
-                menuStyle: MenuStyle(
-                  backgroundColor: WidgetStateProperty.all(Colors.grey[850]),
-                ),
-                dropdownMenuEntries: ['Mérida', 'Badajoz', 'Cáceres','Calamonte','Don benito']
-                    .map((cat) => DropdownMenuEntry(value: cat, label: cat))
-                    .toList(),
-                onSelected: (value) => print(value),
-              )*/
+              ),
+              const SizedBox(width: 20,),
+              _selectorLocalidad(),
             ],
           ),
-        )
+        ),
       ],
 
-    );
+    ));
   }
 
   Widget _selectorLocalidad() {
-    String _inicial = 'Localidad';
+    String _inicial = 'Ubicación';
 
     return FutureBuilder<List<Localidad>>(
       future: futureLocalidad,
@@ -97,14 +94,21 @@ class _BuscarPageState extends State<BuscarPage> {
         } else {
           final nombres = snapshot.data!.map((l) => l.nombre).toList();
 
-          return ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: 150),
+          return Container(
             child: DropdownMenu<String>(
+              width: 165,
               initialSelection: _inicial,
-              label: const Text('Localidad'),
+              label: const Text('Ubicación'),
+              menuHeight: 250,
               menuStyle: MenuStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.grey[850]),
-
+                shape: WidgetStateProperty.resolveWith<OutlinedBorder?>(
+                      (states) =>  RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8))
+                  ),
+                ),
+                backgroundColor: MaterialStateProperty.resolveWith(
+                      (states) => Colors.grey.shade300,
+                ),
               ),
               dropdownMenuEntries: nombres
                   .map((nombre) =>
@@ -119,4 +123,5 @@ class _BuscarPageState extends State<BuscarPage> {
       },
     );
   }
+
 }

@@ -7,56 +7,46 @@ class BotonesGenerico extends StatelessWidget{
   final VoidCallback? pulsar;
   const BotonesGenerico({super.key,required this.titulo, this.imagen, this.ancho, this.pulsar});
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return SizedBox(
-        width: ancho,
-        height: 40,
-        child:Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.black,
-                width:1
-              )
-            ),
-            /*boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                offset: Offset(0, 0.05),
-                blurRadius: 2.5,
-                spreadRadius: 0,
-              )
-            ],*/
-            borderRadius: BorderRadius.circular(30)
-          ),
-          child:ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-                  alignment: .center,
-                  backgroundColor: Color.fromARGB(255, 166, 226, 70),
-                  elevation: 0,
-                shadowColor: Colors.transparent,
-                  minimumSize: Size(150, 40)
-              ),
-              onPressed: pulsar,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: .center,
-                children: [
-                  Text(
-                      titulo,
-                      style: TextStyle(
-                          fontFamily: 'RobotoCondensed',
-                          fontWeight: .bold
-                      )
-                  ),
-                  if (imagen != null) const SizedBox(width: 8),
-                  if(imagen != null) SvgPicture.asset(imagen!,)
-                ],
-              )
-          )
+      width: ancho,
+      height: 40,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.symmetric(horizontal: imagen != null ? 8 : 12),
+          backgroundColor: Color.fromARGB(255, 166, 226, 70),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          elevation: 0,
         ),
+        onPressed: pulsar,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  titulo,
+                  style: TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis, // por si acaso
+                ),
+              ),
+            ),
+            if (imagen != null) ...[
+              SizedBox(width: 4),
+              SvgPicture.asset(
+                imagen!,
+                width: 16,
+                height: 16,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
-
 }

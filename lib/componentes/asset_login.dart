@@ -7,7 +7,8 @@ import 'package:kultux/registro.dart';
 class AssetLogin extends StatefulWidget{
   final VoidCallback? cerrar;
   final VoidCallback? logeado;
-  const AssetLogin({super.key, this.cerrar, this.logeado});
+  final VoidCallback? invitado;
+  const AssetLogin({super.key, this.cerrar, this.logeado, this.invitado});
   @override
   State<AssetLogin> createState() => _AssetLoginState();
 }
@@ -62,7 +63,8 @@ class _AssetLoginState extends State<AssetLogin>{
                     ],
                   ),
                   const SizedBox(height: 10),
-                  BotonesGenerico(titulo:"Iniciar sesión", ancho:194, pulsar: widget.logeado),
+
+                  BotonesGenerico(titulo:"Iniciar sesión", ancho:194, pulsar: widget.logeado, ),
                   const SizedBox(height: 10),
                   BotonesGenerico(
                       titulo:"Registrarse",
@@ -76,7 +78,7 @@ class _AssetLoginState extends State<AssetLogin>{
                         );}
                       ),
                   const SizedBox(height: 10),
-                  BotonesGenerico(titulo:"Entrar como invitado",imagen:"assets/iconos/invitado.svg", ancho:194, pulsar: widget.logeado),
+                  BotonesGenerico(titulo:"Entrar como invitado",imagen:"assets/iconos/invitado.svg", ancho:194, pulsar: widget.invitado),
 
                 ],
               ),

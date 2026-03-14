@@ -68,7 +68,7 @@ class _PerfilPageState extends State<PerfilPage>{
               children: [
               BotonesGenerico(
                 titulo: "Cerrar sesión",
-                imagen: "assets/iconos/",
+               // imagen: "assets/iconos/",
                 pulsar: (){
                 widget.cerrarSesion();
                 },),

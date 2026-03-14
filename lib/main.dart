@@ -5,6 +5,8 @@ import 'package:kultux/componentes/asset_login.dart';
 import 'package:kultux/mapas.dart';
 import 'package:kultux/perfil.dart';
 import 'package:kultux/buscar.dart';
+import 'package:kultux/tarjetas.dart';
+import 'package:kultux/establecimientos.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -36,10 +38,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _logeado = false;
   int _indexActual = 0;
+  bool _invitado = false;
 
   void _cerrarSesion() {
     setState(() {
       _logeado = false;
+      _invitado = false;
       _indexActual = 0;
     });
   }
@@ -51,33 +55,52 @@ class _MyHomePageState extends State<MyHomePage> {
       _bodyInicio(),
       MapasPage(),
       BuscarPage(),
-      Center(child: Text('Servicios')),
+      EstablecimientosPage(),
       PerfilPage(cerrarSesion: _cerrarSesion)
     ];
     return Scaffold(
       appBar: AppBarPersonalizado(),
-      body: _indexActual == 0 ? Stack(alignment: .center,
+      body: _indexActual == 0
+          ? Stack(alignment: .center,
           children: [
             _paginas[_indexActual],
-            if(!_logeado) AssetLogin(
+            if(!_logeado && !_invitado ) AssetLogin(
                 cerrar: () {
                   setState(() {
                     _logeado = true;
+                    _invitado = true;
                   });
                 },
                 logeado: () {
                   setState(() {
                     _logeado = true;
+                    _invitado = false;
                   });
-                }
+                },
+              invitado:(){
+                  setState((){
+                    _invitado = true;
+                    _logeado = true;
+                    _indexActual = 0;
+                  });
+              }
             ),
           ]
       ) : _paginas[_indexActual],
       bottomNavigationBar: BottomNav(
           itemSeleccionado: _indexActual,
           itemSeleccion: (index) {
+            if(index == 4 && _invitado){
+              setState(() {
+                _invitado = false;
+                _logeado = false; // mostrar login
+                _indexActual = 0; // volver a la página inicial
+              });
+              return;
+            }
             setState(() {
               _indexActual = index;
+
             });
           }
       ),
@@ -85,18 +108,60 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _bodyInicio() {
-    return SingleChildScrollView(
-      child: Column(crossAxisAlignment: .stretch,
-        mainAxisAlignment: .center,
-        children: [
-          ListView(
-            children: [
-              ListTile()
-            ],
-          )
-        ],
-      ),
-    );
+    return Center(child:Container(
+
+      width: 364,
+        child:
+    ListView(children: [
+      Tarjeta.actividades(
+          titulo: 'Lucha de gladiadores',
+          localidad: 'Mérida',
+          fecha: '06/05/2026',
+          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+          onTap: (){}),
+
+      Tarjeta.actividades(
+          titulo: 'Lucha de gladiadores',
+          localidad: 'Mérida',
+          fecha: '06/05/2026',
+          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+          onTap: (){}),
+
+      Tarjeta.actividades(
+          titulo: 'Lucha de gladiadores',
+          localidad: 'Mérida',
+          fecha: '06/05/2026',
+          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+          onTap: (){}),
+      Tarjeta.actividades(
+          titulo: 'Lucha de gladiadores',
+          localidad: 'Mérida',
+          fecha: '06/05/2026',
+          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+          onTap: (){}),
+      Tarjeta.actividades(
+          titulo: 'Lucha de gladiadores',
+          localidad: 'Mérida',
+          fecha: '06/05/2026',
+          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+          onTap: (){}),
+      Tarjeta.actividades(
+          titulo: 'Lucha de gladiadores',
+          localidad: 'Mérida',
+          fecha: '06/05/2026',
+          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+          onTap: (){}),
+      Tarjeta.actividades(
+          titulo: 'Lucha de gladiadores',
+          localidad: 'Mérida',
+          fecha: '06/05/2026',
+          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+          onTap: (){}),
+
+
+    ],
+    )
+    ));
   }
 }
 
