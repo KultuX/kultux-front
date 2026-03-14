@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:kultux/componentes/botones.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class Tarjeta extends StatelessWidget {
   final String titulo;
-  final String localidad;
-  final String fecha;
+  final String? localidad;
+  final String? fecha;
   final String imagenUrl;
   final VoidCallback onTap;
+  final String? textoEtiqueta;
+  final String? iconoEtiqueta;
 
   const Tarjeta._({
     super.key,
     required this.titulo,
-    required this.localidad,
-    required this.fecha,
+    this.localidad,
+    this.fecha,
     required this.imagenUrl,
     required this.onTap,
+    this.textoEtiqueta,
+    this.iconoEtiqueta
   });
 
   const Tarjeta.actividades({
@@ -26,11 +29,44 @@ class Tarjeta extends StatelessWidget {
     required String imagenUrl,
     required VoidCallback onTap,
   }) : this._(
+    key: key,
     titulo: titulo,
     localidad: localidad,
     fecha: fecha,
     imagenUrl: imagenUrl,
     onTap: onTap,
+  );
+
+  const Tarjeta.restaurante({
+    Key? key,
+    required String titulo,
+    required String imagenUrl,
+    required String textoEtiqueta,
+    required String iconoEtiqueta,
+    required VoidCallback onTap,
+}) : this._(
+    key: key,
+    titulo: titulo,
+    imagenUrl: imagenUrl,
+    textoEtiqueta: textoEtiqueta,
+    iconoEtiqueta: iconoEtiqueta,
+    onTap: onTap
+  );
+
+  const Tarjeta.alojamiento({
+    Key? key,
+    required String titulo,
+    required String imagenUrl,
+    required String textoEtiqueta,
+    required String iconoEtiqueta,
+    required VoidCallback onTap,
+}) : this._(
+    key: key,
+    titulo: titulo,
+    imagenUrl: imagenUrl,
+    textoEtiqueta: textoEtiqueta,
+    iconoEtiqueta: iconoEtiqueta,
+    onTap: onTap
   );
 
   @override
@@ -71,17 +107,29 @@ class Tarjeta extends StatelessWidget {
             ),
 
             // Fecha arriba derecha
+            if(fecha != null)
             Positioned(
               top: 8,
               right: 8,
-              child: FechaTarjeta(fecha: fecha),
+              child: FechaTarjeta(fecha: fecha!),
             ),
 
             // Localidad abajo izquierda
+            if(localidad != null)
             Positioned(
               bottom: 8,
               left: 8,
-              child: LocalidadTarjeta(localidad: localidad),
+              child: LocalidadTarjeta(localidad: localidad!),
+            ),
+
+            if(textoEtiqueta != null && iconoEtiqueta != null)
+            Positioned(
+              bottom: 8,
+              left: 8,
+              child: EtiquetaTarjeta(
+                texto: textoEtiqueta!,
+                icono: iconoEtiqueta!
+              ),
             ),
 
             // Botón derecha centrado
@@ -127,6 +175,47 @@ class TituloTarjeta extends StatelessWidget {
           fontSize: 14,
           color: Colors.black,
         ),
+      ),
+    );
+  }
+}
+
+class EtiquetaTarjeta extends StatelessWidget{
+  final String texto;
+  final String icono;
+
+  const EtiquetaTarjeta({
+    super.key,
+    required this.texto,
+    required this.icono
+  });
+
+  @override
+  Widget build(BuildContext context){
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 140),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFA6E246),
+        borderRadius: BorderRadius.circular(10)
+      ),
+      child: Row(
+        children: [
+          SvgPicture.asset(
+            icono,
+            width: 15,
+            height: 15,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            texto,
+            style: const TextStyle(
+              fontFamily: "RobotoCondensed",
+              fontSize: 14,
+              color: Colors.black
+            ),
+          )
+        ],
       ),
     );
   }

@@ -127,11 +127,17 @@ class _MyHomePageState extends State<MyHomePage> {
           imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
           onTap: (){}),
 
-      Tarjeta.actividades(
-          titulo: 'Lucha de gladiadores',
-          localidad: 'Mérida',
-          fecha: '06/05/2026',
-          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
+      Tarjeta.alojamiento(
+          titulo: 'Hotel Velada',
+          textoEtiqueta: "Hotel Velada",
+          iconoEtiqueta: "assets/iconos/hotel.svg",
+          imagenUrl:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1c/11/fb/ec/hotel-velada-merida.jpg?w=900&h=500&s=1',
+          onTap: (){}),
+      Tarjeta.restaurante(
+          titulo: 'Bar de copas',
+          imagenUrl:'https://www.civitatis.com/blog/wp-content/uploads/2021/05/foto-copa-bar.jpg',
+          iconoEtiqueta: 'assets/iconos/copas.svg',
+          textoEtiqueta: 'copas',
           onTap: (){}),
       Tarjeta.actividades(
           titulo: 'Lucha de gladiadores',
@@ -151,13 +157,6 @@ class _MyHomePageState extends State<MyHomePage> {
           fecha: '06/05/2026',
           imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
           onTap: (){}),
-      Tarjeta.actividades(
-          titulo: 'Lucha de gladiadores',
-          localidad: 'Mérida',
-          fecha: '06/05/2026',
-          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
-          onTap: (){}),
-
 
     ],
     )
