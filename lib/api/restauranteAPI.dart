@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/restaurante.dart';
 
-class LocalidadApiService{
-  static final String _BASE_URL_ALOJAMIENTOS = "micro-restaurantes.onrender.com";
+class RestauranteApiService{
+  static final String _BASE_URL_RESTAURANTES = "micro-restaurante-n4bv.onrender.com";
 
-  static Future<List<Restaurante>> obtenerAlojamientoDestacados() async {
-    final url = Uri.https(_BASE_URL_ALOJAMIENTOS,'/api/v1/restaurantes/destacados');
+  static Future<List<Restaurante>> obtenerRestauranteDestacados() async {
+    final url = Uri.https(_BASE_URL_RESTAURANTES,'/api/v1/restaurantes/destacados');
 
     final response = await http.get(
       url,
@@ -21,12 +21,12 @@ class LocalidadApiService{
       final List<dynamic> lista = jsonDecode(response.body);
       return lista.map((json) => Restaurante.destacado(json)).toList();
     }else{
-      throw Exception('Error al obtener los nombre de las localidades: ${response.statusCode}');
+      throw Exception('Error al obtener los restaurantes destacados: ${response.statusCode}');
     }
   }
 
-  static Future<Restaurante> obtenerAlojamientoDetalle(int id) async{
-    final url = Uri.https(_BASE_URL_ALOJAMIENTOS, '/api/v1/restaurantes/$id');
+  static Future<Restaurante> obtenerRestauranteDetalle(int id) async{
+    final url = Uri.https(_BASE_URL_RESTAURANTES, '/api/v1/restaurantes/$id');
 
     final response = await http.get(
       url,
@@ -41,7 +41,7 @@ class LocalidadApiService{
       final dynamic json = jsonDecode(response.body);
       return Restaurante.detalle(json);
     }else{
-      throw Exception('Error al obtener los nombre de las localidades: ${response.statusCode}');
+      throw Exception('Error al el restaurante: ${response.statusCode}');
     }
   }
 

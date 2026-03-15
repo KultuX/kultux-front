@@ -1,24 +1,73 @@
 class Usuario{
   final String email;
+  int? id;
   String? password;
   String? nombre;
   String? apellidos;
+  int? localidad;
   String? fechaNacimiento;
+  String? imagenPerfil;
 
   Usuario._({
     required this.email,
-    this.password
-
+    this.id,
+    this.password,
+    this.nombre,
+    this.localidad,
+    this.apellidos,
+    this.fechaNacimiento,
+    this.imagenPerfil
   });
 
-/*
-  Usuario.loggeado(Map<String, json> json){
+
+  factory Usuario.logeado(Map<String, dynamic> json){
     return Usuario._(
       email: json['email'],
-
-    )
-    ;
+      id: json['id'],
+      password: json['password'],
+      nombre: json['nonbre'],
+      localidad: json['localidad'],
+      fechaNacimiento: json['fechaNacimiento'],
+      imagenPerfil: json['imagenPerfil']
+    );
   }
+
+  factory Usuario.registro(Map<String, dynamic> datos){
+    return Usuario._(
+      nombre: datos['nombre'],
+      apellidos: datos['apellidos'],
+      email: datos['email'],
+      password: datos['password'],
+      localidad: datos['localidad'],
+      fechaNacimiento: datos['fechaNacimiento']
+    );
+  }
+  factory Usuario.login(String email, String password){
+    return Usuario._(
+      email: email,
+      password: password
+    );
+  }
+
+  Map<String, dynamic> toJsonLogin(){
+    return {
+      'email' : this.email,
+      'password' : this.password
+    };
+  }
+  Map<String, dynamic> toJsonRegistro(){
+    return {
+      "nombre" : this.nombre,
+      "apellidos" : this.apellidos,
+      "email" : this.email,
+      "password" : this.password,
+      "localidad" : this.localidad,
+      "fechaNacimiento" : this.fechaNacimiento
+    };
+  }
+
+
+  /*
   Usuario.toJson(){
     return {
 
