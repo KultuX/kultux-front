@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/componentes/botones.dart';
 import 'package:kultux/main.dart';
+import 'package:kultux/models/usuario.dart';
 class PerfilPage extends StatefulWidget{
   final VoidCallback cerrarSesion;
-  const PerfilPage({super.key, required this.cerrarSesion});
+  final Usuario? usuario;
+  const PerfilPage({super.key, required this.cerrarSesion, this.usuario});
   @override
   State<PerfilPage> createState() => _PerfilPageState();
 }
@@ -38,9 +40,9 @@ class _PerfilPageState extends State<PerfilPage>{
                               backgroundImage: AssetImage("assets/images/logo_registro.png")
                           ),
                           const SizedBox(height: 8,),
-                          Text('Nombre usuario', style: TextStyle(fontFamily: 'RobotoCondensed',fontSize: 20)),
+                          Text(widget.usuario?.nombre ?? 'Nombre usuario' , style: TextStyle(fontFamily: 'RobotoCondensed',fontSize: 20)),
                           const SizedBox(height: 8,),
-                          Text('correo@correo.com')
+                          Text(widget.usuario?.email ?? 'correo@correo.com', style: TextStyle(fontFamily: 'RobotoCondensed',))
                         ]
                     ),
                   )

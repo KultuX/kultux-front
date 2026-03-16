@@ -86,7 +86,9 @@ class _BuscarPageState extends State<BuscarPage> {
       future: futureLocalidad,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
+          return const CircularProgressIndicator(
+            color: Colors.lightGreenAccent,
+          );
         } else if (snapshot.hasError) {
           return Text('Error al cargar las localidades: ${snapshot.error}');
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
