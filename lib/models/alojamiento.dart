@@ -4,6 +4,7 @@ class Alojamiento{
   final String categoriaAlojamiento;
   final String imagenPrincipal;
 
+  String? localidad;
   String? telefonoEmpresa;
   String? correoCorporativo;
 
@@ -13,7 +14,8 @@ class Alojamiento{
     required this.categoriaAlojamiento,
     required this.imagenPrincipal,
     this.telefonoEmpresa,
-    this.correoCorporativo
+    this.correoCorporativo,
+    this.localidad
   });
 
   factory Alojamiento.destacado(Map<String, dynamic> json){
@@ -32,8 +34,9 @@ class Alojamiento{
         nombre: json['nombre'],
         categoriaAlojamiento: json['categoriaAlojamiento'],
         imagenPrincipal: json['imagenPrincipal'],
-      telefonoEmpresa: json['telefonoEmpresa'],
-      correoCorporativo: json['correoCorporativo'],
+        telefonoEmpresa: json['telefonoEmpresa'],
+        correoCorporativo: json['correoCorporativo'],
+        localidad: json['localidad']
 
     );
   }

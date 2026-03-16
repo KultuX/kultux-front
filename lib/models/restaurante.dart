@@ -8,6 +8,7 @@ class Restaurante{
   String? telefonoEmpresa;
   String? correoCorporativo;
   String? horarioApetura;
+  String? localidad;
 
   Restaurante._({
     required this.id,
@@ -17,7 +18,8 @@ class Restaurante{
     this.descripcion,
     this.telefonoEmpresa,
     this.correoCorporativo,
-    this.horarioApetura
+    this.horarioApetura,
+    this.localidad
   });
 
   factory Restaurante.destacado(Map<String, dynamic> json){
@@ -38,7 +40,8 @@ class Restaurante{
         descripcion: json['descripcion'],
         telefonoEmpresa: json['telefonoEmpresa'],
         correoCorporativo: json['correoCorporativo'],
-        horarioApetura: json['horarioApertura']
+        horarioApetura: json['horarioApertura'],
+        localidad: json['localidad']
     );
   }
 }

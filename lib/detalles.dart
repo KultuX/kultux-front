@@ -6,25 +6,25 @@ import 'package:kultux/models/restaurante.dart';
 class Detalle extends StatelessWidget {
   final String titulo;
   final String imagenPrincipal;
-  final String subtitulo;
   final String? descripcion;
   final String? telefonoEmpresa;
   final String? correoCorporativo;
   final String? fechaInicio;
   final String? fechaFin;
   final String? horarioApertura;
+  final String? localidad;
 
   const Detalle._({
     super.key,
     required this.titulo,
     required this.imagenPrincipal,
-    required this.subtitulo,
     this.descripcion,
     this.telefonoEmpresa,
     this.correoCorporativo,
     this.fechaInicio,
     this.fechaFin,
     this.horarioApertura,
+    this.localidad,
   });
 
   factory Detalle.desdeObjeto({
@@ -34,7 +34,7 @@ class Detalle extends StatelessWidget {
       return Detalle._(
         titulo: objeto.titulo,
         imagenPrincipal: objeto.imagenPrincipal,
-        subtitulo: objeto.categoriaActividad,
+        localidad: objeto.localidad,
         descripcion: objeto.descripcion,
         telefonoEmpresa: objeto.telefonoEmpresa,
         correoCorporativo: objeto.correoCorporativo,
@@ -47,7 +47,7 @@ class Detalle extends StatelessWidget {
       return Detalle._(
         titulo: objeto.nombre,
         imagenPrincipal: objeto.imagenPrincipal,
-        subtitulo: objeto.categoriaAlojamiento,
+        localidad: objeto.localidad,
         telefonoEmpresa: objeto.telefonoEmpresa,
         correoCorporativo: objeto.correoCorporativo,
       );
@@ -57,7 +57,7 @@ class Detalle extends StatelessWidget {
       return Detalle._(
         titulo: objeto.nombre,
         imagenPrincipal: objeto.imagenPrincipal,
-        subtitulo: objeto.categoriaRestaurante,
+        localidad: objeto.localidad,
         descripcion: objeto.descripcion,
         telefonoEmpresa: objeto.telefonoEmpresa,
         correoCorporativo: objeto.correoCorporativo,
@@ -121,9 +121,7 @@ class Detalle extends StatelessWidget {
                       const SizedBox(width: 20),
                     ],
                   ),
-
                   const SizedBox(height: 12),
-
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -141,6 +139,8 @@ class Detalle extends StatelessWidget {
                           borderRadius: BorderRadius.circular(15),
                           child: Image.network(
                             imagenPrincipal,
+                            width: double.infinity,
+                            height: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
                               color: Colors.grey.shade300,
@@ -154,7 +154,6 @@ class Detalle extends StatelessWidget {
                           ),
                         ),
                       ),
-
                       Positioned(
                         left: 6,
                         child: _botonFlecha(
@@ -162,7 +161,6 @@ class Detalle extends StatelessWidget {
                           color: verdeKultux,
                         ),
                       ),
-
                       Positioned(
                         right: 6,
                         child: _botonFlecha(
@@ -172,7 +170,6 @@ class Detalle extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 14),
 
                   if (esActividad)
@@ -185,10 +182,6 @@ class Detalle extends StatelessWidget {
                           icono: Icons.calendar_today_outlined,
                           texto:
                           '${fechaInicio ?? ''}${fechaFin != null ? ' al $fechaFin' : ''}',
-                        ),
-                        _infoConIcono(
-                          icono: Icons.sell_outlined,
-                          texto: subtitulo,
                         ),
                       ],
                     ),
@@ -203,10 +196,6 @@ class Detalle extends StatelessWidget {
                           icono: Icons.access_time_outlined,
                           texto: horarioApertura ?? '',
                         ),
-                        _infoConIcono(
-                          icono: Icons.local_cafe_outlined,
-                          texto: subtitulo,
-                        ),
                       ],
                     ),
 
@@ -218,7 +207,7 @@ class Detalle extends StatelessWidget {
                       children: [
                         _infoConIcono(
                           icono: Icons.hotel_outlined,
-                          texto: subtitulo,
+                          texto: localidad ?? '',
                         ),
                       ],
                     ),
@@ -230,7 +219,7 @@ class Detalle extends StatelessWidget {
                       Expanded(
                         child: _infoConIcono(
                           icono: Icons.location_on_outlined,
-                          texto: esAlojamiento ? subtitulo : 'Mérida',
+                          texto: localidad ?? '',
                           iconColor: verdeKultux,
                           negrita: true,
                         ),
@@ -344,9 +333,7 @@ class Detalle extends StatelessWidget {
                             color: colorTexto,
                           ),
                           children: [
-                            const TextSpan(
-                              text: 'Teléfono: ',
-                            ),
+                            const TextSpan(text: 'Teléfono: '),
                             TextSpan(
                               text: telefonoEmpresa!,
                               style: const TextStyle(
@@ -370,9 +357,7 @@ class Detalle extends StatelessWidget {
                             color: colorTexto,
                           ),
                           children: [
-                            const TextSpan(
-                              text: 'Correo electrónico: ',
-                            ),
+                            const TextSpan(text: 'Correo electrónico: '),
                             TextSpan(
                               text: correoCorporativo!,
                               style: const TextStyle(
@@ -413,11 +398,7 @@ class Detalle extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  esActividad
-                                      ? 'Comprar entradas'
-                                      : esRestaurante
-                                      ? 'Reservar'
-                                      : 'Reservar',
+                                  esActividad ? 'Comprar entradas' : 'Reservar',
                                   style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
@@ -480,12 +461,15 @@ class Detalle extends StatelessWidget {
           color: iconColor,
         ),
         const SizedBox(width: 6),
-        Text(
-          texto,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: negrita ? FontWeight.w700 : FontWeight.w500,
-            color: const Color(0xFF1F1F1F),
+        Flexible(
+          child: Text(
+            texto,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: negrita ? FontWeight.w700 : FontWeight.w500,
+              color: const Color(0xFF1F1F1F),
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
