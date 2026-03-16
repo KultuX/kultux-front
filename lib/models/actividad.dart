@@ -4,6 +4,7 @@ class Actividad{
   final String categoriaActividad;
   final String imagenPrincipal;
   final String fechaInicio;
+  final String localidad;
 
   String? descripcion;
   String? telefonoEmpresa;
@@ -16,6 +17,7 @@ class Actividad{
     required this.categoriaActividad,
     required this.imagenPrincipal,
     required this.fechaInicio,
+    required this.localidad,
     this.descripcion,
     this.telefonoEmpresa,
     this.correoCorporativo,
@@ -29,6 +31,7 @@ class Actividad{
       categoriaActividad: json['categoriaActividad'],
       imagenPrincipal: json['imagenPrincipal'],
       fechaInicio: json['fechaInicio'],
+      localidad: json['localidad']
     );
   }
 
@@ -36,12 +39,13 @@ class Actividad{
     return Actividad._(
       id: json['id'],
       titulo: json['titulo'],
+      localidad: json['localidad'],
       categoriaActividad: json['categoriaActividad'],
       imagenPrincipal: json['imagenPrincipal'],
       fechaInicio: json['fechaInicio'],
       descripcion: json['descripcion'],
       telefonoEmpresa: json['telefonoEmpresa'],
-      correoCorporativo: json['correoCorporativo'],
+      correoCorporativo: json['correoEmpresa'],
       fechaFin: json['fechaFin'],
     );
   }

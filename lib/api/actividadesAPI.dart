@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/actividad.dart';
 
-class LocalidadApiService{
-  static final String _BASE_URL_ACTIVIDADES = "micro-actividades.onrender.com";
-  static Future<List<Actividad>> obtenerLocalidadNombres() async {
+class ActividadesApiService{
+  static final String _BASE_URL_ACTIVIDADES = "micro-actividad.onrender.com";
+  static Future<List<Actividad>> obtenerActividadesDestacadas() async {
     final url = Uri.https(_BASE_URL_ACTIVIDADES,'/api/v1/actividades/destacados');
 
     final response = await http.get(

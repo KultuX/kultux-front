@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kultux/api/actividadesAPI.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
 import 'package:kultux/componentes/app_bar.dart';
 import 'package:kultux/componentes/asset_login.dart';
@@ -7,6 +8,11 @@ import 'package:kultux/perfil.dart';
 import 'package:kultux/buscar.dart';
 import 'package:kultux/tarjetas.dart';
 import 'package:kultux/establecimientos.dart';
+import 'package:kultux/detalles.dart';
+import 'package:kultux/models/actividad.dart';
+import 'package:kultux/models/localidad.dart';
+import 'package:kultux/detalles.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -14,13 +20,12 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'KultuX',
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
       home: const SplashPage(),
     );
@@ -29,7 +34,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
-  //final String title;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -40,159 +44,273 @@ class _MyHomePageState extends State<MyHomePage> {
   int _indexActual = 0;
   bool _invitado = false;
 
+  late Future<List<Actividad>> _futureActividades;
+
+  bool _mostrandoDetalleInicio = false;
+  Actividad? _actividadDetalleSeleccionada;
+
+  bool _mostrandoDetalleEstablecimiento = false;
+  dynamic _establecimientoDetalleSeleccionado;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureActividades = ActividadesApiService.obtenerActividadesDestacadas();
+  }
+
   void _cerrarSesion() {
     setState(() {
       _logeado = false;
       _invitado = false;
       _indexActual = 0;
+      _mostrandoDetalleInicio = false;
+      _actividadDetalleSeleccionada = null;
+      _mostrandoDetalleEstablecimiento = false;
+      _establecimientoDetalleSeleccionado = null;
     });
   }
 
+  void _abrirDetalleActividad(Actividad actividad) {
+    setState(() {
+      _actividadDetalleSeleccionada = actividad;
+      _mostrandoDetalleInicio = true;
+    });
+  }
+
+  void _volverAListadoInicio() {
+    setState(() {
+      _mostrandoDetalleInicio = false;
+      _actividadDetalleSeleccionada = null;
+    });
+  }
+
+  void _abrirDetalleEstablecimiento(dynamic objeto) {
+    setState(() {
+      _establecimientoDetalleSeleccionado = objeto;
+      _mostrandoDetalleEstablecimiento = true;
+    });
+  }
+
+  void _volverAListadoEstablecimientos() {
+    setState(() {
+      _mostrandoDetalleEstablecimiento = false;
+      _establecimientoDetalleSeleccionado = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _paginas = [
+    final List<Widget> paginas = [
       _bodyInicio(),
       MapasPage(),
       BuscarPage(),
-      EstablecimientosPage(),
-      PerfilPage(cerrarSesion: _cerrarSesion)
+      _bodyEstablecimientos(),
+      PerfilPage(cerrarSesion: _cerrarSesion),
     ];
+
     return Scaffold(
       appBar: AppBarPersonalizado(),
       body: _indexActual == 0
-          ? Stack(alignment: .center,
-          children: [
-            _paginas[_indexActual],
-            if(!_logeado && !_invitado ) AssetLogin(
-                cerrar: () {
-                  setState(() {
-                    _logeado = true;
-                    _invitado = true;
-                  });
-                },
-                logeado: () {
-                  setState(() {
-                    _logeado = true;
-                    _invitado = false;
-                  });
-                },
-              invitado:(){
-                  setState((){
-                    _invitado = true;
-                    _logeado = true;
-                    _indexActual = 0;
-                  });
-              }
+          ? Stack(
+        alignment: Alignment.center,
+        children: [
+          paginas[_indexActual],
+          if (!_logeado && !_invitado)
+            AssetLogin(
+              cerrar: () {
+                setState(() {
+                  _logeado = true;
+                  _invitado = true;
+                });
+              },
+              logeado: () {
+                setState(() {
+                  _logeado = true;
+                  _invitado = false;
+                });
+              },
+              invitado: () {
+                setState(() {
+                  _invitado = true;
+                  _logeado = true;
+                  _indexActual = 0;
+                });
+              },
             ),
-          ]
-      ) : _paginas[_indexActual],
+        ],
+      )
+          : paginas[_indexActual],
       bottomNavigationBar: BottomNav(
-          itemSeleccionado: _indexActual,
-          itemSeleccion: (index) {
-            if(index == 4 && _invitado){
-              setState(() {
-                _invitado = false;
-                _logeado = false; // mostrar login
-                _indexActual = 0; // volver a la página inicial
-              });
-              return;
-            }
+        itemSeleccionado: _indexActual,
+        itemSeleccion: (index) {
+          if (index == 4 && _invitado) {
             setState(() {
-              _indexActual = index;
-
+              _invitado = false;
+              _logeado = false;
+              _indexActual = 0;
+              _mostrandoDetalleInicio = false;
+              _actividadDetalleSeleccionada = null;
+              _mostrandoDetalleEstablecimiento = false;
+              _establecimientoDetalleSeleccionado = null;
             });
+            return;
           }
+
+          setState(() {
+            _indexActual = index;
+
+            _mostrandoDetalleInicio = false;
+            _actividadDetalleSeleccionada = null;
+
+            _mostrandoDetalleEstablecimiento = false;
+            _establecimientoDetalleSeleccionado = null;
+          });
+        },
       ),
     );
   }
 
   Widget _bodyInicio() {
-    return Center(child:Container(
 
-      width: 364,
-        child:
-    ListView(children: [
-      Tarjeta.actividades(
-          titulo: 'Lucha de gladiadores',
-          localidad: 'Mérida',
-          fecha: '06/05/2026',
-          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
-          onTap: (){}),
-
-      Tarjeta.actividades(
-          titulo: 'Lucha de gladiadores',
-          localidad: 'Mérida',
-          fecha: '06/05/2026',
-          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
-          onTap: (){}),
-
-      Tarjeta.alojamiento(
-          titulo: 'Hotel Velada',
-          textoEtiqueta: "Hotel Velada",
-          iconoEtiqueta: "assets/iconos/hotel.svg",
-          imagenUrl:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1c/11/fb/ec/hotel-velada-merida.jpg?w=900&h=500&s=1',
-          onTap: (){}),
-      Tarjeta.restaurante(
-          titulo: 'Bar de copas',
-          imagenUrl:'https://www.civitatis.com/blog/wp-content/uploads/2021/05/foto-copa-bar.jpg',
-          iconoEtiqueta: 'assets/iconos/copas.svg',
-          textoEtiqueta: 'copas',
-          onTap: (){}),
-      Tarjeta.actividades(
-          titulo: 'Lucha de gladiadores',
-          localidad: 'Mérida',
-          fecha: '06/05/2026',
-          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
-          onTap: (){}),
-      Tarjeta.actividades(
-          titulo: 'Lucha de gladiadores',
-          localidad: 'Mérida',
-          fecha: '06/05/2026',
-          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
-          onTap: (){}),
-      Tarjeta.actividades(
-          titulo: 'Lucha de gladiadores',
-          localidad: 'Mérida',
-          fecha: '06/05/2026',
-          imagenUrl:'https://www.saboraextremadura.es/wp-content/uploads/2018/07/m%C3%A9rida.webp',
-          onTap: (){}),
-
-    ],
-    )
-    ));
-  }
-}
-
-class SplashPage extends StatefulWidget{
-  const SplashPage({super.key});
-  @override
-  State<SplashPage> createState() => _SplashPageState();
-}
-
-class _SplashPageState extends State<SplashPage>{
-
-  @override
-  void initState(){
-    super.initState();
-    Future.delayed(Duration(seconds: 3), (){
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MyHomePage()),
+    if (_mostrandoDetalleInicio && _actividadDetalleSeleccionada != null) {
+      return Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              onPressed: _volverAListadoInicio,
+              icon: const Icon(Icons.arrow_back),
+            ),
+          ),
+          Expanded(
+            child: Detalle.desdeObjeto(
+              objeto: _actividadDetalleSeleccionada!,
+            ),
+          )
+        ],
       );
-    });
+    }
+
+    return Center(
+      child: SizedBox(
+        width: 364,
+        child: FutureBuilder<List<Actividad>>(
+          future: _futureActividades,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Text("Error ${snapshot.error}"),
+              );
+            }
+
+            final actividades = snapshot.data;
+
+            if (actividades == null || actividades.isEmpty) {
+              return const Center(
+                child: Text("No hay actividades disponibles"),
+              );
+            }
+
+            return ListView.builder(
+              itemCount: actividades.length,
+              itemBuilder: (context, index) {
+                final actividad = actividades[index];
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Tarjeta.actividades(
+                    titulo: actividad.titulo,
+                    localidad: actividad.localidad,
+                    fecha: actividad.fechaInicio,
+                    imagenUrl: actividad.imagenPrincipal,
+                    onTap: () async {
+                      try {
+                        final actividadDetalle =
+                        await ActividadesApiService.detalleActividad(
+                          actividad.id,
+                        );
+                        _abrirDetalleActividad(actividadDetalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Error al cargar el detalle $e"),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
   }
-  @override
-  Widget build(BuildContext context){
-    return Container(
-        color: Colors.white,
-        child:Column(
-          mainAxisAlignment: .center,
-          children: [
-            Image.asset("assets/images/imagen_splash.png")
-          ],
-        )
+
+  Widget _bodyEstablecimientos() {
+    if (_mostrandoDetalleEstablecimiento &&
+        _establecimientoDetalleSeleccionado != null) {
+      return Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              onPressed: _volverAListadoEstablecimientos,
+              icon: const Icon(Icons.arrow_back),
+            ),
+          ),
+          Expanded(
+            child: Detalle.desdeObjeto(
+              objeto: _establecimientoDetalleSeleccionado!,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return EstablecimientosPage(
+      onDetalleSeleccionado: _abrirDetalleEstablecimiento,
     );
   }
 }
 
+class SplashPage extends StatefulWidget {
+  const SplashPage({super.key});
+
+  @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MyHomePage()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset("assets/images/imagen_splash.png"),
+        ],
+      ),
+    );
+  }
+}
