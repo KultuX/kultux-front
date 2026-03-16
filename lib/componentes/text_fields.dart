@@ -10,6 +10,8 @@ class CamposPersonalizados extends StatefulWidget{
   final bool mostrarError;
   final bool pass;
 
+  final TextEditingController controller;
+
   
   const CamposPersonalizados.normal({
     super.key, 
@@ -17,7 +19,8 @@ class CamposPersonalizados extends StatefulWidget{
     this.ancho = 364,
     this.pass = false,
     this.tipo = TextInputType.text,
-    this.mostrarError = false
+    this.mostrarError = false,
+    required this.controller
   });
 
   const CamposPersonalizados.password({
@@ -25,6 +28,7 @@ class CamposPersonalizados extends StatefulWidget{
     required this.titulo,
     this.ancho = 364,
     this.mostrarError = false,
+    required this.controller
   }): pass = true, tipo = TextInputType.text;
 
   @override
@@ -91,8 +95,9 @@ class _CamposPersonalizadosState extends State<CamposPersonalizados>{
     return SizedBox(
       width: widget.ancho,
       child: TextField(
+        controller: widget.controller,
         keyboardType: widget.tipo,
-        obscureText: !_mostrarPass,
+        obscureText: widget.pass ? !_mostrarPass : false,
         decoration: InputDecoration(
           labelText: widget.titulo,
           labelStyle: TextStyle(fontFamily: 'RobotoCondensed'),

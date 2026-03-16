@@ -25,7 +25,7 @@ class Usuario{
       email: json['email'],
       id: json['id'],
       password: json['password'],
-      nombre: json['nonbre'],
+      nombre: json['nombre'],
       localidad: json['localidad'],
       fechaNacimiento: json['fechaNacimiento'],
       imagenPerfil: json['imagenPerfil']

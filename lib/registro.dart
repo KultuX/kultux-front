@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/componentes/text_fields.dart';
 import 'package:kultux/componentes/botones.dart';
-import 'package:kultux/main.dart';
+import 'package:kultux/models/localidad.dart';
+import 'package:kultux/api/localidadesApi.dart';
+import 'package:kultux/api/usuariosAPI.dart';
+import 'package:kultux/models/usuario.dart';
+
 class RegistroPage extends StatefulWidget{
   const RegistroPage({super.key});
   @override
@@ -13,6 +17,100 @@ class RegistroPage extends StatefulWidget{
 class _RegistroPageState extends State<RegistroPage>{
    bool _checkedTerminos = false;
    bool _checkedPolitica = false;
+   String? email;
+
+   Localidad? _localidadSeleccionada;
+
+   static Map<String, TextEditingController>? controllers;
+   final Map<String, String?> _errores = {};
+
+   late Future<List<Localidad>> futureLocalidades;
+
+   Map<String, TextEditingController> _controllers(){
+     return {
+       'nombre' : controler(),
+       'apellidos' : controler(),
+       'email' : controler(),
+       'password' : controler(),
+       'password2' : controler(),
+       'localidad' : controler(),
+       'fechaNacimiento' : controler()
+     };
+   }
+
+
+   TextEditingController controler(){
+     return TextEditingController();
+   }
+   @override
+   void initState(){
+     super.initState();
+     futureLocalidades = LocalidadApiService.obtenerLocalidadNombres();
+     controllers = _controllers();
+
+   }
+
+   Future<bool> registrarUsuario() async {
+     _errores.clear();
+     //1º Comprobar que los dos checkbos estén marcados
+     if (!_checkedTerminos || !_checkedPolitica) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(
+           content: Text(
+               "⚠️ Debes aceptar los Términos y la Política de privacidad. ⚠️ "),
+         ),
+       );
+       return false;
+     }
+     for (final controller in controllers!.values) {
+       if (controller.text.trim().isEmpty) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text(" ⚠️  Todos los campos son obligatorios. ⚠️ ")),
+         );
+         return false;
+       }
+     }
+
+     if(controllers!['password']!.text != controllers!['password2']!.text){
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text("Las contraseñas no coinciden.❌")),
+       );
+       return false;
+     }
+
+     final locTxt = controllers!['localidad']!.text;
+     if (locTxt.isEmpty) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Selecciona una localidad')),
+       );
+       return false;
+     }
+     final locId = int.tryParse(locTxt);
+     if (locId == null) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Localidad inválida')),
+       );
+       return false;
+     }
+
+     Usuario? userRegistro  = Usuario.registro({
+       'nombre' : controllers!['nombre']!.text,
+       'apellidos' : controllers!['apellidos']!.text,
+       'email' :  controllers!['email']!.text,
+       'password' : controllers!['password']!.text,
+       'localidad' : int.parse(controllers!['localidad']!.text),
+       'fechaNacimiento' : controllers!['fechaNacimiento']!.text
+     });
+     try{
+       email = await UsuarioApiService.registroUsuario(userRegistro);
+       return true;
+     } catch (e) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(content: Text('⚠️ Ups.. algo ha ido mal. Revisa los datos introducidos.')),
+       );
+       return false;
+     }
+   }
   @override
   Widget build(BuildContext context){
     return Scaffold(
@@ -21,23 +119,25 @@ class _RegistroPageState extends State<RegistroPage>{
         child: Column(
           mainAxisAlignment: .center,
           children: [
+
+
             Image.asset("assets/images/logo_registro.png", width:200, height: 200,),
             const SizedBox(height: 20,),
-            CamposPersonalizados.normal(titulo: "Nombre"),
+            CamposPersonalizados.normal(titulo: "Nombre", controller: controllers!['nombre']!),
             const SizedBox(height: 20,),
-            CamposPersonalizados.normal(titulo: "Apellidos"),
+            CamposPersonalizados.normal(titulo: "Apellidos", controller: controllers!['apellidos']!),
             const SizedBox(height: 20,),
-            CamposPersonalizados.normal(titulo: "Correo electrónico"),
+            CamposPersonalizados.normal(titulo: "Correo electrónico", controller: controllers!['email']!),
             const SizedBox(height: 20,),
-            CamposPersonalizados.password(titulo: "Contraseña"),
+            CamposPersonalizados.password(titulo: "Contraseña", controller: controllers!['password']!),
             const SizedBox(height: 20,),
-            CamposPersonalizados.password(titulo: "Repite contraseña"),
+            CamposPersonalizados.password(titulo: "Repite contraseña", controller: controllers!['password2']!),
             const SizedBox(height: 20,),
             //Extendible
             _desplegable(titulo: "Localidad"),
             const SizedBox(height: 20,),
             // Fechas
-            _calendario(titulo: "Fecha de nacimiento"),
+            _calendario(titulo: "Fecha de nacimiento",controler: controllers!['fechaNacimiento']!),
             const SizedBox(height: 20,),
             Column(mainAxisAlignment: .start,
             children: [
@@ -61,7 +161,13 @@ class _RegistroPageState extends State<RegistroPage>{
                 children:[
                   BotonesGenerico(
                       titulo:"Registrarse",
-                      ancho:127),
+                      ancho:127,
+                    pulsar: () async {
+                        if(await registrarUsuario()){
+                          Navigator.pop(context);
+                      }
+                    }
+                  ),
                   const SizedBox(width: 50,),
                   BotonesGenerico(
                       titulo:"Volver",
@@ -118,12 +224,11 @@ class _RegistroPageState extends State<RegistroPage>{
     );
   }
 
-  Widget _calendario({required String titulo, double ancho = 364}){
-    TextEditingController _controller = TextEditingController();
+  Widget _calendario({required String titulo, double ancho = 364, TextEditingController? controler }){
     return SizedBox(
       width: ancho,
       child: TextField(
-        controller: _controller,
+        controller: controler!,
         readOnly: true,
         decoration: InputDecoration(
           labelText: titulo,
@@ -139,7 +244,7 @@ class _RegistroPageState extends State<RegistroPage>{
           );
           if(fecha !=null){
             setState(() {
-              _controller.text = "${fecha.day}/${fecha.month}/${fecha.year}";
+              controler.text = fechaFormateada(fecha);
             });
           }
         }
@@ -148,10 +253,14 @@ class _RegistroPageState extends State<RegistroPage>{
     );
   }
 
-  Widget _desplegable({required String titulo, double ancho = 364}){
-    final List<String> localidades = ['Mérida','Badajoz','Cáceres','Plasencia','Navalmoral de la Mata','Don Benito','Zafra','Villafranca de los Barros'];
-    String? localidadSeleccionada = localidades[0];
-    return SizedBox(
+   String fechaFormateada(DateTime fecha) {
+     final month = fecha.month.toString().padLeft(2,'0');
+     final day = fecha.day.toString().padLeft(2,'0');
+     return "${fecha.year}-$month-$day";
+   }
+
+  Widget _desplegable({required String titulo, double ancho = 364, TextEditingController? controler}){
+    return /*SizedBox(
       width: ancho,
       child: InputDecorator(
         decoration: InputDecoration(
@@ -162,25 +271,44 @@ class _RegistroPageState extends State<RegistroPage>{
           isDense: true,
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         ),
-        child: DropdownButton<String>(
-          value : localidadSeleccionada,
-          hint: Text(titulo, style: TextStyle(fontFamily: 'RobotoCondensed'),),
-          onChanged: (String? nuevo){
-            setState(() {
-              localidadSeleccionada = nuevo!;
-            });
-          },
-          items: localidades.map((loc){
-            return DropdownMenuItem<String>(
-              value: loc,
-              child: Text(loc, style: TextStyle(fontFamily: 'RobotoCondensed')),
-            );
-          }).toList(),
-          underline: const SizedBox(),
-
-        )
-      )
-    );
+        child:*/
+          FutureBuilder<List<Localidad>>(
+            future: futureLocalidades,
+            builder: (context, snapshot){
+              if(snapshot.connectionState == ConnectionState.waiting)
+                return const CircularProgressIndicator();
+              else if (snapshot.hasError)
+                return Text('Ups..Error al cargar las localidades. Prueba a reiniciar la APP');
+              else if (!snapshot.hasData || snapshot.data!.isEmpty)
+                return const Text('Noy ha localidades disponibles.');
+              else{}
+              final localidades = snapshot.data!;
+              return Container(
+                child: DropdownMenu<Localidad>(
+                  width: ancho,
+                    initialSelection: _localidadSeleccionada,
+                    label: const Text('Ubicación'),
+                    menuHeight: 250,
+                    dropdownMenuEntries: localidades.map((localidad) =>
+                    DropdownMenuEntry<Localidad>(
+                      value: localidad,
+                      label: localidad.nombre
+                    )).toList(),
+                  onSelected: (Localidad? seleccionada){
+                    setState((){
+                      _localidadSeleccionada = seleccionada;
+                      controllers!['localidad']!.text = seleccionada?.ine.toString() ?? '';
+                    });
+                  },
+                )
+              );
+            }
+          );
+     // )
+   // );
   }
+
+
+
 
 }

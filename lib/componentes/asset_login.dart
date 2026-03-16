@@ -8,17 +8,20 @@ class AssetLogin extends StatefulWidget{
   final VoidCallback? cerrar;
   final VoidCallback? logeado;
   final VoidCallback? invitado;
+
   const AssetLogin({super.key, this.cerrar, this.logeado, this.invitado});
   @override
   State<AssetLogin> createState() => _AssetLoginState();
 }
 
 class _AssetLoginState extends State<AssetLogin>{
+
+  TextEditingController email = TextEditingController();
+  TextEditingController pass = TextEditingController();
   @override
   Widget build(BuildContext context){
 
     return Stack(
-
       children:[
         GestureDetector(
           onTap: widget.cerrar,
@@ -43,10 +46,11 @@ class _AssetLoginState extends State<AssetLogin>{
                   const SizedBox(height: 15),
                   CamposPersonalizados.normal(
                       titulo: 'Correo electrónico',
-                      ancho:321
+                      ancho:321,
+                    controller: email,
                   ),
                   const SizedBox(height: 15),
-                  CamposPersonalizados.password(titulo: 'Contraseña',ancho:321),
+                  CamposPersonalizados.password(titulo: 'Contraseña',ancho:321, controller: pass,),
                   const SizedBox(height: 8),
                   Row(
                     children:[

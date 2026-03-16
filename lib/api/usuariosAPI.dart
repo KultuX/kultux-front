@@ -31,7 +31,7 @@ class UsuarioApiService{
 
 
   static Future<String> registroUsuario(Usuario userRegistro) async {
-    final url = Uri.https(_BASE_URL_USUARIOS, '/apis/usuarios/crear');
+    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/crear');
 
     final response = await http.post(
       url,
@@ -42,10 +42,10 @@ class UsuarioApiService{
       },
       body: jsonEncode(userRegistro.toJsonRegistro())
     );
-
-    if(response.statusCode == 200){
+    print(jsonEncode(userRegistro.toJsonRegistro()));
+    if(response.statusCode == 200 || response.statusCode == 201){
       final dynamic json = jsonDecode(response.body);
-      return json['email'];
+      return json['email'] ?? userRegistro.email;
     }else{
       throw Exception('Error al registrarse ${response
           .statusCode}');
