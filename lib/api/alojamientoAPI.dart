@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/alojamiento.dart';
 
-class LocalidadApiService{
+class AlojamientoApiService{
   static final String _BASE_URL_ALOJAMIENTOS = "micro-alojamiento.onrender.com";
 
   static Future<List<Alojamiento>> obtenerAlojamientoDestacados() async {

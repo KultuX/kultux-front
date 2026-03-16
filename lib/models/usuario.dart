@@ -25,7 +25,7 @@ class Usuario{
       email: json['email'],
       id: json['id'],
       password: json['password'],
-      nombre: json['nonbre'],
+      nombre: json['nombre'],
       localidad: json['localidad'],
       fechaNacimiento: json['fechaNacimiento'],
       imagenPerfil: json['imagenPerfil']
@@ -65,25 +65,4 @@ class Usuario{
       "fechaNacimiento" : this.fechaNacimiento
     };
   }
-
-
-  /*
-  Usuario.toJson(){
-    return {
-
-    }
-  }
-  Map<String, dynamic> toJson(){
-    return {
-      'nombre' : this.nombre,
-      'apellidos' : this.apellidos,
-      'correo' : this.email,
-      'pass' : this.password,
-
-    }
-  }*/
-
-
-
-
 }
