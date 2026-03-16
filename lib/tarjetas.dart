@@ -205,6 +205,10 @@ class EtiquetaTarjeta extends StatelessWidget{
             icono,
             width: 15,
             height: 15,
+            colorFilter: const ColorFilter.mode(
+              Colors.black,
+              BlendMode.srcIn,
+            ),
           ),
           const SizedBox(width: 10),
           Text(

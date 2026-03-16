@@ -65,25 +65,4 @@ class Usuario{
       "fechaNacimiento" : this.fechaNacimiento
     };
   }
-
-
-  /*
-  Usuario.toJson(){
-    return {
-
-    }
-  }
-  Map<String, dynamic> toJson(){
-    return {
-      'nombre' : this.nombre,
-      'apellidos' : this.apellidos,
-      'correo' : this.email,
-      'pass' : this.password,
-
-    }
-  }*/
-
-
-
-
 }
