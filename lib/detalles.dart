@@ -225,14 +225,13 @@ class Detalle extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Icon(
-                        esActividad
-                            ? Icons.person_add_alt_1_outlined
-                            : Icons.bookmark_border,
-                        color: colorTexto,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 16),
+                      if(esActividad)
+                        Icon(
+                          Icons.person_add_alt_1_outlined,
+                          color: colorTexto,
+                          size: 24,
+                        ),
+                      if(esActividad) const SizedBox(width: 16),
                       const Icon(
                         Icons.bookmark_border,
                         color: colorTexto,
