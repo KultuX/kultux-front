@@ -283,7 +283,7 @@ class _RegistroPageState extends State<RegistroPage>{
             future: futureLocalidades,
             builder: (context, snapshot){
               if(snapshot.connectionState == ConnectionState.waiting)
-                return const CircularProgressIndicator();
+                return const CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70));
               else if (snapshot.hasError)
                 return Text('Ups..Error al cargar las localidades. Prueba a reiniciar la APP');
               else if (!snapshot.hasData || snapshot.data!.isEmpty)

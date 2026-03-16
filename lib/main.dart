@@ -184,6 +184,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       _mostrandoDetalleEstablecimiento = false;
                       _establecimientoDetalleSeleccionado = null;
                     });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          showCloseIcon: true,
+                          content: Text(textAlign: .center,"⚠️ ¡Inicia sesión o registrate para acceder a más funcionalidades! ⚠️")),
+                    );
                     return;
                   }
 

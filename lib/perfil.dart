@@ -17,7 +17,7 @@ class _PerfilPageState extends State<PerfilPage>{
     'Guardados' : 'assets/iconos/guardados.svg',
     'Notificaciones activadas' : 'assets/iconos/sin_notificaciones.svg',
     //'Idioma Español' : 'assets/iconos/idiomas.svg',
-    'Contacta con nostros' : 'assets/iconos/contactar_nosotros.svg',
+    'Contacta con nosotros' : 'assets/iconos/contactar_nosotros.svg',
     'Términos y condiciones':'assets/iconos/terminos_condiciones.svg',
     'Política de privacidad': 'assets/iconos/politica_privacidad.svg'
   };
@@ -26,7 +26,7 @@ class _PerfilPageState extends State<PerfilPage>{
   Widget build(BuildContext context){
     return SingleChildScrollView(
         child: Column(
-            crossAxisAlignment: .center,
+            crossAxisAlignment: .stretch,
             children: [
               Card(
                   elevation: 4,
@@ -61,7 +61,14 @@ class _PerfilPageState extends State<PerfilPage>{
                         child:ListTile(
                       leading: SvgPicture.asset(icono, colorFilter: ColorFilter.mode(Colors.black, BlendMode.srcIn),),
                       title: Text(texto),
-                      trailing: SvgPicture.asset("assets/iconos/flecha_siguiente.svg")
+                      trailing: SvgPicture.asset("assets/iconos/flecha_siguiente.svg"),
+                          onTap: (){
+                            if(texto == 'Contacta con nosotros'){
+                              _mostrarContacto();
+                            }else{
+                              _mostrarProximamente();
+                            }
+                          },
                     ));
                   }
                 ),
@@ -72,7 +79,7 @@ class _PerfilPageState extends State<PerfilPage>{
                 titulo: "Cerrar sesión",
                // imagen: "assets/iconos/",
                 pulsar: (){
-                widget.cerrarSesion();
+                  _confirmarCerrarSesion();
                 },),
               const SizedBox(width: 20,),
               BotonesGenerico(titulo: "Eliminar cuenta"),
@@ -83,16 +90,148 @@ class _PerfilPageState extends State<PerfilPage>{
     );
   }
 
-  Widget _opcionesElemento({required String titulo, required String pathIcono}){
-    return Container(
-      child: Row(
-        children:[
-          SvgPicture.asset(pathIcono),
-          Text(titulo),
-          SvgPicture.asset("assets/iconos/flecha_siguiente.svg")
-        ]
+ Future<void> _mostrarContacto() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Contacta con nosotros'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // Corregido
+            crossAxisAlignment: CrossAxisAlignment.start, // Corregido
+            children: [
+              SvgPicture.asset("assets/iconos/contactar_nosotros.svg"), // ¡falta la coma!
+              const SizedBox(height: 8), // opcional, para separar imagen y texto
+              const Text(
+                  'Si tienes cualquier duda o sugerencia, pueden contactarnos en los siguientes correos electrónicos:'
+              ),
+              _textoConLink(normal: '1: ', link: 'smmoninog01@iesalbarregas.es'),
+              _textoConLink(normal: '2: ', link: 'cmaciasi01@iesalbarregas.es'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-      ),
+  Future<void> _confirmarCerrarSesion()async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cerrar sesión', textAlign: .center,),
+            content: Column(
+              mainAxisAlignment: .center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('⚠️', style: TextStyle(fontSize: 50)),
+                const SizedBox(height: 16),
+                const Text('¿Estás segur@ de que quieres cerrar sesión?', textAlign: .center,),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                        width:120,
+                        child:ElevatedButton(
+                          onPressed: (){
+                            Navigator.of(context).pop();
+                            },
+                          child: Text('Cancelar'
+                          ),
+                        )
+                    ),
+                    const SizedBox(width: 10),
+                    BotonesGenerico(
+                      titulo: 'Cerrar sesión',
+                      ancho: 120,
+                      pulsar: () {
+                        Navigator.of(context).pop();
+                        widget.cerrarSesion();
+                      },
+                    ),
+                  ],
+                )
+              ],
+            ),
+        );
+      },
+    );
+  }
+
+
+  Widget _textoConLink({required String normal, required String link}){
+    return RichText(
+        text: TextSpan(
+            style: TextStyle(
+                fontFamily: 'RobotoCondensed',
+                color: Colors.black,
+                fontSize: 14
+            ),
+            children: [
+              TextSpan(text:normal),
+              TextSpan(
+                text: link,
+                style: TextStyle(
+
+                    color:Colors.blue,
+                    decoration: .underline
+                ),
+              )
+            ]
+        )
+    );
+  }
+
+  Future<void> _mostrarProximamente() async{
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Color.fromARGB(255, 166, 226, 70),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.construction,
+                size: 60,
+                color: Colors.black,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Próximamente',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const CircularProgressIndicator(
+                color: Colors.white,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Cerrar',
+                  style: TextStyle(color: Colors.black),
+                ),
+              )
+            ],
+          ),
+        );
+      },
     );
   }
 }
