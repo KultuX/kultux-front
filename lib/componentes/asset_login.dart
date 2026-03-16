@@ -3,10 +3,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/componentes/botones.dart';
 import 'package:kultux/componentes/text_fields.dart';
 import 'package:kultux/registro.dart';
+import 'package:kultux/models/usuario.dart';
+import 'package:kultux/api/usuariosAPI.dart';
 
 class AssetLogin extends StatefulWidget{
   final VoidCallback? cerrar;
-  final VoidCallback? logeado;
+  final void Function(Usuario usuario)? logeado;
   final VoidCallback? invitado;
 
   const AssetLogin({super.key, this.cerrar, this.logeado, this.invitado});
@@ -18,6 +20,7 @@ class _AssetLoginState extends State<AssetLogin>{
 
   TextEditingController email = TextEditingController();
   TextEditingController pass = TextEditingController();
+  bool _checked = false;
   @override
   Widget build(BuildContext context){
 
@@ -50,25 +53,73 @@ class _AssetLoginState extends State<AssetLogin>{
                     controller: email,
                   ),
                   const SizedBox(height: 15),
-                  CamposPersonalizados.password(titulo: 'Contraseña',ancho:321, controller: pass,),
+                  CamposPersonalizados.password(
+                    titulo: 'Contraseña',
+                    ancho:321,
+                    controller: pass,),
                   const SizedBox(height: 8),
                   Row(
                     children:[
                       Checkbox(
-                        value: false,
-                        onChanged: (valor){},
-                        checkColor: Color.fromARGB(255, 166, 226, 70) ,
-                        activeColor: Colors.grey[200],
-                        semanticLabel: 'Mantener sesión iniciada',
+                          value: _checked,
+                          onChanged: (valor) => setState(()=> _checked = valor ?? false),
+                          checkColor: Colors.black,
+                          fillColor: MaterialStateProperty.resolveWith<Color?>((states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return Color.fromARGB(255, 166, 226, 70); // verde solo al marcar
+                            }
+                            return null; // fondo transparente al desmarcar → borde intacto
+                          }),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5), // hace las esquinas redondeadas
+                            side: BorderSide(color: Colors.black26, width: 1), // borde del checkbox
+                          )
                       ),
-                      Text('Mantener la sesión iniciada',style: TextStyle(fontFamily: 'RobotoCondensed',)),
+                      /*Text('Mantener la sesión iniciada',style: TextStyle(fontFamily: 'RobotoCondensed',)),*/
                       const SizedBox(height: 20),
                       //Text("He olvidado mi contraseña",style: TextStyle(fontFamily: 'RobotoCondensed'),)
                     ],
                   ),
                   const SizedBox(height: 10),
 
-                  BotonesGenerico(titulo:"Iniciar sesión", ancho:194, pulsar: widget.logeado, ),
+                  BotonesGenerico(
+                    titulo:"Iniciar sesión",
+                    ancho:194,
+                    pulsar: () async{
+                      if (email.text.trim().isEmpty || pass.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              showCloseIcon: true,
+                              content: Text(textAlign: .center, "⚠️ Debes introducir correo y contraseña.")),
+                        );
+                        return;
+                      }
+                      final usuarioLogin = Usuario.login(email.text, pass.text);
+                      try {
+                      // Llamada a la API
+                      Usuario usuario = await UsuarioApiService.loginUsuario(usuarioLogin);
+
+                      // Mostrar mensaje de bienvenida
+                      ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          showCloseIcon: true,
+                          content: Text(textAlign: .center,"👋🏻 ¡¡Bienvenid@, ${usuario.nombre!.toUpperCase() ?? usuario.email}!!👋🏻")),
+                      );
+
+                      // Ejecutar callback y pasar el usuario
+                      if (widget.logeado != null) widget.logeado!(usuario);
+
+                      } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            showCloseIcon: true,
+                            content: Text(textAlign: .center,"⚠️ Usuario o contraseña incorrectos.")),
+                        );
+                      }
+                    },
+
+                    //widget.logeado,
+                  ),
                   const SizedBox(height: 10),
                   BotonesGenerico(
                       titulo:"Registrarse",

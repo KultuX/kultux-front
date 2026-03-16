@@ -10,8 +10,8 @@ import 'package:kultux/tarjetas.dart';
 import 'package:kultux/establecimientos.dart';
 import 'package:kultux/detalles.dart';
 import 'package:kultux/models/actividad.dart';
-import 'package:kultux/models/localidad.dart';
-import 'package:kultux/detalles.dart';
+import 'package:kultux/models/usuario.dart';
+import 'package:kultux/notificaciones.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,6 +43,9 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _logeado = false;
   int _indexActual = 0;
   bool _invitado = false;
+  Usuario? usuario;
+
+  bool _mostrarNotificaciones = false;
 
   late Future<List<Actividad>> _futureActividades;
 
@@ -105,73 +108,100 @@ class _MyHomePageState extends State<MyHomePage> {
       MapasPage(),
       BuscarPage(),
       _bodyEstablecimientos(),
-      PerfilPage(cerrarSesion: _cerrarSesion),
+      PerfilPage(cerrarSesion: _cerrarSesion, usuario: usuario),
     ];
 
     return Scaffold(
-      appBar: AppBarPersonalizado(),
-      body: _indexActual == 0
-          ? Stack(
-        alignment: Alignment.center,
-        children: [
-          paginas[_indexActual],
-          if (!_logeado && !_invitado)
-            AssetLogin(
-              cerrar: () {
-                setState(() {
-                  _logeado = true;
-                  _invitado = true;
-                });
-              },
-              logeado: () {
-                setState(() {
-                  _logeado = true;
-                  _invitado = false;
-                });
-              },
-              invitado: () {
-                setState(() {
-                  _invitado = true;
-                  _logeado = true;
-                  _indexActual = 0;
-                });
-              },
-            ),
-        ],
-      )
-          : paginas[_indexActual],
-      bottomNavigationBar: BottomNav(
-        itemSeleccionado: _indexActual,
-        itemSeleccion: (index) {
-          if (index == 4 && _invitado) {
-            setState(() {
-              _invitado = false;
-              _logeado = false;
-              _indexActual = 0;
-              _mostrandoDetalleInicio = false;
-              _actividadDetalleSeleccionada = null;
-              _mostrandoDetalleEstablecimiento = false;
-              _establecimientoDetalleSeleccionado = null;
-            });
-            return;
-          }
-
+      resizeToAvoidBottomInset: false,
+      appBar: AppBarPersonalizado(
+        logeado: !_logeado ? true : _invitado,
+        mostrar: _mostrarNotificaciones,
+        notificaciones: () {
           setState(() {
-            _indexActual = index;
-
-            _mostrandoDetalleInicio = false;
-            _actividadDetalleSeleccionada = null;
-
-            _mostrandoDetalleEstablecimiento = false;
-            _establecimientoDetalleSeleccionado = null;
+            _mostrarNotificaciones = !_mostrarNotificaciones;
           });
         },
       ),
-    );
+      body: _mostrarNotificaciones
+          ? NotificacionesPage(mostrar:_mostrarNotificaciones) // 🔹 muestra notificaciones
+          : (
+              _indexActual == 0 && !_logeado && !_invitado
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        paginas[_indexActual],
+                        if (!_logeado && !_invitado)
+                          AssetLogin(
+                            cerrar: () {
+                              setState(() {
+                                _logeado = true;
+                                _invitado = true;
+                              });
+                            },
+                            logeado: (Usuario logeado) {
+                              setState(() {
+                                _logeado = true;
+                                _invitado = false;
+                                usuario = logeado;
+                              });
+                            },
+                            invitado: () {
+                              setState(() {
+                                _invitado = true;
+                                _logeado = true;
+                                _indexActual = 0;
+                              });
+                            },
+                          ),
+                      ],
+                    )
+                  : paginas[_indexActual]),
+              bottomNavigationBar: BottomNav(
+                itemSeleccionado: _indexActual,
+                itemSeleccion: (index) {
+                  if (!_logeado && !_invitado) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "¡Inicia sesión, registrate o entra como invitado!",
+                          textAlign: .center,
+                        ),
+                        showCloseIcon: true,
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (index == 4 && _invitado) {
+                    setState(() {
+                      _invitado = false;
+                      _logeado = false;
+                      _indexActual = 0;
+                      _mostrandoDetalleInicio = false;
+                      _actividadDetalleSeleccionada = null;
+                      _mostrandoDetalleEstablecimiento = false;
+                      _establecimientoDetalleSeleccionado = null;
+                    });
+                    return;
+                  }
+
+                  setState(() {
+                    _mostrarNotificaciones = false;
+                    _indexActual = index;
+
+                    _mostrandoDetalleInicio = false;
+                    _actividadDetalleSeleccionada = null;
+
+                    _mostrandoDetalleEstablecimiento = false;
+                    _establecimientoDetalleSeleccionado = null;
+                  });
+                },
+              ),
+            );
   }
 
   Widget _bodyInicio() {
-
     if (_mostrandoDetalleInicio && _actividadDetalleSeleccionada != null) {
       return Column(
         children: [
@@ -183,10 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           Expanded(
-            child: Detalle.desdeObjeto(
-              objeto: _actividadDetalleSeleccionada!,
-            ),
-          )
+            child: Detalle.desdeObjeto(objeto: _actividadDetalleSeleccionada!),
+          ),
         ],
       );
     }
@@ -198,15 +226,11 @@ class _MyHomePageState extends State<MyHomePage> {
           future: _futureActividades,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const Center(child: CircularProgressIndicator());
             }
 
             if (snapshot.hasError) {
-              return Center(
-                child: Text("Error ${snapshot.error}"),
-              );
+              return Center(child: Text("Error ${snapshot.error}"));
             }
 
             final actividades = snapshot.data;
@@ -232,15 +256,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     onTap: () async {
                       try {
                         final actividadDetalle =
-                        await ActividadesApiService.detalleActividad(
-                          actividad.id,
-                        );
+                            await ActividadesApiService.detalleActividad(
+                              actividad.id,
+                            );
                         _abrirDetalleActividad(actividadDetalle);
                       } catch (e) {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("Error al cargar el detalle $e"),
+                            showCloseIcon: true,
+                            content: Text(textAlign: .center, "Error al cargar el detalle $e"),
                           ),
                         );
                       }
@@ -307,9 +332,7 @@ class _SplashPageState extends State<SplashPage> {
       color: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset("assets/images/imagen_splash.png"),
-        ],
+        children: [Image.asset("assets/images/imagen_splash.png")],
       ),
     );
   }

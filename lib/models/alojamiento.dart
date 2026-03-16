@@ -29,7 +29,6 @@ class Alojamiento{
 
   factory Alojamiento.detalle(Map<String, dynamic> json){
     return Alojamiento._(
-
         id: json['id'],
         nombre: json['nombre'],
         categoriaAlojamiento: json['categoriaAlojamiento'],
