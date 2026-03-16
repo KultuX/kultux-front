@@ -20,6 +20,9 @@ class _AssetLoginState extends State<AssetLogin>{
 
   TextEditingController email = TextEditingController();
   TextEditingController pass = TextEditingController();
+
+  bool _errorEmail = false;
+  bool _errorPass = false;
   bool _checked = false;
   @override
   Widget build(BuildContext context){
@@ -51,14 +54,17 @@ class _AssetLoginState extends State<AssetLogin>{
                       titulo: 'Correo electrónico',
                       ancho:321,
                     controller: email,
+                    mostrarError: _errorEmail,
                   ),
                   const SizedBox(height: 15),
                   CamposPersonalizados.password(
                     titulo: 'Contraseña',
                     ancho:321,
-                    controller: pass,),
-                  const SizedBox(height: 8),
-                  Row(
+                    controller: pass,
+                    mostrarError: _errorPass,
+                  ),
+                  const SizedBox(height: 40),
+                 /* Row(
                     children:[
                       Checkbox(
                           value: _checked,
@@ -80,13 +86,20 @@ class _AssetLoginState extends State<AssetLogin>{
                       //Text("He olvidado mi contraseña",style: TextStyle(fontFamily: 'RobotoCondensed'),)
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 10),*/
 
                   BotonesGenerico(
                     titulo:"Iniciar sesión",
                     ancho:194,
                     pulsar: () async{
-                      if (email.text.trim().isEmpty || pass.text.trim().isEmpty) {
+                      setState(() {
+                        _errorEmail = false;
+                        _errorPass = false;
+                      });
+
+                      if (email.text.trim().isEmpty && pass.text.trim().isEmpty) {
+                        _errorEmail = true;
+                        _errorPass = true;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                               showCloseIcon: true,
@@ -94,6 +107,34 @@ class _AssetLoginState extends State<AssetLogin>{
                         );
                         return;
                       }
+
+                      if(email.text.trim().isEmpty) {
+                        setState(() {
+                          _errorEmail = true;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              showCloseIcon: true,
+                              content: Text(textAlign: .center, "⚠️ Introduce un correo.")),
+                        );
+                        return;
+                      }
+
+                     if(pass.text.trim().isEmpty) {
+                        setState(() {
+                          _errorPass = true;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+
+                          const SnackBar(
+                              showCloseIcon: true,
+                              content: Text(textAlign: .center, "⚠️ Introduce una contraseña.")),
+                        );
+                        return;
+                      }
+
+
+
                       final usuarioLogin = Usuario.login(email.text, pass.text);
                       try {
                       // Llamada a la API
@@ -110,6 +151,8 @@ class _AssetLoginState extends State<AssetLogin>{
                       if (widget.logeado != null) widget.logeado!(usuario);
 
                       } catch (e) {
+                        _errorEmail = true;
+                        _errorPass = true;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                             showCloseIcon: true,

@@ -163,6 +163,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
+                            showCloseIcon: true,
                             content: Text('Error al cargar detalle: $e'),
                           ),
                         );
@@ -190,6 +191,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
+                            showCloseIcon: true,
                             content: Text('Error al cargar detalle: $e'),
                           ),
                         );
@@ -232,7 +234,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
-                  child: CircularProgressIndicator(),
+                  child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70)),
                 );
               }
 
