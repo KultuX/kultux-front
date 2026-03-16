@@ -165,6 +165,10 @@ class _RegistroPageState extends State<RegistroPage>{
                     pulsar: () async {
                         if(await registrarUsuario()){
                           Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('✅¡Registro completado!')),
+                          );
+
                       }
                     }
                   ),

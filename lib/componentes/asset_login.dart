@@ -18,6 +18,7 @@ class _AssetLoginState extends State<AssetLogin>{
 
   TextEditingController email = TextEditingController();
   TextEditingController pass = TextEditingController();
+  bool _checked = false;
   @override
   Widget build(BuildContext context){
 
@@ -50,17 +51,35 @@ class _AssetLoginState extends State<AssetLogin>{
                     controller: email,
                   ),
                   const SizedBox(height: 15),
-                  CamposPersonalizados.password(titulo: 'Contraseña',ancho:321, controller: pass,),
+                  CamposPersonalizados.password(
+                    titulo: 'Contraseña',
+                    ancho:321,
+                    controller: pass,),
                   const SizedBox(height: 8),
                   Row(
                     children:[
                       Checkbox(
+                          value: _checked,
+                          onChanged: (valor) => setState(()=> _checked = valor ?? false),
+                          checkColor: Colors.black,
+                          fillColor: MaterialStateProperty.resolveWith<Color?>((states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return Color.fromARGB(255, 166, 226, 70); // verde solo al marcar
+                            }
+                            return null; // fondo transparente al desmarcar → borde intacto
+                          }),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5), // hace las esquinas redondeadas
+                            side: BorderSide(color: Colors.black26, width: 1), // borde del checkbox
+                          )
+                      ),
+                      /*Checkbox(
                         value: false,
                         onChanged: (valor){},
                         checkColor: Color.fromARGB(255, 166, 226, 70) ,
                         activeColor: Colors.grey[200],
                         semanticLabel: 'Mantener sesión iniciada',
-                      ),
+                      ),*/
                       Text('Mantener la sesión iniciada',style: TextStyle(fontFamily: 'RobotoCondensed',)),
                       const SizedBox(height: 20),
                       //Text("He olvidado mi contraseña",style: TextStyle(fontFamily: 'RobotoCondensed'),)
@@ -68,7 +87,11 @@ class _AssetLoginState extends State<AssetLogin>{
                   ),
                   const SizedBox(height: 10),
 
-                  BotonesGenerico(titulo:"Iniciar sesión", ancho:194, pulsar: widget.logeado, ),
+                  BotonesGenerico(
+                    titulo:"Iniciar sesión",
+                    ancho:194,
+                    pulsar: widget.logeado,
+                  ),
                   const SizedBox(height: 10),
                   BotonesGenerico(
                       titulo:"Registrarse",
