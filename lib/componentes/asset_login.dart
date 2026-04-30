@@ -5,6 +5,7 @@ import 'package:kultux/componentes/text_fields.dart';
 import 'package:kultux/registro.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/api/usuariosAPI.dart';
+import 'package:kultux/repository/usuario_repository.dart';
 
 class AssetLogin extends StatefulWidget{
   final VoidCallback? cerrar;
@@ -139,6 +140,7 @@ class _AssetLoginState extends State<AssetLogin>{
                       try {
                       // Llamada a la API
                       Usuario usuario = await UsuarioApiService.loginUsuario(usuarioLogin);
+                      await UsuarioRepository.guardar(usuario);
 
                       // Mostrar mensaje de bienvenida
                       ScaffoldMessenger.of(context).showSnackBar(

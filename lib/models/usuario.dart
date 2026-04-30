@@ -8,6 +8,8 @@ class Usuario{
   String? fechaNacimiento;
   String? imagenPerfil;
 
+  static Usuario? usuarioActual;
+
   Usuario._({
     required this.email,
     this.id,
@@ -64,5 +66,42 @@ class Usuario{
       "localidad" : this.localidad,
       "fechaNacimiento" : this.fechaNacimiento
     };
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'id': id,
+      'nombre': nombre,
+      'apellidos': apellidos,
+      'localidad': localidad,
+      'fechaNacimiento': fechaNacimiento,
+      'imagenPerfil': imagenPerfil,
+      // password no se guarda en disco por seguridad
+    };
+  }
+
+  /// Construye un Usuario desde SharedPreferences
+  factory Usuario.fromJson(Map<String, dynamic> json) {
+    return Usuario._(
+      email: json['email'],
+      id: json['id'],
+      nombre: json['nombre'],
+      apellidos: json['apellidos'],
+      localidad: json['localidad'],
+      fechaNacimiento: json['fechaNacimiento'],
+      imagenPerfil: json['imagenPerfil'],
+    );
+  }
+
+  factory Usuario.desdeEdicion(Map<String, dynamic> json) {
+    return Usuario._(
+      email: json['email'],
+      nombre: json['nombre'],
+      apellidos: json['apellidos'],
+      localidad: json['localidad'],
+      imagenPerfil: json['urlImagenPerfil'],
+      id: Usuario.usuarioActual?.id,
+    );
   }
 }
