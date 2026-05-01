@@ -1,3 +1,4 @@
+import 'package:kultux/models/imagen.dart';
 class Alojamiento{
   final int id;
   final String nombre;
@@ -7,6 +8,7 @@ class Alojamiento{
   String? localidad;
   String? telefonoEmpresa;
   String? correoCorporativo;
+  List<Imagen>? imagenes;
 
   Alojamiento._({
     required this.id,
@@ -15,7 +17,8 @@ class Alojamiento{
     required this.imagenPrincipal,
     this.telefonoEmpresa,
     this.correoCorporativo,
-    this.localidad
+    this.localidad,
+    this.imagenes
   });
 
   factory Alojamiento.destacado(Map<String, dynamic> json){
@@ -23,7 +26,7 @@ class Alojamiento{
         id: json['id'],
         nombre: json['nombre'],
         categoriaAlojamiento: json['categoriaAlojamiento'],
-        imagenPrincipal: json['imagenPrincipal']
+        imagenPrincipal: json['portada'] ?? 'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
     );
   }
 
@@ -35,7 +38,8 @@ class Alojamiento{
         imagenPrincipal: json['imagenPrincipal'],
         telefonoEmpresa: json['telefonoEmpresa'],
         correoCorporativo: json['correoCorporativo'],
-        localidad: json['localidad']
+        localidad: json['localidad'],
+        imagenes: json['imagenes']
 
     );
   }

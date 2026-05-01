@@ -11,6 +11,7 @@ import 'package:kultux/establecimientos.dart';
 import 'package:kultux/detalles.dart';
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/usuario.dart';
+import 'package:kultux/models/pages.dart';
 import 'package:kultux/notificaciones.dart';
 
 void main() {
@@ -48,7 +49,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _mostrarNotificaciones = false;
 
-  late Future<List<Actividad>> _futureActividades;
+
+  List<Actividad> _actividades = [];
+  int _paginaActual = 0;
+  int _totalPaginas = 1;
+  bool _cargando = false;
+
+  final ScrollController _scrollController = ScrollController();
+
 
   bool _mostrandoDetalleInicio = false;
   Actividad? _actividadDetalleSeleccionada;
@@ -59,7 +67,41 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _futureActividades = ActividadesApiService.obtenerActividadesDestacadas();
+
+    _cargarActividades();
+
+    _scrollController.addListener((){
+      if(_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200){
+        _cargarMas();
+      }
+    });
+  }
+
+  Future<void> _cargarActividades() async {
+    if(_cargando) return;
+    setState(() => _cargando = true);
+    try{
+      final page = await ActividadesApiService.obtenerActividadesInicio(_paginaActual);
+      setState(() {
+        _actividades.addAll(page.contenido);
+        _totalPaginas = page.totalPaginas;
+        _paginaActual++ ;
+      });
+    }catch(e){
+      if(mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'))
+        );
+      }
+    }
+
+    setState(() => _cargando = false);
+  }
+
+  Future<void> _cargarMas() async {
+    if(_cargando) return;
+    if(_paginaActual >= _totalPaginas) return;
+    await _cargarActividades();
   }
 
   void _cerrarSesion() {
@@ -85,6 +127,10 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _mostrandoDetalleInicio = false;
       _actividadDetalleSeleccionada = null;
+      _actividadDetalleSeleccionada = null;
+      _actividades.clear();
+      _paginaActual = 0;
+      _cargarActividades();
     });
   }
 
@@ -224,65 +270,107 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       );
     }
-
-    return Center(
-      child: SizedBox(
-        width: 364,
-        child: FutureBuilder<List<Actividad>>(
-          future: _futureActividades,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Center(child: Text("Error ${snapshot.error}"));
-            }
-
-            final actividades = snapshot.data;
-
-            if (actividades == null || actividades.isEmpty) {
-              return const Center(
-                child: Text("No hay actividades disponibles"),
-              );
-            }
-
-            return ListView.builder(
-              itemCount: actividades.length,
-              itemBuilder: (context, index) {
-                final actividad = actividades[index];
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Tarjeta.actividades(
-                    titulo: actividad.titulo,
-                    localidad: actividad.localidad,
-                    fecha: actividad.fechaInicio,
-                    imagenUrl: actividad.imagenPrincipal,
-                    onTap: () async {
-                      try {
-                        final actividadDetalle =
-                            await ActividadesApiService.detalleActividad(
-                              actividad.id,
-                            );
-                        _abrirDetalleActividad(actividadDetalle);
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            showCloseIcon: true,
-                            content: Text(textAlign: .center, "Error al cargar el detalle $e"),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                );
-              },
-            );
-          },
+    final fechaActual = DateTime.now();
+    const dias = ['LUN','MAR','MIE','JUE','VIE','SÁB','DOM'];
+    final dia = dias[fechaActual.weekday -1];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: .spaceBetween,
+            children: [
+              const Text(
+                "ACTIVIDADES RECIENTES",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "${dia}. ${fechaActual.day}/${fechaActual.month}/${fechaActual.year}",
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+
+        Expanded(
+          child: Center(
+            child: SizedBox(
+              width: 364,
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: _actividades.length + 1,
+                itemBuilder: (context, index) {
+
+                  if (index < _actividades.length) {
+                    final actividad = _actividades[index];
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Tarjeta.actividades(
+                        titulo: actividad.titulo,
+                        localidad: actividad.localidad,
+                        fecha: actividad.fechaInicio,
+                        imagenUrl: actividad.imagenPrincipal,
+                        estado: '',
+                        onTap: () async {
+                          try {
+                            final actividadDetalle =
+                            await ActividadesApiService.detalleActividad(
+                                actividad.id);
+                            _abrirDetalleActividad(actividadDetalle);
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                showCloseIcon: true,
+                                content: Text(
+                                  "Error al cargar el detalle $e",
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  }
+
+                  if (_cargando) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (_paginaActual >= _totalPaginas) {
+                    return const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          "¡Ya no hay más actividades para mostrar, ve a la sección de buscar!",
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

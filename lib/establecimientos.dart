@@ -148,7 +148,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
               const SizedBox(height: 12),
               _tarjetaEstablecimiento(
                 tituloBloque: 'RESTAURANTES DESTACADOS',
-                items: restaurantes.take(6).map((r) {
+                items: restaurantes.map((r) {
                   return _ItemEstablecimiento(
                     titulo: r.nombre,
                     imagenUrl: r.imagenPrincipal,
@@ -176,7 +176,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
               const SizedBox(height: 22),
               _tarjetaEstablecimiento(
                 tituloBloque: 'ALOJAMIENTOS DESTACADOS',
-                items: alojamientos.take(6).map((a) {
+                items: alojamientos.map((a) {
                   return _ItemEstablecimiento(
                     titulo: a.nombre,
                     imagenUrl: a.imagenPrincipal,

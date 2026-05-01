@@ -3,11 +3,12 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/usuario.dart';
 
 class UsuarioApiService{
-  static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
+  //static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
+  static final String _BASE_URL_USUARIOS = "10.0.2.2:8084";
 
 
   static Future<Usuario> loginUsuario(Usuario userLogin) async {
-    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/login');
+    final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/login');
 
     final response = await http.post(
         url,
@@ -31,7 +32,7 @@ class UsuarioApiService{
 
 
   static Future<String> registroUsuario(Usuario userRegistro) async {
-    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/crear');
+    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
 
     final response = await http.post(
       url,

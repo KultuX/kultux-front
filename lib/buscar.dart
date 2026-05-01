@@ -1,129 +1,183 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:kultux/models/localidad.dart';
-import 'package:kultux/api/localidadesApi.dart';
-class BuscarPage extends StatefulWidget{
+import 'package:kultux/buscarActividad.dart';
+
+class BuscarPage extends StatelessWidget {
   const BuscarPage({super.key});
-  @override
-  State<BuscarPage> createState() => _BuscarPageState();
-}
 
-class _BuscarPageState extends State<BuscarPage> {
-  late Future<List<Localidad>> futureLocalidad;
-
-  @override
-  void initState() {
-    super.initState();
-    futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
-  }
+  static const Color primaryGreen = Color.fromARGB(255, 166, 226, 70);
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-        child:Column(
-      mainAxisAlignment: .center,
-      children: [
-        Container(
-          width: 341,
-          child: SearchBar(
-            hintText: 'Buscar',
-            leading: SvgPicture.asset(
-              "assets/iconos/buscar.svg",
-              colorFilter: ColorFilter.mode(
-                  Colors.black26,
-                  BlendMode.srcIn
+    return Scaffold(
+      // 📦 BODY
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            const SizedBox(height: 10),
+
+            const Text(
+              "¿Qué quieres explorar hoy?",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-            backgroundColor: WidgetStateProperty.all(Colors.grey[350]),
-          ),
 
-        ),
-        const SizedBox(height: 20,),
-        Container(
-          width: 350,
-          child: Row(
-            children: [
-              DropdownMenu<String>(
-                width: 165,
-                initialSelection: 'Categoría',
-                label: const Text('Categoría'),
-                menuStyle: MenuStyle(
-                  shape: WidgetStateProperty.resolveWith<OutlinedBorder?>(
-                      (states) =>  RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8))
-                    ),
-                  ),
-                  backgroundColor: MaterialStateProperty.resolveWith(
-                        (states) => Colors.grey.shade300,
-                  ),
-                ),
-                dropdownMenuEntries: [
-                  'Gastronomía',
-                  'Teatro',
-                  'Comedia',
-                  'Música',
-                  'Infantil',
-                  'Noche'
-                ]
-                    .map((cat) => DropdownMenuEntry(value: cat, label: cat))
-                    .toList(),
-                onSelected: (value) => print(value),
+            const SizedBox(height: 6),
+
+            Text(
+              "Busca actividades, restaurantes o alojamientos",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
               ),
-              const SizedBox(width: 20,),
-              _selectorLocalidad(),
-            ],
-          ),
-        ),
-      ],
-
-    ));
-  }
-
-  Widget _selectorLocalidad() {
-    String _inicial = 'Ubicación';
-
-    return FutureBuilder<List<Localidad>>(
-      future: futureLocalidad,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator(
-            color: Colors.lightGreenAccent,
-          );
-        } else if (snapshot.hasError) {
-          return Text('Error al cargar las localidades: ${snapshot.error}');
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('No hay localidades disponibles');
-        } else {
-          final nombres = snapshot.data!.map((l) => l.nombre).toList();
-
-          return Container(
-            child: DropdownMenu<String>(
-              width: 165,
-              initialSelection: _inicial,
-              label: const Text('Ubicación'),
-              menuHeight: 250,
-              menuStyle: MenuStyle(
-                shape: WidgetStateProperty.resolveWith<OutlinedBorder?>(
-                      (states) =>  RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8))
-                  ),
-                ),
-                backgroundColor: MaterialStateProperty.resolveWith(
-                      (states) => Colors.grey.shade300,
-                ),
-              ),
-              dropdownMenuEntries: nombres
-                  .map((nombre) =>
-                  DropdownMenuEntry(
-                    value: nombre,
-                    label: nombre,
-                  ))
-                  .toList(),
             ),
-          );
-        }
-      },
+
+            const SizedBox(height: 25),
+
+            // 🧭 CARDS
+            Expanded(
+              child: ListView(
+                children: [
+
+                  _buildCard(
+                    context,
+                    title: "Actividades",
+                    subtitle: "Eventos, cultura, ocio y experiencias",
+                    icon: Icons.event,
+                    color: primaryGreen,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (BuildContext context) => const BuscarActividadPage(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildCard(
+                    context,
+                    title: "Restaurantes",
+                    subtitle: "Descubre dónde comer cerca de ti",
+                    icon: Icons.restaurant,
+                    color: Colors.orange,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/restaurantes');
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildCard(
+                    context,
+                    title: "Alojamientos",
+                    subtitle: "Hoteles, casas rurales y estancias",
+                    icon: Icons.hotel,
+                    color: Colors.blueAccent,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/alojamientos');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+
     );
   }
 
+  // 🎴 CARD REUTILIZABLE
+  Widget _buildCard(
+      BuildContext context, {
+        required String title,
+        required String subtitle,
+        required IconData icon,
+        required Color color,
+        required VoidCallback onTap,
+      }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 130,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+
+            // 🟩 ICONO LATERAL
+            Container(
+              width: 90,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 40,
+                color: color,
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // 📝 TEXTO
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

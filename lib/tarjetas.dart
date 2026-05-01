@@ -9,6 +9,7 @@ class Tarjeta extends StatelessWidget {
   final VoidCallback onTap;
   final String? textoEtiqueta;
   final String? iconoEtiqueta;
+  final String? estado;
 
   const Tarjeta._({
     super.key,
@@ -18,7 +19,8 @@ class Tarjeta extends StatelessWidget {
     required this.imagenUrl,
     required this.onTap,
     this.textoEtiqueta,
-    this.iconoEtiqueta
+    this.iconoEtiqueta,
+    this.estado
   });
 
   const Tarjeta.actividades({
@@ -28,6 +30,7 @@ class Tarjeta extends StatelessWidget {
     required String fecha,
     required String imagenUrl,
     required VoidCallback onTap,
+    required String estado
   }) : this._(
     key: key,
     titulo: titulo,
@@ -35,6 +38,7 @@ class Tarjeta extends StatelessWidget {
     fecha: fecha,
     imagenUrl: imagenUrl,
     onTap: onTap,
+    estado: estado
   );
 
   const Tarjeta.restaurante({
