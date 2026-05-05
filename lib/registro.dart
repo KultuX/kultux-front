@@ -7,6 +7,9 @@ import 'package:kultux/models/localidad.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/models/usuario.dart';
+import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
+import 'package:kultux/componentes/politica_privacidad_dialog.dart';
+import 'package:flutter/gestures.dart';
 
 class RegistroPage extends StatefulWidget{
   const RegistroPage({super.key});
@@ -139,23 +142,33 @@ class _RegistroPageState extends State<RegistroPage>{
             // Fechas
             _calendario(titulo: "Fecha de nacimiento",controler: controllers!['fechaNacimiento']!),
             const SizedBox(height: 20,),
-            Column(mainAxisAlignment: .start,
-            children: [
-              Row(
-                  children:[
-                    _check(
-                        checked:_checkedTerminos,
-                        pulsar: (valor) => setState(()=> _checkedTerminos = valor ?? false)),
-                    _textoConLink(normal:'Aceptar nuestros ' , link:'Términos y Condiciones')
-                  ]),
-              Row(
-                  children:[
-                    _check(
-                        checked:_checkedPolitica,
-                    pulsar: (valor) => setState(()=> _checkedPolitica = valor ?? false)),
-                    _textoConLink(normal:'Aceptar nuestra ' , link:'Política de Privacidad')
-                  ]),
-            ],),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Row(
+                    children: [
+                      _check(
+                          checked: _checkedTerminos,
+                          pulsar: (valor) => setState(() => _checkedTerminos = valor ?? false)),
+                      _textoConLink(
+                          normal: 'Aceptar nuestros ',
+                          link: 'Términos y Condiciones',
+                          onTap: () => TerminosCondicionesDialog.mostrar(context)),
+                    ]
+                ),
+                Row(
+                    children: [
+                      _check(
+                          checked: _checkedPolitica,
+                          pulsar: (valor) => setState(() => _checkedPolitica = valor ?? false)),
+                      _textoConLink(
+                          normal: 'Aceptar nuestra ',
+                          link: 'Política de Privacidad',
+                          onTap: () => PoliticaPrivacidadDialog.mostrar(context)),
+                    ]
+                ),
+              ],
+            ),
             const SizedBox(height: 20,),
             Row(mainAxisAlignment: .center,
                 children:[
@@ -191,25 +204,28 @@ class _RegistroPageState extends State<RegistroPage>{
     );
   }
 
-  Widget _textoConLink({required String normal, required String link}){
+  Widget _textoConLink({required String normal, required String link, VoidCallback? onTap}){
     return RichText(
-      text: TextSpan(
-        style: TextStyle(
-          fontFamily: 'RobotoCondensed',
-          color: Colors.black,
-          fontSize: 14
-        ),
-        children: [
-          TextSpan(text:normal),
-          TextSpan(
-              text: link,
-              style: TextStyle(
-                  color:Colors.blue,
-                  decoration: .underline
-              ),
-          )
-        ]
-      )
+        text: TextSpan(
+            style: const TextStyle(
+                fontFamily: 'RobotoCondensed',
+                color: Colors.black,
+                fontSize: 14
+            ),
+            children: [
+              TextSpan(text: normal),
+              TextSpan(
+                text: link,
+                style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline
+                ),
+                recognizer: onTap != null
+                    ? (TapGestureRecognizer()..onTap = onTap)
+                    : null,
+              )
+            ]
+        )
     );
   }
 

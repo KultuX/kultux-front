@@ -5,6 +5,8 @@ import 'package:kultux/editar_perfil.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/repository/usuario_repository.dart';
+import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
+import 'package:kultux/componentes/politica_privacidad_dialog.dart';
 
 class PerfilPage extends StatefulWidget {
   final VoidCallback cerrarSesion;
@@ -94,6 +96,10 @@ class _PerfilPageState extends State<PerfilPage> {
                       setState(() => _editandoPerfil = true);
                     } else if (texto == 'Contacta con nosotros') {
                       _mostrarContacto();
+                    } else if (texto == 'Términos y condiciones') {
+                      TerminosCondicionesDialog.mostrar(context);
+                    } else if (texto == 'Política de privacidad') {  // ← nuevo
+                      PoliticaPrivacidadDialog.mostrar(context);
                     } else {
                       _mostrarProximamente();
                     }
@@ -132,26 +138,134 @@ class _PerfilPageState extends State<PerfilPage> {
   Future<void> _mostrarContacto() async {
     await showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Contacta con nosotros'),
-          content: Column(
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SvgPicture.asset("assets/iconos/contactar_nosotros.svg"),
-              const SizedBox(height: 8),
-              const Text('Si tienes cualquier duda o sugerencia, pueden contactarnos en los siguientes correos electrónicos:'),
-              _textoConLink(normal: '1: ', link: 'smmoninog01@iesalbarregas.es'),
-              _textoConLink(normal: '2: ', link: 'cmaciasi01@iesalbarregas.es'),
+
+              // ── Cabecera ──────────────────────────────────────────────
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: const BoxDecoration(
+                  color: Color.fromARGB(255, 166, 226, 70),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: Row(
+                  children: [
+                    SvgPicture.asset(
+                      "assets/iconos/contactar_nosotros.svg",
+                      width: 24,
+                      height: 24,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Contacta con nosotros',
+                        style: TextStyle(
+                          fontFamily: 'RobotoCondensed',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: Colors.black),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Contenido ─────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Si tienes cualquier duda o sugerencia, pueden contactarnos en los siguientes correos electrónicos:',
+                      style: TextStyle(
+                        fontFamily: 'RobotoCondensed',
+                        fontSize: 13,
+                        color: Colors.black87,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontFamily: 'RobotoCondensed', color: Colors.black, fontSize: 14),
+                        children: [
+                          const TextSpan(text: '1: '),
+                          TextSpan(
+                            text: 'smmoninog01@iesalbarregas.es',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontFamily: 'RobotoCondensed', color: Colors.black, fontSize: 14),
+                        children: [
+                          const TextSpan(text: '2: '),
+                          TextSpan(
+                            text: 'cmaciasi01@iesalbarregas.es',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Botón Cerrar ──────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 166, 226, 70),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text(
+                      'Cerrar',
+                      style: TextStyle(
+                        fontFamily: 'RobotoCondensed',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
         );
       },
     );

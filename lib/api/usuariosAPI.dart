@@ -5,12 +5,12 @@ import 'package:kultux/models/usuario.dart';
 import 'package:http_parser/http_parser.dart';
 
 class UsuarioApiService{
-  //static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
-  static final String _BASE_URL_USUARIOS = "10.0.2.2:8080";
+  static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
+  // static final String _BASE_URL_USUARIOS = "10.0.2.2:8080";
 
   static Future<Usuario> loginUsuario(Usuario userLogin) async {
-    //final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/login');
-    final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/login');
+    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/login');
+    //final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/login');
 
     final response = await http.post(
         url,
@@ -34,8 +34,8 @@ class UsuarioApiService{
 
 
   static Future<String> registroUsuario(Usuario userRegistro) async {
-    //final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
-    final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
+    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
+    // final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
 
     final response = await http.post(
       url,
@@ -61,7 +61,7 @@ class UsuarioApiService{
     required Map<String, dynamic> datos,
     File? imagen,
   }) async {
-    final uri = Uri.http(
+    final uri = Uri.https(
       _BASE_URL_USUARIOS,
       '/api/usuarios/editar-usuario/$id',
     );
@@ -98,7 +98,7 @@ class UsuarioApiService{
   }
 
   static Future<void> eliminarUsuario(int id) async {
-    final uri = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/eliminar-usuario/$id');
+    final uri = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/eliminar-usuario/$id');
     final response = await http.delete(uri);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
