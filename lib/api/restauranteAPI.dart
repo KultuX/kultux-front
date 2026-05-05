@@ -71,6 +71,7 @@ class RestauranteApiService{
     String? nombre,
     String? categoria,
     int? localidad,
+    bool? soloAbiertos,
     required int page,
   }) async {
     final params = <String, String>{
@@ -81,6 +82,7 @@ class RestauranteApiService{
     if (nombre != null && nombre.isNotEmpty) params['nombre'] = nombre;
     if (categoria != null) params['categoria'] = categoria;
     if (localidad != null) params['localidad'] = localidad.toString();
+    if ( soloAbiertos != null ) params['soloAbiertos'] = soloAbiertos.toString();
 
     final url = Uri.http(
       _BASE_URL_RESTAURANTES,

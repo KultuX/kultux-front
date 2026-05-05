@@ -215,7 +215,7 @@ class _PerfilPageState extends State<PerfilPage>{
               ),
               const SizedBox(height: 10),
               const CircularProgressIndicator(
-                color: Colors.white,
+                  color: Color.fromARGB(255, 166, 226, 70)
               ),
               const SizedBox(height: 20),
               ElevatedButton(

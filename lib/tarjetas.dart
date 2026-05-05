@@ -2,13 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/models/horario.dart';
 
-const List<String> diasSemana = [
-  "L", "M", "X", "J", "V", "S", "D"
-];
-
-String formatearHora(String hora) {
-  return hora.substring(0, 5);
-}
 class Tarjeta extends StatelessWidget {
   final String titulo;
   final String? localidad;
@@ -42,7 +35,6 @@ class Tarjeta extends StatelessWidget {
     required String fecha,
     required String imagenUrl,
     required VoidCallback onTap,
-    required String estado
   }) : this._(
     key: key,
     titulo: titulo,
@@ -50,7 +42,6 @@ class Tarjeta extends StatelessWidget {
     fecha: fecha,
     imagenUrl: imagenUrl,
     onTap: onTap,
-    estado: estado
   );
 
   const Tarjeta.restaurante({
@@ -123,8 +114,14 @@ class Tarjeta extends StatelessWidget {
               child: Image.network(
                 imagenUrl,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.grey.shade200,
+                  child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 36),
+                ),
               ),
             ),
+
+           // Positioned(child:Text('No disponible')),
 
             // Borde de la tarjeta
             Positioned.fill(
@@ -148,19 +145,19 @@ class Tarjeta extends StatelessWidget {
 
             // Fecha arriba derecha
             if(fecha != null)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: FechaTarjeta(fecha: fecha!),
-            ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: FechaTarjeta(fecha: fecha!),
+              ),
 
             // Localidad abajo izquierda
             if(localidad != null)
-            Positioned(
-              bottom: 8,
-              left: 8,
-              child: LocalidadTarjeta(localidad: localidad!),
-            ),
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: LocalidadTarjeta(localidad: localidad!),
+              ),
 
             if(textoEtiqueta != null && iconoEtiqueta != null)
             Positioned(

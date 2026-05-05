@@ -7,6 +7,7 @@ import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/restauranteApi.dart';
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/tarjetas.dart';
+import 'package:kultux/tarjetasBusqueda.dart';
 
 import 'package:kultux/core/utils/iconos.dart';
 
@@ -30,6 +31,8 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   int totalPaginas = 0;
   bool cargando = false;
   bool cargandoInicial = true;
+
+  bool? soloAbiertos = false;
 
   final ScrollController controller = ScrollController();
 
@@ -71,6 +74,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         nombre: nombre.isEmpty ? null : nombre,
         categoria: categoria,
         localidad: localidad,
+        soloAbiertos: soloAbiertos,
         page: paginaActual,
       );
 
@@ -95,39 +99,6 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     return Scaffold(
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color.fromARGB(255, 166, 226, 70), Colors.blue.shade500],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 8),
-                Text(
-                  "BUSCAR RESTAURANTES",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  "Encuentra restaurantes cerca de ti",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: _searchBar(),
@@ -172,7 +143,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                   return Padding(
                     padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Tarjeta.restauranteBusqueda(
+                    child: TarjetaBusqueda.restaurante(
                       titulo: r.nombre,
                       imagenUrl: r.imagenPrincipal,
                       textoEtiqueta: r.categoriaRestaurante,
@@ -189,7 +160,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                 if (cargando) {
                   return const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70))),
                   );
                 }
 
@@ -207,10 +178,6 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                 }
 
                 return const SizedBox.shrink();
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                );
               },
             ),
           ),
@@ -266,6 +233,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                     categoria = null;
                     localidad = null;
                     nombre = "";
+                    soloAbiertos = false;
                   });
 
                   _cargarRestaurantes();
@@ -285,6 +253,17 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
               ),
             ],
           ),
+
+        FilterChip(
+          label: const Text("Abierto ahora"),
+          selected: soloAbiertos == true,
+          selectedColor: Color.fromARGB(183, 166, 226, 70),
+          onSelected: (value) {
+            setState(() => soloAbiertos = value ? true : null);
+            _cargarRestaurantes();
+          },
+        )
+
       ],
     );
   }

@@ -156,10 +156,10 @@ class _MyHomePageState extends State<MyHomePage> {
     final List<Widget> paginas = [
       _bodyInicio(),
       MapasPage(),
-     // BuscarPage(),
-      //BuscarActividadPage(),
+     BuscarPage(),
+     // BuscarActividadPage(),
      // BuscarAlojamientoPage(),
-      BuscarRestaurantePage(),
+      //BuscarRestaurantePage(),
       _bodyEstablecimientos(),
       PerfilPage(cerrarSesion: _cerrarSesion, usuario: usuario),
     ];
@@ -326,7 +326,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         localidad: actividad.localidad,
                         fecha: actividad.fechaInicio,
                         imagenUrl: actividad.imagenPrincipal,
-                        estado: '',
+
                         onTap: () async {
                           try {
                             final actividadDetalle =
@@ -353,7 +353,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (_cargando) {
                     return const Padding(
                       padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70))),
                     );
                   }
 

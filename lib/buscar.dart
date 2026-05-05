@@ -1,183 +1,161 @@
 import 'package:flutter/material.dart';
 import 'package:kultux/buscarActividad.dart';
+import 'package:kultux/buscarRestaurante.dart';
+import 'package:kultux/buscarAlojamiento.dart';
 
-class BuscarPage extends StatelessWidget {
+class BuscarPage extends StatefulWidget {
   const BuscarPage({super.key});
 
-  static const Color primaryGreen = Color.fromARGB(255, 166, 226, 70);
+  @override
+  State<BuscarPage> createState() => _BuscarPageState();
+}
+
+class _BuscarPageState extends State<BuscarPage> {
+  int _selectedIndex = 0;
+
+  final List<String> _categorias = ["Actividades", "Restaurantes", "Alojamientos"];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // 📦 BODY
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            const SizedBox(height: 10),
-
-            const Text(
-              "¿Qué quieres explorar hoy?",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+    return Column(
+      children: [
+        // ── HEADER compacto ──
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-
-            const SizedBox(height: 6),
-
-            Text(
-              "Busca actividades, restaurantes o alojamientos",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // 🧭 CARDS
-            Expanded(
-              child: ListView(
-                children: [
-
-                  _buildCard(
-                    context,
-                    title: "Actividades",
-                    subtitle: "Eventos, cultura, ocio y experiencias",
-                    icon: Icons.event,
-                    color: primaryGreen,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (BuildContext context) => const BuscarActividadPage(),
+          ),
+          child: Stack(
+            children: [
+              // Miniatura de fondo
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Opacity(
+                  opacity: 0.15,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: Image.asset(
+                        "assets/images/extrem.png",
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.grey.shade700,
+                          child: const Icon(Icons.image, color: Colors.grey),
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  _buildCard(
-                    context,
-                    title: "Restaurantes",
-                    subtitle: "Descubre dónde comer cerca de ti",
-                    icon: Icons.restaurant,
-                    color: Colors.orange,
-                    onTap: () {
-                      Navigator.pushNamed(context, '/restaurantes');
-                    },
+                ),
+              ),
+              // Texto
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        "Buscar ",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        _categorias[_selectedIndex],
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  _buildCard(
-                    context,
-                    title: "Alojamientos",
-                    subtitle: "Hoteles, casas rurales y estancias",
-                    icon: Icons.hotel,
-                    color: Colors.blueAccent,
-                    onTap: () {
-                      Navigator.pushNamed(context, '/alojamientos');
-                    },
+                  const SizedBox(height: 2),
+                  const Text(
+                    "Conoce Extremadura",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFFb0b0b0),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 40,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 166, 226, 70),
+                      borderRadius: BorderRadius.circular(1),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
 
+        // ── SELECTOR DE CATEGORÍAS compacto ──
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(
+              _categorias.length,
+                  (index) => GestureDetector(
+                onTap: () => setState(() => _selectedIndex = index),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _selectedIndex == index
+                        ? Color.fromARGB(255, 166, 226, 70)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _categorias[index],
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _selectedIndex == index
+                          ? Colors.black
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // ── CONTENIDO ──
+        Expanded(
+          child: _buildContent(),
+        ),
+      ],
     );
   }
 
-  // 🎴 CARD REUTILIZABLE
-  Widget _buildCard(
-      BuildContext context, {
-        required String title,
-        required String subtitle,
-        required IconData icon,
-        required Color color,
-        required VoidCallback onTap,
-      }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 130,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-
-            // 🟩 ICONO LATERAL
-            Container(
-              width: 90,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ),
-              ),
-              child: Icon(
-                icon,
-                size: 40,
-                color: color,
-              ),
-            ),
-
-            const SizedBox(width: 16),
-
-            // 📝 TEXTO
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Widget _buildContent() {
+    switch (_selectedIndex) {
+      case 0:
+        return const BuscarActividadPage();
+      case 1:
+        return const BuscarRestaurantePage();
+      case 2:
+        return const BuscarAlojamientoPage();
+      default:
+        return const SizedBox.shrink();
+    }
   }
 }

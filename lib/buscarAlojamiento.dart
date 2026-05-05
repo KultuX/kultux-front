@@ -4,9 +4,11 @@ import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/alojamientoApi.dart';
 import 'package:kultux/tarjetas.dart';
+import 'package:kultux/tarjetasBusqueda.dart';
 import 'package:kultux/core/utils/iconos.dart';
 
 class BuscarAlojamientoPage extends StatefulWidget {
+
   const BuscarAlojamientoPage({super.key});
 
   @override
@@ -88,44 +90,6 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
     return Scaffold(
       body: Column(
         children: [
-          // HEADER
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color.fromARGB(255, 166, 226, 70),
-                  Colors.blue.shade500
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 8),
-                Text(
-                  "BUSCAR ALOJAMIENTOS",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  "Encuentra alojamientos cerca de ti",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // SEARCH
           Padding(
             padding: const EdgeInsets.all(12),
@@ -143,7 +107,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
           // LISTADO
           Expanded(
             child: cargandoInicial
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70)))
                 : alojamientos.isEmpty
                 ? Center(
               child: Column(
@@ -173,7 +137,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
-                    child: Tarjeta.alojamiento(
+                    child: TarjetaBusqueda.alojamiento(
                       titulo: a.nombre,
                       localidad: a.localidad?.nombre,
                       imagenUrl: a.imagenPrincipal,
@@ -190,7 +154,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                   return const Padding(
                     padding: EdgeInsets.all(16),
                     child: Center(
-                        child: CircularProgressIndicator()),
+                        child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70))),
                   );
                 }
 

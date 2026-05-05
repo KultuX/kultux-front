@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/models/localidad.dart';
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/pages.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/actividadesApi.dart';
 import 'package:kultux/tarjetas.dart';
+import 'package:kultux/tarjetasBusqueda.dart';
 
 class BuscarActividadPage extends StatefulWidget {
   const BuscarActividadPage({super.key});
@@ -31,20 +31,14 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   final ScrollController controller = ScrollController();
 
-
-
   @override
   void initState() {
     super.initState();
-
     futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     futureCategorias = ActividadesApiService.categoriasActividad();
-
     _cargarActividades();
-
     controller.addListener(() {
-      if (controller.position.pixels >=
-          controller.position.maxScrollExtent - 200) {
+      if (controller.position.pixels >= controller.position.maxScrollExtent - 200) {
         _cargarMas();
       }
     });
@@ -61,9 +55,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
   Future<void> _cargarMas() async {
     if (cargando) return;
     if (paginaActual >= totalPaginas && paginaActual != 0) return;
-
     setState(() => cargando = true);
-
     try {
       final pageResponse = await ActividadesApiService.actividadesFiltradas(
         titulo: titulo.isEmpty ? null : titulo,
@@ -72,7 +64,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         fecha: fecha,
         page: paginaActual,
       );
-
       setState(() {
         actividades.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
@@ -84,134 +75,99 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         SnackBar(content: Text("Error en búsqueda: $e")),
       );
     }
-
     setState(() => cargando = false);
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color.fromARGB(255, 166, 226, 70), Colors.blue.shade500],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 8),
-                Text(
-                  "BUSCAR ACTIVIDADES",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  "Encuentra actividades cerca de ti",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
+      body: cargandoInicial
+          ? const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 166, 226, 70),
+        ),
+      )
+          : CustomScrollView(
+        controller: controller,
+        slivers: [
+          // ── Barra de búsqueda ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+              child: _searchBar(),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: _searchBar(),
+
+          // ── Filtros ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: _filtros(),
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _filtros(),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: cargandoInicial
-                ? const Center(
-              child: CircularProgressIndicator(),
-            )
-                : actividades.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "No hay actividades",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade600,
+
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+          // ── Lista o vacío ──
+          if (actividades.isEmpty && !cargando)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search_off, size: 56, color: Colors.grey.shade400),
+                    const SizedBox(height: 12),
+                    Text(
+                      "No hay actividades",
+                      style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
-                : ListView.builder(
-              controller: controller,
-              itemCount: actividades.length + (cargando ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < actividades.length) {
-                  final a = actividades[index];
-                  return Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Tarjeta.actividades(
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                  if (index < actividades.length) {
+                    final a = actividades[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      child: TarjetaBusqueda.actividad(
                         titulo: a.titulo,
                         localidad: a.localidad,
                         fecha: a.fechaInicio,
                         imagenUrl: a.imagenPrincipal,
-                        onTap: () {
-
-                        },
-                        estado: a.estado
-                    ),
-                  );
-                }
-
-                if (cargando) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                if (paginaActual >= totalPaginas) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        "¡Ya no hay más actividades para mostrar, ve a la sección de buscar!",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                        textAlign: TextAlign.center,
+                        onTap: () {},
                       ),
-                    ),
-                  );
-                }
-
-                return const SizedBox.shrink();
-                return const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              },
+                    );
+                  }
+                  if (cargando) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color.fromARGB(255, 166, 226, 70),
+                        ),
+                      ),
+                    );
+                  }
+                  if (paginaActual >= totalPaginas) {
+                    return const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          "No hay más actividades",
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+                childCount: actividades.length + (cargando || paginaActual >= totalPaginas ? 1 : 0),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -221,20 +177,22 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     return SearchBar(
       hintText: 'Buscar actividad...',
       leading: Padding(
-        padding: const EdgeInsets.only(left: 12),
-        child: Icon(
-          Icons.search,
-          color: Colors.grey.shade600,
-        ),
+        padding: const EdgeInsets.only(left: 8),
+        child: Icon(Icons.search, size: 18, color: Colors.grey.shade600),
       ),
       backgroundColor: WidgetStateProperty.all(Colors.grey.shade100),
       elevation: WidgetStateProperty.all(0),
       shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           side: BorderSide(color: Colors.grey.shade300),
         ),
       ),
+      textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 13)),
+      padding: WidgetStateProperty.all(
+        const EdgeInsets.symmetric(vertical: 0, horizontal: 4),
+      ),
+      constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
         titulo = value;
         _cargarActividades();
@@ -248,132 +206,134 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         Row(
           children: [
             Expanded(child: _selectorCategorias()),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(child: _selectorLocalidad()),
+            if (categoria != null || localidad != null || fecha != null) ...[
+              const SizedBox(width: 8),
+              _botonLimpiar(),
+            ],
           ],
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _selectorFecha(),
-            ),
-            const SizedBox(width: 12),
-            if (categoria != null || localidad != null || fecha != null)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-
-                    categoria = null;
-                    localidad = null;
-                    fecha = null;
-                    titulo = "";
-                  });
-
-                  _cargarActividades();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.shade300),
-                  ),
-                  child: Icon(
-                    Icons.clear,
-                    color: Colors.red.shade700,
-                  ),
-                ),
-              ),
-          ],
-        ),
+        const SizedBox(height: 8),
+        _selectorFecha(),
       ],
     );
   }
 
-  Widget _selectorCategorias() {
+  Widget _botonLimpiar() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          categoria = null;
+          localidad = null;
+          fecha = null;
+          titulo = "";
+        });
+        _cargarActividades();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.red.shade100,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.shade300),
+        ),
+        child: Icon(Icons.clear, size: 18, color: Colors.red.shade700),
+      ),
+    );
+  }
 
+  // ── Decoración compacta compartida ──
+  InputDecoration _inputDeco({
+    required String label,
+    required IconData icon,
+    VoidCallback? onClear,
+    bool hasValue = false,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+      isDense: true,
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.blue.shade400, width: 1.5),
+      ),
+      suffixIcon: hasValue && onClear != null
+          ? GestureDetector(
+        onTap: onClear,
+        child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
+      )
+          : Icon(icon, size: 16, color: Colors.grey.shade600),
+    );
+  }
+
+  Widget _selectorCategorias() {
     return FutureBuilder<List<String>>(
       future: futureCategorias,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return _shimmerLoader();
-        }
-
+        if (!snapshot.hasData) return _shimmerLoader();
         final categorias = snapshot.data!;
-
         return Autocomplete<String>(
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable<String>.empty();
-            }
-            return categorias.where((cat) => cat
-                .toLowerCase()
-                .contains(textEditingValue.text.toLowerCase()));
+          optionsBuilder: (v) {
+            if (v.text.isEmpty) return const Iterable<String>.empty();
+            return categorias.where(
+                    (c) => c.toLowerCase().contains(v.text.toLowerCase()));
           },
-          onSelected: (String selection) {
-            setState(() => categoria = selection);
+          onSelected: (s) {
+            setState(() => categoria = s);
             _cargarActividades();
           },
-          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+          fieldViewBuilder: (context, ctrl, focusNode, _) {
             return TextField(
-              controller: textEditingController,
+              controller: ctrl,
               focusNode: focusNode,
-              decoration: InputDecoration(
-                labelText: 'Categoría',
-                labelStyle: TextStyle(color: Colors.grey.shade600),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue.shade500, width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                suffixIcon: categoria != null
-                    ? GestureDetector(
-                  onTap: () {
-                    setState(() => categoria = null);
-                    textEditingController.clear();
-                    _cargarActividades();
+              style: const TextStyle(fontSize: 13),
+              decoration: _inputDeco(
+                label: 'Categoría',
+                icon: Icons.category,
+                hasValue: categoria != null,
+                onClear: () {
+                  setState(() => categoria = null);
+                  ctrl.clear();
+                  _cargarActividades();
+                },
+              ),
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) => Align(
+            alignment: Alignment.topLeft,
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 180,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  itemBuilder: (_, i) {
+                    final o = options.elementAt(i);
+                    return ListTile(
+                      dense: true,
+                      title: Text(o, style: const TextStyle(fontSize: 13)),
+                      onTap: () => onSelected(o),
+                    );
                   },
-                  child: Icon(Icons.clear, size: 20, color: Colors.grey.shade600),
-                )
-                    : Icon(Icons.category, size: 20, color: Colors.grey.shade600),
-              ),
-            );
-          },
-          optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 200,
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      final option = options.elementAt(index);
-                      return ListTile(
-                        title: Text(option),
-                        onTap: () => onSelected(option),
-                      );
-                    },
-                  ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
@@ -383,87 +343,59 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     return FutureBuilder<List<Localidad>>(
       future: futureLocalidad,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return _shimmerLoader();
-        }
-
+        if (!snapshot.hasData) return _shimmerLoader();
         final localidades = snapshot.data!;
-
         return Autocomplete<Localidad>(
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable<Localidad>.empty();
-            }
-            return localidades.where((loc) => loc.nombre
-                .toLowerCase()
-                .contains(textEditingValue.text.toLowerCase()));
+          optionsBuilder: (v) {
+            if (v.text.isEmpty) return const Iterable<Localidad>.empty();
+            return localidades.where((l) =>
+                l.nombre.toLowerCase().contains(v.text.toLowerCase()));
           },
-          onSelected: (Localidad selection) {
-            print("LOCALIDAD SELECCIONADA: ${selection.nombre} -> ${selection.ine}");
-            setState(() => localidad = selection.ine);
+          onSelected: (s) {
+            setState(() => localidad = s.ine);
             _cargarActividades();
           },
-          displayStringForOption: (Localidad option) => option.nombre,
-          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-
+          displayStringForOption: (o) => o.nombre,
+          fieldViewBuilder: (context, ctrl, focusNode, _) {
             return TextField(
-              controller: textEditingController,
+              controller: ctrl,
               focusNode: focusNode,
-              decoration: InputDecoration(
-                labelText: 'Ubicación',
-                labelStyle: TextStyle(color: Colors.grey.shade600),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue.shade500, width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                suffixIcon: localidad != null
-                    ? GestureDetector(
-                  onTap: () {
-                    setState(() => localidad = null);
-                    textEditingController.clear();
-                    _cargarActividades();
+              style: const TextStyle(fontSize: 13),
+              decoration: _inputDeco(
+                label: 'Ubicación',
+                icon: Icons.location_on,
+                hasValue: localidad != null,
+                onClear: () {
+                  setState(() => localidad = null);
+                  ctrl.clear();
+                  _cargarActividades();
+                },
+              ),
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) => Align(
+            alignment: Alignment.topLeft,
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 180,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  itemBuilder: (_, i) {
+                    final o = options.elementAt(i);
+                    return ListTile(
+                      dense: true,
+                      title: Text(o.nombre, style: const TextStyle(fontSize: 13)),
+                      onTap: () => onSelected(o),
+                    );
                   },
-                  child: Icon(Icons.clear, size: 20, color: Colors.grey.shade600),
-                )
-                    : Icon(Icons.location_on, size: 20, color: Colors.grey.shade600),
-              ),
-            );
-          },
-          optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 200,
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      final option = options.elementAt(index);
-                      return ListTile(
-                        title: Text(option.nombre),
-                        onTap: () => onSelected(option),
-                      );
-                    },
-                  ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
@@ -477,33 +409,30 @@ class _BuscarPageState extends State<BuscarActividadPage> {
           firstDate: DateTime.now(),
           lastDate: DateTime(2030),
         );
-
         if (picked != null) {
           setState(() => fecha = picked);
           _cargarActividades();
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey.shade300),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_today, size: 20, color: Colors.grey.shade600),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                fecha == null
-                    ? 'Fecha'
-                    : '${fecha!.day}/${fecha!.month}/${fecha!.year}',
-                style: TextStyle(
-                  color: fecha == null ? Colors.grey.shade600 : Colors.black,
-                  fontSize: 14,
-                ),
-                overflow: TextOverflow.ellipsis,
+            Icon(Icons.calendar_today, size: 15, color: Colors.grey.shade600),
+            const SizedBox(width: 6),
+            Text(
+              fecha == null
+                  ? 'Seleccionar fecha'
+                  : '${fecha!.day}/${fecha!.month}/${fecha!.year}',
+              style: TextStyle(
+                color: fecha == null ? Colors.grey.shade600 : Colors.black,
+                fontSize: 12,
               ),
             ),
           ],
@@ -514,7 +443,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   Widget _shimmerLoader() {
     return Container(
-      height: 44,
+      height: 36,
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8),
