@@ -343,6 +343,9 @@ class _PerfilPageState extends State<PerfilPage> {
               const Text('Próximamente', style: TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               const CircularProgressIndicator(color: Colors.white),
+              const CircularProgressIndicator(
+                  color: Color.fromARGB(255, 166, 226, 70)
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.white),

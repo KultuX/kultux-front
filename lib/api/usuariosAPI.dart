@@ -35,7 +35,6 @@ class UsuarioApiService{
 
   static Future<String> registroUsuario(Usuario userRegistro) async {
     final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
-    // final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
 
     final response = await http.post(
       url,

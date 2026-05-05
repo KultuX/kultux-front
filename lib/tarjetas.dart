@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kultux/models/horario.dart';
 
 class Tarjeta extends StatelessWidget {
   final String titulo;
@@ -9,6 +10,9 @@ class Tarjeta extends StatelessWidget {
   final VoidCallback onTap;
   final String? textoEtiqueta;
   final String? iconoEtiqueta;
+  final String? estado;
+  final Horario? horario;
+  final bool? abierto;
 
   const Tarjeta._({
     super.key,
@@ -18,7 +22,10 @@ class Tarjeta extends StatelessWidget {
     required this.imagenUrl,
     required this.onTap,
     this.textoEtiqueta,
-    this.iconoEtiqueta
+    this.iconoEtiqueta,
+    this.estado,
+    this.horario,
+    this.abierto,
   });
 
   const Tarjeta.actividades({
@@ -60,13 +67,37 @@ class Tarjeta extends StatelessWidget {
     required String textoEtiqueta,
     required String iconoEtiqueta,
     required VoidCallback onTap,
+    String? localidad
 }) : this._(
     key: key,
     titulo: titulo,
     imagenUrl: imagenUrl,
     textoEtiqueta: textoEtiqueta,
     iconoEtiqueta: iconoEtiqueta,
-    onTap: onTap
+    onTap: onTap,
+    localidad: localidad
+  );
+
+  const Tarjeta.restauranteBusqueda({
+    Key? key,
+    required String titulo,
+    required String imagenUrl,
+    required String textoEtiqueta,
+    required String iconoEtiqueta,
+    required VoidCallback onTap,
+    required Horario horario,
+    required bool abierto,
+    String? localidad,
+  }) : this._(
+    key: key,
+    titulo: titulo,
+    imagenUrl: imagenUrl,
+    textoEtiqueta: textoEtiqueta,
+    iconoEtiqueta: iconoEtiqueta,
+    onTap: onTap,
+    horario: horario,
+    abierto: abierto,
+    localidad: localidad,
   );
 
   @override
@@ -83,8 +114,14 @@ class Tarjeta extends StatelessWidget {
               child: Image.network(
                 imagenUrl,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.grey.shade200,
+                  child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 36),
+                ),
               ),
             ),
+
+           // Positioned(child:Text('No disponible')),
 
             // Borde de la tarjeta
             Positioned.fill(
@@ -108,24 +145,24 @@ class Tarjeta extends StatelessWidget {
 
             // Fecha arriba derecha
             if(fecha != null)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: FechaTarjeta(fecha: fecha!),
-            ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: FechaTarjeta(fecha: fecha!),
+              ),
 
             // Localidad abajo izquierda
             if(localidad != null)
-            Positioned(
-              bottom: 8,
-              left: 8,
-              child: LocalidadTarjeta(localidad: localidad!),
-            ),
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: LocalidadTarjeta(localidad: localidad!),
+              ),
 
             if(textoEtiqueta != null && iconoEtiqueta != null)
             Positioned(
               bottom: 8,
-              left: 8,
+              right: 8,
               child: EtiquetaTarjeta(
                 texto: textoEtiqueta!,
                 icono: iconoEtiqueta!

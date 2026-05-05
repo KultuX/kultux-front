@@ -1,3 +1,5 @@
+import 'package:kultux/models/imagen.dart';
+import 'package:kultux/models/horario.dart';
 class Restaurante{
   final int id;
   final String nombre;
@@ -7,8 +9,10 @@ class Restaurante{
   String? descripcion;
   String? telefonoEmpresa;
   String? correoCorporativo;
-  String? horarioApetura;
+  Horario? horario;
   String? localidad;
+  List<Imagen>? imagenes;
+  bool? abierto;
 
   Restaurante._({
     required this.id,
@@ -18,8 +22,10 @@ class Restaurante{
     this.descripcion,
     this.telefonoEmpresa,
     this.correoCorporativo,
-    this.horarioApetura,
-    this.localidad
+    this.horario,
+    this.localidad,
+    this.imagenes,
+    this.abierto
   });
 
   factory Restaurante.destacado(Map<String, dynamic> json){
@@ -27,7 +33,7 @@ class Restaurante{
       id: json['id'],
       nombre: json['nombre'],
       categoriaRestaurante: json['categoriaRestaurante'],
-      imagenPrincipal: json['imagenPrincipal']
+      imagenPrincipal: json['portada'] ?? 'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg'
     );
   }
 
@@ -40,8 +46,22 @@ class Restaurante{
         descripcion: json['descripcion'],
         telefonoEmpresa: json['telefonoEmpresa'],
         correoCorporativo: json['correoCorporativo'],
-        horarioApetura: json['horarioApertura'],
-        localidad: json['localidad']
+        horario: Horario.fromJson(json['horario']),
+        localidad: json['localidad'],
+        imagenes: json['imagenes'],
+        abierto: json['abierto'] // -> añadir campo en spring boot
+    );
+  }
+
+  factory Restaurante.busqueda(Map<String, dynamic> json){
+    return Restaurante._(
+      id: json['id'],
+      nombre: json['nombre'],
+      horario: Horario.fromJson(json['horario']),
+      localidad: json['localidad']['nombre'],
+      categoriaRestaurante: json['categoria'],
+      imagenPrincipal: json['portada'],
+      abierto: json['abierto']
     );
   }
 }
