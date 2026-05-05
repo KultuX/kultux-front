@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/localidad.dart';
 
 class LocalidadApiService{
-  //static final String _BASE_URL_LOCALIDADES = "micro-localidades.onrender.com";
-  static final String _BASE_URL_LOCALIDADES = "10.0.2.2:8080";
+  static final String _BASE_URL_LOCALIDADES = "micro-localidades.onrender.com";
+  //static final String _BASE_URL_LOCALIDADES = "10.0.2.2:8080";
   static Future<List<Localidad>> obtenerLocalidadNombres() async {
     final url = Uri.http(_BASE_URL_LOCALIDADES,'/api/v1/localidades/nombres');
 

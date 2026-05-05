@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/restaurante.dart';
+import 'package:kultux/models/pages.dart';
 
 class RestauranteApiService{
-  //static final String _BASE_URL_RESTAURANTES = "micro-restaurante-n4bv.onrender.com";
-  static final String _BASE_URL_RESTAURANTES = "10.0.2.2:8083";
+  static final String _BASE_URL_RESTAURANTES = "micro-restaurante-n4bv.onrender.com";
+  //static final String _BASE_URL_RESTAURANTES = "10.0.2.2:8083";
 
   static Future<List<Restaurante>> obtenerRestauranteDestacados() async {
     final url = Uri.http(_BASE_URL_RESTAURANTES,'/api/v1/restaurantes/destacados');
@@ -27,7 +28,7 @@ class RestauranteApiService{
   }
 
   static Future<Restaurante> obtenerRestauranteDetalle(int id) async{
-    final url = Uri.http(_BASE_URL_RESTAURANTES, '/api/v1/restaurantes/$id');
+    final url = Uri.http(_BASE_URL_RESTAURANTES, '/api/v1/restaurantes/detalle_restaurante/$id');
 
     final response = await http.get(
       url,
@@ -44,6 +45,71 @@ class RestauranteApiService{
     }else{
       throw Exception('Error al el restaurante: ${response.statusCode}');
     }
+  }
+
+  static Future<List<String>> categoriasRestaurantes() async{
+    final url = Uri.https(_BASE_URL_RESTAURANTES, 'api/v1/restaurantes/categoria_restaurante');
+
+    final response = await http.get(
+        url,
+        headers:{
+          'Content-Type':'application/json',
+          'Accept':'application/json',
+          'User-Agent': 'KultuX APP'
+        }
+    );
+
+    if(response.statusCode == 200){
+      final List<dynamic> json = jsonDecode(response.body);
+      return json.map((c) => c.toString()).toList();
+    }else{
+      throw Exception('Error al obtener las categorias de los restaurantes: ${response.statusCode}');
+    }
+  }
+
+  static Future<Pages<Restaurante>> restaurantesFiltrados({
+    String? nombre,
+    String? categoria,
+    int? localidad,
+    required int page,
+  }) async {
+    final params = <String, String>{
+      'page': page.toString(),
+      'size': '8',
+    };
+
+    if (nombre != null && nombre.isNotEmpty) params['nombre'] = nombre;
+    if (categoria != null) params['categoria'] = categoria;
+    if (localidad != null) params['localidad'] = localidad.toString();
+
+    final url = Uri.http(
+      _BASE_URL_RESTAURANTES,
+      '/api/v1/restaurantes/busqueda',
+      params,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP'
+      },
+    );
+
+    if(response.statusCode == 200){
+      final dynamic json = jsonDecode(response.body);
+      return Pages<Restaurante>.fromJson(
+        json,
+            (a) => Restaurante.busqueda(a),
+      );
+    }else if(response.statusCode == 204){
+      throw Exception('No hay restaurantes para esta búsqueda');
+    }
+    else{
+      throw Exception('Error al obtener los restaurantes');
+    }
+
   }
 
 }

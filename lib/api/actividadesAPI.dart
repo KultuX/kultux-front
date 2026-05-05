@@ -4,8 +4,8 @@ import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/pages.dart';
 
 class ActividadesApiService{
-  //static final String _BASE_URL_ACTIVIDADES = "micro-actividad.onrender.com";
-  static final String _BASE_URL_ACTIVIDADES = "10.0.2.2:8081";
+  static final String _BASE_URL_ACTIVIDADES = "micro-actividad.onrender.com";
+  //static final String _BASE_URL_ACTIVIDADES = "10.0.2.2:8081";
 
   static Future<Pages<Actividad>> obtenerActividadesInicio(int page) async {
     final url = Uri.http(
@@ -84,7 +84,7 @@ class ActividadesApiService{
 
     if(response.statusCode == 200){
       final List<dynamic> json = jsonDecode(response.body);
-      return json.map((e) => e.toString()).toList();
+      return json.map((c) => c.toString()).toList();
     }else{
       throw Exception('Error al obtener las categorias de la actividad');
     }

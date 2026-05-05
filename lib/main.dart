@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:kultux/api/actividadesAPI.dart';
+import 'package:kultux/buscarRestaurante.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
 import 'package:kultux/componentes/app_bar.dart';
 import 'package:kultux/componentes/asset_login.dart';
 import 'package:kultux/mapas.dart';
 import 'package:kultux/perfil.dart';
 import 'package:kultux/buscar.dart';
+import 'package:kultux/buscarActividad.dart';
+import 'package:kultux/buscarAlojamiento.dart';
 import 'package:kultux/tarjetas.dart';
 import 'package:kultux/establecimientos.dart';
 import 'package:kultux/detalles.dart';
@@ -153,7 +156,10 @@ class _MyHomePageState extends State<MyHomePage> {
     final List<Widget> paginas = [
       _bodyInicio(),
       MapasPage(),
-      BuscarPage(),
+     // BuscarPage(),
+      //BuscarActividadPage(),
+     // BuscarAlojamientoPage(),
+      BuscarRestaurantePage(),
       _bodyEstablecimientos(),
       PerfilPage(cerrarSesion: _cerrarSesion, usuario: usuario),
     ];

@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kultux/models/horario.dart';
 
+const List<String> diasSemana = [
+  "L", "M", "X", "J", "V", "S", "D"
+];
+
+String formatearHora(String hora) {
+  return hora.substring(0, 5);
+}
 class Tarjeta extends StatelessWidget {
   final String titulo;
   final String? localidad;
@@ -10,6 +18,8 @@ class Tarjeta extends StatelessWidget {
   final String? textoEtiqueta;
   final String? iconoEtiqueta;
   final String? estado;
+  final Horario? horario;
+  final bool? abierto;
 
   const Tarjeta._({
     super.key,
@@ -20,7 +30,9 @@ class Tarjeta extends StatelessWidget {
     required this.onTap,
     this.textoEtiqueta,
     this.iconoEtiqueta,
-    this.estado
+    this.estado,
+    this.horario,
+    this.abierto,
   });
 
   const Tarjeta.actividades({
@@ -64,13 +76,37 @@ class Tarjeta extends StatelessWidget {
     required String textoEtiqueta,
     required String iconoEtiqueta,
     required VoidCallback onTap,
+    String? localidad
 }) : this._(
     key: key,
     titulo: titulo,
     imagenUrl: imagenUrl,
     textoEtiqueta: textoEtiqueta,
     iconoEtiqueta: iconoEtiqueta,
-    onTap: onTap
+    onTap: onTap,
+    localidad: localidad
+  );
+
+  const Tarjeta.restauranteBusqueda({
+    Key? key,
+    required String titulo,
+    required String imagenUrl,
+    required String textoEtiqueta,
+    required String iconoEtiqueta,
+    required VoidCallback onTap,
+    required Horario horario,
+    required bool abierto,
+    String? localidad,
+  }) : this._(
+    key: key,
+    titulo: titulo,
+    imagenUrl: imagenUrl,
+    textoEtiqueta: textoEtiqueta,
+    iconoEtiqueta: iconoEtiqueta,
+    onTap: onTap,
+    horario: horario,
+    abierto: abierto,
+    localidad: localidad,
   );
 
   @override
@@ -129,7 +165,7 @@ class Tarjeta extends StatelessWidget {
             if(textoEtiqueta != null && iconoEtiqueta != null)
             Positioned(
               bottom: 8,
-              left: 8,
+              right: 8,
               child: EtiquetaTarjeta(
                 texto: textoEtiqueta!,
                 icono: iconoEtiqueta!

@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/usuario.dart';
 
 class UsuarioApiService{
-  //static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
-  static final String _BASE_URL_USUARIOS = "10.0.2.2:8084";
+  static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
+  //static final String _BASE_URL_USUARIOS = "10.0.2.2:8084";
 
 
   static Future<Usuario> loginUsuario(Usuario userLogin) async {
