@@ -31,26 +31,44 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   final ScrollController controller = ScrollController();
 
+
   @override
   void initState() {
     super.initState();
+
     futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     futureCategorias = ActividadesApiService.categoriasActividad();
-    _cargarActividades();
+
+    _cargaInicial();
+
     controller.addListener(() {
       if (controller.position.pixels >= controller.position.maxScrollExtent - 200) {
         _cargarMas();
       }
     });
+
   }
 
-  Future<void> _cargarActividades() async {
+
+  Future<void> _resetYcargar() async {
     paginaActual = 0;
     actividades.clear();
-    setState(() => cargandoInicial = true);
     await _cargarMas();
+  }
+
+
+  Future<void> _cargarActividades() async {
+    await _resetYcargar();
+  }
+
+
+
+  Future<void> _cargaInicial() async {
+    setState(() => cargandoInicial = true);
+    await _resetYcargar();
     setState(() => cargandoInicial = false);
   }
+
 
   Future<void> _cargarMas() async {
     if (cargando) return;
@@ -91,12 +109,20 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         controller: controller,
         slivers: [
           // ── Barra de búsqueda ──
+
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-              child: _searchBar(),
+              child: Row(
+                children: [
+                  Expanded(child: _searchBar()),
+                  const SizedBox(width: 8),
+                  _selectorFecha(),
+                ],
+              ),
             ),
           ),
+
 
           // ── Filtros ──
           SliverToBoxAdapter(
@@ -214,8 +240,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
             ],
           ],
         ),
-        const SizedBox(height: 8),
-        _selectorFecha(),
       ],
     );
   }
@@ -267,7 +291,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.blue.shade400, width: 1.5),
+        borderSide: BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
       ),
       suffixIcon: hasValue && onClear != null
           ? GestureDetector(
@@ -401,6 +425,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     );
   }
 
+
   Widget _selectorFecha() {
     return GestureDetector(
       onTap: () async {
@@ -415,31 +440,29 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        height: 40,
+        width: 40,
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
+          color: fecha == null ? Colors.grey.shade100 : const Color.fromARGB(30, 166, 226, 70),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: fecha == null
+                ? Colors.grey.shade300
+                : const Color.fromARGB(255, 166, 226, 70),
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.calendar_today, size: 15, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              fecha == null
-                  ? 'Seleccionar fecha'
-                  : '${fecha!.day}/${fecha!.month}/${fecha!.year}',
-              style: TextStyle(
-                color: fecha == null ? Colors.grey.shade600 : Colors.black,
-                fontSize: 12,
-              ),
-            ),
-          ],
+        child: Icon(
+          Icons.calendar_today,
+          size: 18,
+          color: fecha == null
+              ? Colors.grey.shade600
+              : const Color.fromARGB(255, 166, 226, 70),
         ),
       ),
     );
   }
+
+
 
   Widget _shimmerLoader() {
     return Container(

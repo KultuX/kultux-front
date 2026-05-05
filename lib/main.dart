@@ -176,7 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
       body: _mostrarNotificaciones
-          ? NotificacionesPage(mostrar:_mostrarNotificaciones) // 🔹 muestra notificaciones
+          ? NotificacionesPage(mostrar:_mostrarNotificaciones) //  mostrar notificaciones
           : (
               _indexActual == 0 && !_logeado && !_invitado
                   ? Stack(
@@ -277,7 +277,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
     final fechaActual = DateTime.now();
-    const dias = ['LUN','MAR','MIE','JUE','VIE','SÁB','DOM'];
+    const dias = ['L','M','x','J','V','S','D'];
     final dia = dias[fechaActual.weekday -1];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +291,7 @@ class _MyHomePageState extends State<MyHomePage> {
               const Text(
                 "ACTIVIDADES RECIENTES",
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),

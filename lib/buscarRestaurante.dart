@@ -10,7 +10,6 @@ import 'package:kultux/tarjetas.dart';
 import 'package:kultux/tarjetasBusqueda.dart';
 
 import 'package:kultux/core/utils/iconos.dart';
-
 class BuscarRestaurantePage extends StatefulWidget {
   const BuscarRestaurantePage({super.key});
 
@@ -25,18 +24,16 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   String nombre = "";
   String? categoria;
   int? localidad;
+  bool? soloAbiertos;
 
   List<Restaurante> restaurantes = [];
   int paginaActual = 0;
   int totalPaginas = 0;
+
   bool cargando = false;
   bool cargandoInicial = true;
 
-  bool? soloAbiertos = false;
-
   final ScrollController controller = ScrollController();
-
-
 
   @override
   void initState() {
@@ -45,7 +42,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     futureCategorias = RestauranteApiService.categoriasRestaurantes();
 
-    _cargarRestaurantes();
+    _cargaInicial();
 
     controller.addListener(() {
       if (controller.position.pixels >=
@@ -55,11 +52,15 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     });
   }
 
-  Future<void> _cargarRestaurantes() async {
+  Future<void> _resetYcargar() async {
     paginaActual = 0;
     restaurantes.clear();
-    setState(() => cargandoInicial = true);
     await _cargarMas();
+  }
+
+  Future<void> _cargaInicial() async {
+    setState(() => cargandoInicial = true);
+    await _resetYcargar();
     setState(() => cargandoInicial = false);
   }
 
@@ -70,7 +71,8 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     setState(() => cargando = true);
 
     try {
-      final pageResponse = await RestauranteApiService.restaurantesFiltrados(
+      final pageResponse =
+      await RestauranteApiService.restaurantesFiltrados(
         nombre: nombre.isEmpty ? null : nombre,
         categoria: categoria,
         localidad: localidad,
@@ -93,120 +95,151 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     setState(() => cargando = false);
   }
 
+  // ───────────────── BUILD ─────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: _searchBar(),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _filtros(),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: cargandoInicial
-                ? const Center(
-              child: CircularProgressIndicator(),
-            )
-                : restaurantes.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: cargandoInicial
+          ? const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 166, 226, 70),
+        ),
+      )
+          : CustomScrollView(
+        controller: controller,
+        slivers: [
+          // ── Search ──
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+              child: Row(
                 children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "No hay restaurantes",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
+                  Expanded(child: _searchBar()),
+                  const SizedBox(width: 8),
+                  _chipAbiertoAhora(),
                 ],
               ),
-            )
-                : ListView.builder(
-              controller: controller,
-              itemCount: restaurantes.length + (cargando ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < restaurantes.length) {
-                  final r = restaurantes[index];
-                  return Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: TarjetaBusqueda.restaurante(
-                      titulo: r.nombre,
-                      imagenUrl: r.imagenPrincipal,
-                      textoEtiqueta: r.categoriaRestaurante,
-                      iconoEtiqueta: Iconos.getIconoRestaurante(r.categoriaRestaurante),
-                      onTap: () {},
-                      horario: r.horario!,
-                      abierto: r.abierto!,
-                      localidad: r.localidad,
-
-                    ),
-                  );
-                }
-
-                if (cargando) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70))),
-                  );
-                }
-
-                if (paginaActual >= totalPaginas) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        "¡Ya no hay más restaurantes para mostrar, ve a la sección de buscar!",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  );
-                }
-
-                return const SizedBox.shrink();
-              },
             ),
           ),
+
+
+          // ── Filtros ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: _filtros(),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+          // ── Empty / List ──
+          if (restaurantes.isEmpty && !cargando)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.search_off,
+                        size: 56, color: Colors.grey.shade400),
+                    const SizedBox(height: 12),
+                    Text(
+                      "No hay restaurantes",
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                  if (index < restaurantes.length) {
+                    final r = restaurantes[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 5),
+                      child: TarjetaBusqueda.restaurante(
+                        titulo: r.nombre,
+                        imagenUrl: r.imagenPrincipal,
+                        textoEtiqueta: r.categoriaRestaurante,
+                        iconoEtiqueta: Iconos.getIconoRestaurante(
+                            r.categoriaRestaurante),
+                        horario: r.horario!,
+                        abierto: r.abierto!,
+                        localidad: r.localidad,
+                        onTap: () {},
+                      ),
+                    );
+                  }
+
+                  if (cargando) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color:
+                          Color.fromARGB(255, 166, 226, 70),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (paginaActual >= totalPaginas) {
+                    return const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          "No hay más restaurantes",
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+                childCount: restaurantes.length +
+                    (cargando || paginaActual >= totalPaginas
+                        ? 1
+                        : 0),
+              ),
+            ),
         ],
       ),
     );
   }
 
+  // ───────────────── UI COMPONENTS ─────────────────
+
   Widget _searchBar() {
     return SearchBar(
       hintText: 'Buscar restaurante...',
       leading: Padding(
-        padding: const EdgeInsets.only(left: 12),
-        child: Icon(
-          Icons.search,
-          color: Colors.grey.shade600,
-        ),
+        padding: const EdgeInsets.only(left: 8),
+        child:
+        Icon(Icons.search, size: 18, color: Colors.grey.shade600),
       ),
       backgroundColor: WidgetStateProperty.all(Colors.grey.shade100),
       elevation: WidgetStateProperty.all(0),
       shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           side: BorderSide(color: Colors.grey.shade300),
         ),
       ),
+      textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 13)),
+      constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
         nombre = value;
-        _cargarRestaurantes();
+        _resetYcargar();
       },
     );
   }
@@ -217,244 +250,198 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         Row(
           children: [
             Expanded(child: _selectorCategorias()),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(child: _selectorLocalidad()),
+            if (categoria != null ||
+                localidad != null ||
+                soloAbiertos == true) ...[
+              const SizedBox(width: 8),
+              _botonLimpiar(),
+            ],
           ],
         ),
-        const SizedBox(height: 12),
-
-        // BOTÓN LIMPIAR
-        if (categoria != null || localidad != null)
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    categoria = null;
-                    localidad = null;
-                    nombre = "";
-                    soloAbiertos = false;
-                  });
-
-                  _cargarRestaurantes();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                    border:
-                    Border.all(color: Colors.red.shade300),
-                  ),
-                  child: Icon(Icons.clear,
-                      color: Colors.red.shade700),
-                ),
-              ),
-            ],
-          ),
-
-        FilterChip(
-          label: const Text("Abierto ahora"),
-          selected: soloAbiertos == true,
-          selectedColor: Color.fromARGB(183, 166, 226, 70),
-          onSelected: (value) {
-            setState(() => soloAbiertos = value ? true : null);
-            _cargarRestaurantes();
-          },
-        )
-
       ],
     );
   }
 
-  Widget _selectorCategorias() {
-
-    return FutureBuilder<List<String>>(
-      future: futureCategorias,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return _shimmerLoader();
-        }
-
-        final categorias = snapshot.data!;
-
-        return Autocomplete<String>(
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable<String>.empty();
-            }
-            return categorias.where((cat) => cat
-                .toLowerCase()
-                .contains(textEditingValue.text.toLowerCase()));
-          },
-          onSelected: (String selection) {
-            setState(() => categoria = selection);
-            _cargarRestaurantes();
-          },
-          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-            return TextField(
-              controller: textEditingController,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                labelText: 'Categoría',
-                labelStyle: TextStyle(color: Colors.grey.shade600),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue.shade500, width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                suffixIcon: categoria != null
-                    ? GestureDetector(
-                  onTap: () {
-                    setState(() => categoria = null);
-                    textEditingController.clear();
-                    _cargarRestaurantes();
-                  },
-                  child: Icon(Icons.clear, size: 20, color: Colors.grey.shade600),
-                )
-                    : Icon(Icons.category, size: 20, color: Colors.grey.shade600),
-              ),
-            );
-          },
-          optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 200,
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      final option = options.elementAt(index);
-                      return ListTile(
-                        title: Text(option),
-                        onTap: () => onSelected(option),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
-        );
+  Widget _botonLimpiar() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          categoria = null;
+          localidad = null;
+          soloAbiertos = null;
+          nombre = "";
+        });
+        _resetYcargar();
       },
-    );
-  }
-
-  Widget _selectorLocalidad() {
-    return FutureBuilder<List<Localidad>>(
-      future: futureLocalidad,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return _shimmerLoader();
-        }
-
-        final localidades = snapshot.data!;
-
-        return Autocomplete<Localidad>(
-          optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return const Iterable<Localidad>.empty();
-            }
-            return localidades.where((loc) => loc.nombre
-                .toLowerCase()
-                .contains(textEditingValue.text.toLowerCase()));
-          },
-          onSelected: (Localidad selection) {
-            print("LOCALIDAD SELECCIONADA: ${selection.nombre} -> ${selection.ine}");
-            setState(() => localidad = selection.ine);
-            _cargarRestaurantes();
-          },
-          displayStringForOption: (Localidad option) => option.nombre,
-          fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-
-            return TextField(
-              controller: textEditingController,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                labelText: 'Ubicación',
-                labelStyle: TextStyle(color: Colors.grey.shade600),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.blue.shade500, width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                suffixIcon: localidad != null
-                    ? GestureDetector(
-                  onTap: () {
-                    setState(() => localidad = null);
-                    textEditingController.clear();
-                    _cargarRestaurantes();
-                  },
-                  child: Icon(Icons.clear, size: 20, color: Colors.grey.shade600),
-                )
-                    : Icon(Icons.location_on, size: 20, color: Colors.grey.shade600),
-              ),
-            );
-          },
-          optionsViewBuilder: (context, onSelected, options) {
-            return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 200,
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      final option = options.elementAt(index);
-                      return ListTile(
-                        title: Text(option.nombre),
-                        onTap: () => onSelected(option),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _shimmerLoader() {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.red.shade100,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.shade300),
+        ),
+        child: Icon(Icons.clear,
+            size: 18, color: Colors.red.shade700),
       ),
     );
   }
+
+  // ───────────────── SELECTORES ─────────────────
+  InputDecoration _inputDeco({
+    required String label,
+    required IconData icon,
+    VoidCallback? onClear,
+    bool hasValue = false,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+      isDense: true,
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
+      ),
+      suffixIcon: hasValue && onClear != null
+          ? GestureDetector(
+        onTap: onClear,
+        child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
+      )
+          : Icon(icon, size: 16, color: Colors.grey.shade600),
+    );
+  }
+
+  Widget _selectorCategorias() => FutureBuilder<List<String>>(
+    future: futureCategorias,
+    builder: (c, s) {
+      if (!s.hasData) return _shimmerLoader();
+      return Autocomplete<String>(
+        optionsBuilder: (v) => v.text.isEmpty
+            ? const Iterable<String>.empty()
+            : s.data!.where((c) =>
+            c.toLowerCase().contains(v.text.toLowerCase())),
+        onSelected: (s) {
+          categoria = s;
+          _resetYcargar();
+        },
+        fieldViewBuilder:
+            (_, ctrl, focus, __) => TextField(
+          controller: ctrl,
+          focusNode: focus,
+          style: const TextStyle(fontSize: 13),
+          decoration: _inputDeco(
+            label: "Categoría",
+            icon: Icons.category,
+            hasValue: categoria != null,
+            onClear: () {
+              categoria = null;
+              ctrl.clear();
+              _resetYcargar();
+            },
+          ),
+        ),
+      );
+    },
+  );
+
+  Widget _selectorLocalidad() =>
+      FutureBuilder<List<Localidad>>(
+        future: futureLocalidad,
+        builder: (c, s) {
+          if (!s.hasData) return _shimmerLoader();
+          return Autocomplete<Localidad>(
+            optionsBuilder: (v) => v.text.isEmpty
+                ? const Iterable<Localidad>.empty()
+                : s.data!.where((l) => l.nombre
+                .toLowerCase()
+                .contains(v.text.toLowerCase())),
+            onSelected: (l) {
+              localidad = l.ine;
+              _resetYcargar();
+            },
+            displayStringForOption: (l) => l.nombre,
+            fieldViewBuilder:
+                (_, ctrl, focus, __) => TextField(
+              controller: ctrl,
+              focusNode: focus,
+              style: const TextStyle(fontSize: 13),
+              decoration: _inputDeco(
+                label: "Ubicación",
+                icon: Icons.location_on,
+                hasValue: localidad != null,
+                onClear: () {
+                  localidad = null;
+                  ctrl.clear();
+                  _resetYcargar();
+                },
+              ),
+            ),
+          );
+        },
+      );
+
+  Widget _shimmerLoader() => Container(
+    height: 36,
+    decoration: BoxDecoration(
+      color: Colors.grey.shade200,
+      borderRadius: BorderRadius.circular(8),
+    ),
+  );
+
+
+
+  Widget _chipAbiertoAhora() {
+    final bool seleccionado = soloAbiertos == true;
+
+    return InkWell(
+      splashColor: const Color.fromARGB(40, 166, 226, 70),
+      highlightColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      onTap: () {
+        setState(() {
+          soloAbiertos = seleccionado ? null : true;
+        });
+        _resetYcargar();
+      },
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: seleccionado ? Color.fromARGB(136, 166, 226, 70):  Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: seleccionado
+                ? const Color.fromARGB(255, 166, 226, 70)
+                : Colors.grey.shade300,
+            width: 1,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          "Abierto",
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+
+
 
   @override
   void dispose() {

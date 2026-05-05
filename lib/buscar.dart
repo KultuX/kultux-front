@@ -34,7 +34,7 @@ class _BuscarPageState extends State<BuscarPage> {
             children: [
               // Miniatura de fondo
               Positioned(
-                top: 0,
+                top: 2,
                 right: 0,
                 child: Opacity(
                   opacity: 0.15,

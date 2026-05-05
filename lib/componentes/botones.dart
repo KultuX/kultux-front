@@ -29,6 +29,7 @@ class BotonesGenerico extends StatelessWidget{
                 child: Text(
                   titulo,
                   style: TextStyle(
+                    color: Colors.black,
                     fontFamily: 'RobotoCondensed',
                     fontWeight: FontWeight.bold,
                   ),
