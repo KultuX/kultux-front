@@ -15,6 +15,8 @@ class Actividad{
   String? horaFin;
   String? horaInicio;
   List<Imagen>? imagenes;
+  String? urlCompra;
+  String? urlWeb;
 
   Actividad._({
     required this.id,
@@ -30,7 +32,9 @@ class Actividad{
     this.correoCorporativo,
     this.fechaFin,
     this.horaFin,
-    this.imagenes
+    this.imagenes,
+    this.urlCompra,
+    this.urlWeb
   });
 
   factory Actividad.inicio(Map<String, dynamic> json) {
@@ -42,6 +46,19 @@ class Actividad{
       fechaInicio: json['fechaInicio'] ?? '',
       localidad: json['localidad'] ?? '',
       estado: json['estado'] ?? ''
+    );
+  }
+
+  factory Actividad.busqueda(Map<String, dynamic> json){
+    return Actividad._(
+        id: json['id'] ?? 0,
+        titulo: json['titulo'] ?? '',
+        categoriaActividad: json['categoria'] ?? '',
+        imagenPrincipal: json['portada'] ?? 'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
+        fechaInicio: json['fechaInicio'] ?? '',
+        horaInicio: json['horaInicio'],
+        localidad: json['localidad'] ?? '',
+        estado: json['estado'] ?? ''
     );
   }
 
@@ -64,7 +81,9 @@ class Actividad{
           .map((e) => Imagen.fromJson(e))
           .toList()
           : [],
-      estado: json['estado'] ?? ''
+      estado: json['estado'] ?? '',
+     urlCompra: json['urlCompra'],
+     urlWeb: json['urlWeb']
     );
   }
 

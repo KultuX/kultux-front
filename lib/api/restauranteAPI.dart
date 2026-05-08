@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/pages.dart';
@@ -23,11 +24,11 @@ class RestauranteApiService{
       final List<dynamic> lista = jsonDecode(response.body);
       return lista.map((json) => Restaurante.destacado(json)).toList();
     }else{
-      throw Exception('Error al obtener los restaurantes destacados: ${response.statusCode}');
+      throw HttpException(response.statusCode.toString());
     }
   }
 
-  static Future<Restaurante> obtenerRestauranteDetalle(int id) async{
+  static Future<Restaurante> restauranteDetalle(int id) async{
     final url = Uri.http(_BASE_URL_RESTAURANTES, '/api/v1/restaurantes/detalle_restaurante/$id');
 
     final response = await http.get(
@@ -43,9 +44,10 @@ class RestauranteApiService{
       final dynamic json = jsonDecode(response.body);
       return Restaurante.detalle(json);
     }else{
-      throw Exception('Error al el restaurante: ${response.statusCode}');
+      throw HttpException(response.statusCode.toString());
     }
   }
+
 
   static Future<List<String>> categoriasRestaurantes() async{
     final url = Uri.https(_BASE_URL_RESTAURANTES, 'api/v1/restaurantes/categoria_restaurante');
@@ -63,7 +65,7 @@ class RestauranteApiService{
       final List<dynamic> json = jsonDecode(response.body);
       return json.map((c) => c.toString()).toList();
     }else{
-      throw Exception('Error al obtener las categorias de los restaurantes: ${response.statusCode}');
+      throw HttpException(response.statusCode.toString());
     }
   }
 
@@ -106,10 +108,10 @@ class RestauranteApiService{
             (a) => Restaurante.busqueda(a),
       );
     }else if(response.statusCode == 204){
-      throw Exception('No hay restaurantes para esta búsqueda');
+      throw HttpException(response.statusCode.toString());
     }
     else{
-      throw Exception('Error al obtener los restaurantes');
+      throw HttpException(response.statusCode.toString());
     }
 
   }

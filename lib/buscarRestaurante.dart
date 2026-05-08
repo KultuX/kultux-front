@@ -1,17 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/models/localidad.dart';
-import 'package:kultux/models/actividad.dart';
-import 'package:kultux/models/pages.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/restauranteApi.dart';
 import 'package:kultux/models/restaurante.dart';
-import 'package:kultux/tarjetas.dart';
 import 'package:kultux/tarjetasBusqueda.dart';
+import 'package:kultux/componentes/scroll_boton.dart';
 
 import 'package:kultux/core/utils/iconos.dart';
+import 'core/utils/estado_ui.dart';
+import 'core/utils/http_error_mapper.dart';
+import 'package:kultux/core/utils/estados_widgets.dart';
+
 class BuscarRestaurantePage extends StatefulWidget {
-  const BuscarRestaurantePage({super.key});
+  final Function(dynamic)? onDetalleSeleccionado;
+  const BuscarRestaurantePage({super.key, this.onDetalleSeleccionado});
 
   @override
   State<BuscarRestaurantePage> createState() => _BuscarRestaurantePageState();
@@ -34,6 +38,10 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   bool cargandoInicial = true;
 
   final ScrollController controller = ScrollController();
+
+
+  EstadoUi estado = EstadoUi.cargando;
+  String mensajeError = '';
 
   @override
   void initState() {
@@ -68,7 +76,10 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     if (cargando) return;
     if (paginaActual >= totalPaginas && paginaActual != 0) return;
 
-    setState(() => cargando = true);
+    setState(() {
+      cargando = true;
+      estado = EstadoUi.cargando;
+    });
 
     try {
       final pageResponse =
@@ -84,140 +95,190 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         restaurantes.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
         paginaActual++;
+        estado =
+        restaurantes.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error en búsqueda: $e")),
-      );
-    }
+    }on SocketException {
+      setState(() {
+        estado = EstadoUi.sinConexion;
+        mensajeError = 'No hay conexión a internet';
+      });
 
-    setState(() => cargando = false);
+    } on HttpException catch (e) {
+      final uiError = mapearStatusCode(int.parse(e.message));
+      setState(() {
+        estado = uiError.estado;
+        mensajeError = uiError.mensaje;
+      });
+
+    } catch (_) {
+      setState(() {
+        estado = EstadoUi.error;
+        mensajeError = 'Error inesperado';
+      });
+
+    } finally {
+      cargando = false;
+    }
   }
 
-  // ───────────────── BUILD ─────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: cargandoInicial
-          ? const Center(
+    if (cargandoInicial) {
+      return const Center(
         child: CircularProgressIndicator(
           color: Color.fromARGB(255, 166, 226, 70),
         ),
-      )
-          : CustomScrollView(
-        controller: controller,
-        slivers: [
-          // ── Search ──
+      );
+    }
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-              child: Row(
+    switch (estado) {
+      case EstadoUi.cargando:
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 166, 226, 70),
+          ),
+        );
+
+      case EstadoUi.vacio:
+        return estadoVacio();
+
+      case EstadoUi.sinConexion:
+        return estadoError(
+          icon: Icons.wifi_off,
+          mensaje: mensajeError,
+          onRetry: _cargaInicial,
+        );
+
+      case EstadoUi.error:
+        return estadoError(
+          icon: Icons.error_outline,
+          mensaje: mensajeError,
+          onRetry: _cargaInicial,
+        );
+
+      case EstadoUi.contenido:
+        return _contenido();
+    }
+  }
+
+  Widget _contenido(){
+    return Stack(children:[CustomScrollView(
+      controller: controller,
+      slivers: [
+        // ── Search ──
+
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+            child: Row(
+              children: [
+                Expanded(child: _searchBar()),
+                const SizedBox(width: 8),
+                _chipAbiertoAhora(),
+              ],
+            ),
+          ),
+        ),
+
+
+        // ── Filtros ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _filtros(),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+        // ── Empty / List ──
+        if (restaurantes.isEmpty && !cargando)
+          SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(child: _searchBar()),
-                  const SizedBox(width: 8),
-                  _chipAbiertoAhora(),
+                  Icon(Icons.search_off,
+                      size: 56, color: Colors.grey.shade400),
+                  const SizedBox(height: 12),
+                  Text(
+                    "No hay restaurantes",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600),
+                  ),
                 ],
               ),
             ),
-          ),
-
-
-          // ── Filtros ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: _filtros(),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-          // ── Empty / List ──
-          if (restaurantes.isEmpty && !cargando)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search_off,
-                        size: 56, color: Colors.grey.shade400),
-                    const SizedBox(height: 12),
-                    Text(
-                      "No hay restaurantes",
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade600),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                if (index < restaurantes.length) {
+                  final r = restaurantes[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 5),
+                    child: TarjetaBusqueda.restaurante(
+                      titulo: r.nombre,
+                      imagenUrl: r.imagenPrincipal,
+                      textoEtiqueta: r.categoriaRestaurante,
+                      iconoEtiqueta: Iconos.getIconoRestaurante(
+                          r.categoriaRestaurante),
+                      horario: r.horario!,
+                      abierto: r.abierto!,
+                      localidad: r.localidad,
+                      onTap:() { widget.onDetalleSeleccionado?.call(r);
+                      },
                     ),
-                  ],
-                ),
-              ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  if (index < restaurantes.length) {
-                    final r = restaurantes[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 5),
-                      child: TarjetaBusqueda.restaurante(
-                        titulo: r.nombre,
-                        imagenUrl: r.imagenPrincipal,
-                        textoEtiqueta: r.categoriaRestaurante,
-                        iconoEtiqueta: Iconos.getIconoRestaurante(
-                            r.categoriaRestaurante),
-                        horario: r.horario!,
-                        abierto: r.abierto!,
-                        localidad: r.localidad,
-                        onTap: () {},
-                      ),
-                    );
-                  }
+                  );
+                }
 
-                  if (cargando) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color:
-                          Color.fromARGB(255, 166, 226, 70),
-                        ),
+                if (cargando) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color:
+                        Color.fromARGB(255, 166, 226, 70),
                       ),
-                    );
-                  }
+                    ),
+                  );
+                }
 
-                  if (paginaActual >= totalPaginas) {
-                    return const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Center(
-                        child: Text(
-                          "No hay más restaurantes",
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey),
-                        ),
+                if (paginaActual >= totalPaginas) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        "No hay más restaurantes",
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey),
                       ),
-                    );
-                  }
+                    ),
+                  );
+                }
 
-                  return const SizedBox.shrink();
-                },
-                childCount: restaurantes.length +
-                    (cargando || paginaActual >= totalPaginas
-                        ? 1
-                        : 0),
-              ),
+                return const SizedBox.shrink();
+              },
+              childCount: restaurantes.length +
+                  (cargando || paginaActual >= totalPaginas
+                      ? 1
+                      : 0),
             ),
-        ],
-      ),
-    );
+          ),
+      ],
+    ), Positioned(
+        bottom:16,
+        right:16,
+        child: ScrollBoton(controller: controller)
+    )
+    ]);
   }
-
-  // ───────────────── UI COMPONENTS ─────────────────
 
   Widget _searchBar() {
     return SearchBar(

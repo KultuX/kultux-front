@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:kultux/models/horario.dart';
+import 'package:kultux/models/franja.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Tarjeta extends StatelessWidget {
   final String titulo;
@@ -11,7 +12,7 @@ class Tarjeta extends StatelessWidget {
   final String? textoEtiqueta;
   final String? iconoEtiqueta;
   final String? estado;
-  final Horario? horario;
+  final Map<String, List<Franja>>? horario;
   final bool? abierto;
 
   const Tarjeta._({
@@ -51,13 +52,13 @@ class Tarjeta extends StatelessWidget {
     required String textoEtiqueta,
     required String iconoEtiqueta,
     required VoidCallback onTap,
-}) : this._(
+  }) : this._(
     key: key,
     titulo: titulo,
     imagenUrl: imagenUrl,
     textoEtiqueta: textoEtiqueta,
     iconoEtiqueta: iconoEtiqueta,
-    onTap: onTap
+    onTap: onTap,
   );
 
   const Tarjeta.alojamiento({
@@ -67,15 +68,15 @@ class Tarjeta extends StatelessWidget {
     required String textoEtiqueta,
     required String iconoEtiqueta,
     required VoidCallback onTap,
-    String? localidad
-}) : this._(
+    String? localidad,
+  }) : this._(
     key: key,
     titulo: titulo,
     imagenUrl: imagenUrl,
     textoEtiqueta: textoEtiqueta,
     iconoEtiqueta: iconoEtiqueta,
     onTap: onTap,
-    localidad: localidad
+    localidad: localidad,
   );
 
   const Tarjeta.restauranteBusqueda({
@@ -85,7 +86,7 @@ class Tarjeta extends StatelessWidget {
     required String textoEtiqueta,
     required String iconoEtiqueta,
     required VoidCallback onTap,
-    required Horario horario,
+    required Map<String, List<Franja>> horario,
     required bool abierto,
     String? localidad,
   }) : this._(
@@ -109,19 +110,29 @@ class Tarjeta extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            // Imagen de fondo
+            // ✅ IMAGEN CACHEADA
             Positioned.fill(
-              child: Image.network(
-                imagenUrl,
+              child: CachedNetworkImage(
+                imageUrl: imagenUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                placeholder: (context, url) => Container(
                   color: Colors.grey.shade200,
-                  child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 36),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: Color.fromARGB(255, 166, 226, 70),
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey.shade200,
+                  child: Icon(
+                    Icons.image_outlined,
+                    color: Colors.grey.shade400,
+                    size: 36,
+                  ),
                 ),
               ),
             ),
-
-           // Positioned(child:Text('No disponible')),
 
             // Borde de la tarjeta
             Positioned.fill(
@@ -136,47 +147,41 @@ class Tarjeta extends StatelessWidget {
               ),
             ),
 
-            // Título arriba izquierda
             Positioned(
               top: 8,
               left: 8,
               child: TituloTarjeta(titulo: titulo),
             ),
 
-            // Fecha arriba derecha
-            if(fecha != null)
+            if (fecha != null)
               Positioned(
                 top: 8,
                 right: 8,
                 child: FechaTarjeta(fecha: fecha!),
               ),
 
-            // Localidad abajo izquierda
-            if(localidad != null)
+            if (localidad != null)
               Positioned(
                 bottom: 8,
                 left: 8,
                 child: LocalidadTarjeta(localidad: localidad!),
               ),
 
-            if(textoEtiqueta != null && iconoEtiqueta != null)
-            Positioned(
-              bottom: 8,
-              right: 8,
-              child: EtiquetaTarjeta(
-                texto: textoEtiqueta!,
-                icono: iconoEtiqueta!
+            if (textoEtiqueta != null && iconoEtiqueta != null)
+              Positioned(
+                bottom: 8,
+                right: 8,
+                child: EtiquetaTarjeta(
+                  texto: textoEtiqueta!,
+                  icono: iconoEtiqueta!,
+                ),
               ),
-            ),
 
-            // Botón derecha centrado
             Positioned(
               right: 12,
               top: 0,
               bottom: 0,
-              child: Center(
-                child: BotonTarjeta(onTap: onTap)
-              ),
+              child: Center(child: BotonTarjeta(onTap: onTap)),
             ),
           ],
         ),
@@ -185,13 +190,11 @@ class Tarjeta extends StatelessWidget {
   }
 }
 
+/* ───────────── COMPONENTES ───────────── */
+
 class TituloTarjeta extends StatelessWidget {
   final String titulo;
-
-  const TituloTarjeta({
-    super.key,
-    required this.titulo,
-  });
+  const TituloTarjeta({super.key, required this.titulo});
 
   @override
   Widget build(BuildContext context) {
@@ -210,31 +213,24 @@ class TituloTarjeta extends StatelessWidget {
           fontWeight: FontWeight.bold,
           fontFamily: "RobotoCondensed",
           fontSize: 14,
-          color: Colors.black,
         ),
       ),
     );
   }
 }
 
-class EtiquetaTarjeta extends StatelessWidget{
+class EtiquetaTarjeta extends StatelessWidget {
   final String texto;
   final String icono;
-
-  const EtiquetaTarjeta({
-    super.key,
-    required this.texto,
-    required this.icono
-  });
+  const EtiquetaTarjeta({super.key, required this.texto, required this.icono});
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 140),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFFA6E246),
-        borderRadius: BorderRadius.circular(10)
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
@@ -242,10 +238,8 @@ class EtiquetaTarjeta extends StatelessWidget{
             icono,
             width: 15,
             height: 15,
-            colorFilter: const ColorFilter.mode(
-              Colors.black,
-              BlendMode.srcIn,
-            ),
+            colorFilter:
+            const ColorFilter.mode(Colors.black, BlendMode.srcIn),
           ),
           const SizedBox(width: 10),
           Text(
@@ -253,9 +247,8 @@ class EtiquetaTarjeta extends StatelessWidget{
             style: const TextStyle(
               fontFamily: "RobotoCondensed",
               fontSize: 14,
-              color: Colors.black
             ),
-          )
+          ),
         ],
       ),
     );
@@ -264,11 +257,7 @@ class EtiquetaTarjeta extends StatelessWidget{
 
 class FechaTarjeta extends StatelessWidget {
   final String fecha;
-
-  const FechaTarjeta({
-    super.key,
-    required this.fecha,
-  });
+  const FechaTarjeta({super.key, required this.fecha});
 
   @override
   Widget build(BuildContext context) {
@@ -284,19 +273,15 @@ class FechaTarjeta extends StatelessWidget {
           fontWeight: FontWeight.bold,
           fontFamily: "RobotoCondensed",
           fontSize: 14,
-          color: Colors.black,
         ),
       ),
     );
   }
 }
 
-class BotonTarjeta extends StatelessWidget{
+class BotonTarjeta extends StatelessWidget {
   final VoidCallback onTap;
-  const BotonTarjeta({
-    super.key,
-    required this.onTap,
-  });
+  const BotonTarjeta({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -307,14 +292,13 @@ class BotonTarjeta extends StatelessWidget{
         height: 50,
         decoration: BoxDecoration(
           color: const Color.fromARGB(227, 166, 226, 70),
-          borderRadius: BorderRadius.circular(14)
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Center(
           child: SvgPicture.asset(
-              "assets/iconos/flecha_siguiente.svg",
-              width: 22,
-              height: 22,
-              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+            "assets/iconos/flecha_siguiente.svg",
+            width: 22,
+            height: 22,
           ),
         ),
       ),
@@ -324,39 +308,30 @@ class BotonTarjeta extends StatelessWidget{
 
 class LocalidadTarjeta extends StatelessWidget {
   final String localidad;
-
-  const LocalidadTarjeta({
-    super.key,
-    required this.localidad,
-  });
+  const LocalidadTarjeta({super.key, required this.localidad});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 140),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: const Color.fromARGB(190, 235, 245, 233),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(mainAxisAlignment: .center,
+      child: Row(
         children: [
-        SvgPicture.asset("assets/iconos/ubicar.svg",
-          width: 15,
-          height: 15,
-        ),
-        const SizedBox(width: 10),
-        Text(
-          localidad,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontFamily: "RobotoCondensed",
-            fontSize: 14,
-            color: Colors.black,
-        ),
-      ),
-      ]
+          SvgPicture.asset("assets/iconos/ubicar.svg", width: 15),
+          const SizedBox(width: 10),
+          Text(
+            localidad,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: "RobotoCondensed",
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }

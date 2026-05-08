@@ -9,6 +9,7 @@ import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
 import 'package:kultux/componentes/politica_privacidad_dialog.dart';
+import 'package:kultux/componentes/selector_localidad.dart';
 import 'package:flutter/gestures.dart';
 
 class RegistroPage extends StatefulWidget{
@@ -137,7 +138,16 @@ class _RegistroPageState extends State<RegistroPage>{
             CamposPersonalizados.password(titulo: "Repite contraseña", controller: controllers!['password2']!),
             const SizedBox(height: 20,),
             //Extendible
-            _desplegable(titulo: "Localidad"),
+
+            SelectorLocalidad(
+              onSelected: (loc) {
+                setState(() {
+                  _localidadSeleccionada = loc;
+                  controllers!['localidad']!.text = loc?.ine.toString() ?? '';
+                });
+              },
+            )
+            ,
             const SizedBox(height: 20,),
             // Fechas
             _calendario(titulo: "Fecha de nacimiento",controler: controllers!['fechaNacimiento']!),

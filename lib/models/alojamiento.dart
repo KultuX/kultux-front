@@ -10,6 +10,10 @@ class Alojamiento{
   String? telefonoEmpresa;
   String? correoCorporativo;
   List<Imagen>? imagenes;
+  String? descripcion;
+
+  String? urlReserva;
+  String? urlWeb;
 
   Alojamiento._({
     required this.id,
@@ -19,7 +23,10 @@ class Alojamiento{
     this.telefonoEmpresa,
     this.correoCorporativo,
     this.localidad,
-    this.imagenes
+    this.imagenes,
+    this.urlReserva,
+    this.urlWeb,
+    this.descripcion
   });
 
   factory Alojamiento.destacado(Map<String, dynamic> json){
@@ -55,6 +62,9 @@ class Alojamiento{
           .map((e) => Imagen.fromJson(e))
           .toList()
           : null,
+      urlReserva: json['urlReserva'],
+      urlWeb: json['urlWeb'],
+      descripcion: json['descripcion']
 
     );
   }

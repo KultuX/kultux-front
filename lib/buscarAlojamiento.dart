@@ -1,14 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:kultux/models/localidad.dart';
 import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/alojamientoApi.dart';
-import 'package:kultux/tarjetas.dart';
+import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/tarjetasBusqueda.dart';
 import 'package:kultux/core/utils/iconos.dart';
 
+import 'core/utils/estado_ui.dart';
+import 'core/utils/http_error_mapper.dart';
+import 'package:kultux/core/utils/estados_widgets.dart';
+
 class BuscarAlojamientoPage extends StatefulWidget {
-  const BuscarAlojamientoPage({super.key});
+  final Function(dynamic)? onDetalleSeleccionado;
+  const BuscarAlojamientoPage({super.key, this.onDetalleSeleccionado});
 
   @override
   State<BuscarAlojamientoPage> createState() => _BuscarAlojamientoState();
@@ -30,6 +37,11 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
   bool cargandoInicial = true;
 
   final ScrollController controller = ScrollController();
+
+
+  EstadoUi estado = EstadoUi.cargando;
+  String mensajeError = '';
+
 
   @override
   void initState() {
@@ -66,7 +78,10 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
     if (cargando) return;
     if (paginaActual >= totalPaginas && paginaActual != 0) return;
 
-    setState(() => cargando = true);
+    setState(() {
+      cargando = true;
+      estado = EstadoUi.cargando;
+    });
 
     try {
       final pageResponse =
@@ -81,69 +96,99 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
         alojamientos.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
         paginaActual++;
+        estado =
+        alojamientos.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+
       });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+    on SocketException {
+      setState(() {
+        estado = EstadoUi.sinConexion;
+        mensajeError = 'No hay conexión a internet';
+      });
+
+    } on HttpException catch (e) {
+      final uiError = mapearStatusCode(int.parse(e.message));
+      setState(() {
+        estado = uiError.estado;
+        mensajeError = uiError.mensaje;
+      });
+
+    } catch (_) {
+      setState(() {
+        estado = EstadoUi.error;
+        mensajeError = 'Error inesperado';
+      });
+
+    } finally {
+      cargando = false;
     }
 
-    setState(() => cargando = false);
   }
 
-  // ────────────────── BUILD ──────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: cargandoInicial
-          ? const Center(
+    if (cargandoInicial) {
+      return const Center(
         child: CircularProgressIndicator(
           color: Color.fromARGB(255, 166, 226, 70),
         ),
-      )
-          : CustomScrollView(
-        controller: controller,
-        slivers: [
-          // ── Search ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-              child: _searchBar(),
-            ),
+      );
+    }
+
+    switch (estado) {
+      case EstadoUi.cargando:
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 166, 226, 70),
           ),
+        );
 
-          // ── Filtros ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: _filtros(),
-            ),
-          ),
+      case EstadoUi.vacio:
+        return estadoVacio();
 
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+      case EstadoUi.sinConexion:
+        return estadoError(
+          icon: Icons.wifi_off,
+          mensaje: mensajeError,
+          onRetry: _cargaInicial,
+        );
 
-          // ── Lista / vacío ──
-          if (alojamientos.isEmpty && !cargando)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search_off,
-                        size: 56, color: Colors.grey.shade400),
-                    const SizedBox(height: 12),
-                    Text(
-                      "No hay alojamientos",
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
+      case EstadoUi.error:
+        return estadoError(
+          icon: Icons.error_outline,
+          mensaje: mensajeError,
+          onRetry: _cargaInicial,
+        );
+
+      case EstadoUi.contenido:
+        return _contenido();
+    }
+  }
+
+  Widget _contenido() {
+    return Stack(
+      children: [
+        CustomScrollView(
+          controller: controller,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+                child: _searchBar(),
               ),
-            )
-          else
+            ),
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: _filtros(),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
             SliverList(
               delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -157,9 +202,10 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                         localidad: a.localidad?.nombre,
                         imagenUrl: a.imagenPrincipal,
                         textoEtiqueta: a.categoriaAlojamiento,
-                        iconoEtiqueta: Iconos.getIconoAlojamiento(
-                            a.categoriaAlojamiento),
-                        onTap: () {},
+                        iconoEtiqueta:
+                        Iconos.getIconoAlojamiento(a.categoriaAlojamiento),
+                        onTap: () =>
+                            widget.onDetalleSeleccionado?.call(a),
                       ),
                     );
                   }
@@ -169,8 +215,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                       padding: EdgeInsets.all(16),
                       child: Center(
                         child: CircularProgressIndicator(
-                          color:
-                          Color.fromARGB(255, 166, 226, 70),
+                          color: Color.fromARGB(255, 166, 226, 70),
                         ),
                       ),
                     );
@@ -182,9 +227,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                       child: Center(
                         child: Text(
                           "No hay más alojamientos",
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey),
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ),
                     );
@@ -193,17 +236,19 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                   return const SizedBox.shrink();
                 },
                 childCount: alojamientos.length +
-                    (cargando || paginaActual >= totalPaginas
-                        ? 1
-                        : 0),
+                    (cargando || paginaActual >= totalPaginas ? 1 : 0),
               ),
             ),
-        ],
-      ),
+          ],
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: ScrollBoton(controller: controller),
+        )
+      ],
     );
   }
-
-  // ────────────────── UI ──────────────────
 
   Widget _searchBar() {
     return SearchBar(
