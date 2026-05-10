@@ -4,7 +4,8 @@ import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/pages.dart';
 
 class ActividadesApiService{
-  static final String _BASE_URL_ACTIVIDADES = "micro-actividad.onrender.com";
+  static final String _BASE_URL_ACTIVIDADES = "micro-actividad-comd.onrender.com";
+  //static final String _BASE_URL_ACTIVIDADES = "micro-actividad.onrender.com"
   //static final String _BASE_URL_ACTIVIDADES = "10.0.2.2:8081";
 
   static Future<Pages<Actividad>> obtenerActividadesInicio(int page) async {
