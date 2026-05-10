@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:kultux/componentes/botones.dart';
 import 'package:kultux/models/restaurante.dart';
@@ -5,6 +7,9 @@ import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/api/restauranteAPI.dart';
 import 'package:kultux/api/alojamientoAPI.dart';
 import 'package:kultux/tarjetas.dart';
+import 'package:kultux/core/utils/estado_ui.dart';
+import 'package:kultux/core/utils/http_error_mapper.dart';
+import 'package:kultux/core/utils/estados_widgets.dart';
 
 class EstablecimientosPage extends StatefulWidget {
   final Function(dynamic objetoDetalle) onDetalleSeleccionado;
@@ -19,83 +24,185 @@ class EstablecimientosPage extends StatefulWidget {
 }
 
 class _EstablecimientosPageState extends State<EstablecimientosPage> {
-  late Future<List<Restaurante>> _futureRestaurantes;
-  late Future<List<Alojamiento>> _futureAlojamientos;
+  // ── Estado resumen ──
+  List<Restaurante> _restaurantes = [];
+  List<Alojamiento> _alojamientos = [];
+  EstadoUi _estadoResumen = EstadoUi.cargando;
+  String _mensajeErrorResumen = '';
 
-  Future<List<Restaurante>>? _futureTodosRestaurantes;
-  Future<List<Alojamiento>>? _futureTodosAlojamientos;
+  // ── Estado listado restaurantes ──
+  List<Restaurante> _todosRestaurantes = [];
+  EstadoUi _estadoRestaurantes = EstadoUi.cargando;
+  String _mensajeErrorRestaurantes = '';
 
-  bool _mostrandoListado = false;
+  // ── Estado listado alojamientos ──
+  List<Alojamiento> _todosAlojamientos = [];
+  EstadoUi _estadoAlojamientos = EstadoUi.cargando;
+  String _mensajeErrorAlojamientos = '';
+
   bool _mostrandoListadoRestaurantes = false;
   bool _mostrandoListadoAlojamientos = false;
 
-  Map<String, String> iconosAlojamiento={
-    "HOTEL":"assets/iconos/hotel.svg",
-    "HOSTAL":"assets/iconos/hostal.svg",
-    "APARTAMENTO_TURISTICO":"assets/iconos/apartamento.svg",
-    "CASA_RURAL":"assets/iconos/casa_rural.svg",
-    "PENSION":"assets/iconos/hostal.svg",
-    "CAMPING":"assets/iconos/casa_rural.svg",
-    "ALBERGUE":"assets/iconos/casa_rural.svg",
+  // ── Para no recargar si ya se cargó ──
+  bool _restaurantesCargados = false;
+  bool _alojamientosCargados = false;
+
+  final Map<String, String> iconosAlojamiento = {
+    "HOTEL": "assets/iconos/hotel.svg",
+    "HOSTAL": "assets/iconos/hostal.svg",
+    "APARTAMENTO_TURISTICO": "assets/iconos/apartamento.svg",
+    "CASA_RURAL": "assets/iconos/casa_rural.svg",
+    "PENSION": "assets/iconos/hostal.svg",
+    "CAMPING": "assets/iconos/casa_rural.svg",
+    "ALBERGUE": "assets/iconos/casa_rural.svg",
     "PARADOR": "assets/iconos/casa_rural.svg",
-    "RESORT":"assets/iconos/hotel.svg",
-    "BALNEARIO":"assets/iconos/hotel.svg",
-    "APARTAHOTEL":"assets/iconos/hostal.svg",
-    "BUNGALOW":"assets/iconos/hostal.svg",
-    "FINCA":"assets/iconos/casa_rural.svg",
+    "RESORT": "assets/iconos/hotel.svg",
+    "BALNEARIO": "assets/iconos/hotel.svg",
+    "APARTAHOTEL": "assets/iconos/hostal.svg",
+    "BUNGALOW": "assets/iconos/hostal.svg",
+    "FINCA": "assets/iconos/casa_rural.svg",
   };
 
-  Map<String, String> iconosRestaurante={
-    "TRADICIONAL":"assets/iconos/restaurantes.svg",
-    "EXTREMEÑA":"assets/iconos/restaurantes.svg",
-    "INTERNACIONAL":"assets/iconos/restaurantes.svg",
-    "ESPAÑOLA":"assets/iconos/restaurantes.svg",
-    "ALTA_COCINA":"assets/iconos/restaurantes.svg",
-    "ASADORES_Y_PARRILLAS":"assets/iconos/restaurantes.svg",
-    "MARISQUERIAS":"assets/iconos/restaurantes.svg",
+  final Map<String, String> iconosRestaurante = {
+    "TRADICIONAL": "assets/iconos/restaurantes.svg",
+    "EXTREMEÑA": "assets/iconos/restaurantes.svg",
+    "INTERNACIONAL": "assets/iconos/restaurantes.svg",
+    "ESPAÑOLA": "assets/iconos/restaurantes.svg",
+    "ALTA_COCINA": "assets/iconos/restaurantes.svg",
+    "ASADORES_Y_PARRILLAS": "assets/iconos/restaurantes.svg",
+    "MARISQUERIAS": "assets/iconos/restaurantes.svg",
     "ITALIANO": "assets/iconos/restaurantes.svg",
-    "MEXICANO":"assets/iconos/restaurantes.svg",
-    "ASIATICO":"assets/iconos/restaurantes.svg",
-    "VEGETARIANO":"assets/iconos/restaurantes.svg",
-    "VEGANO":"assets/iconos/restaurantes.svg",
-    "TAPAS":"assets/iconos/cerveceria.svg",
-    "CAFETERIA":"assets/iconos/cafeteria.svg",
-    "HAMBURGUESERIA":"assets/iconos/restaurante.svg",
-    "PIZZERIA":"assets/iconos/restaurante.svg",
-    "COPAS":"assets/iconos/copas.svg"
+    "MEXICANO": "assets/iconos/restaurantes.svg",
+    "ASIATICO": "assets/iconos/restaurantes.svg",
+    "VEGETARIANO": "assets/iconos/restaurantes.svg",
+    "VEGANO": "assets/iconos/restaurantes.svg",
+    "TAPAS": "assets/iconos/cerveceria.svg",
+    "CAFETERIA": "assets/iconos/cafeteria.svg",
+    "HAMBURGUESERIA": "assets/iconos/restaurante.svg",
+    "PIZZERIA": "assets/iconos/restaurante.svg",
+    "COPAS": "assets/iconos/copas.svg",
   };
-
 
   @override
   void initState() {
     super.initState();
-    _futureRestaurantes = RestauranteApiService.obtenerRestauranteDestacados();
-    _futureAlojamientos = AlojamientoApiService.obtenerAlojamientoDestacados();
+    _cargarResumen();
+  }
+
+  // ── Carga resumen (destacados de ambos) ──
+  Future<void> _cargarResumen() async {
+    setState(() => _estadoResumen = EstadoUi.cargando);
+    try {
+      final results = await Future.wait([
+        RestauranteApiService.obtenerRestauranteDestacados(),
+        AlojamientoApiService.obtenerAlojamientoDestacados(),
+      ]);
+      setState(() {
+        _restaurantes = results[0] as List<Restaurante>;
+        _alojamientos = results[1] as List<Alojamiento>;
+        _estadoResumen = (_restaurantes.isEmpty && _alojamientos.isEmpty)
+            ? EstadoUi.vacio
+            : EstadoUi.contenido;
+      });
+    } on SocketException {
+      setState(() {
+        _estadoResumen = EstadoUi.sinConexion;
+        _mensajeErrorResumen = 'No hay conexión a internet';
+      });
+    } on HttpException catch (e) {
+      final uiError = mapearStatusCode(int.parse(e.message));
+      setState(() {
+        _estadoResumen = uiError.estado;
+        _mensajeErrorResumen = uiError.mensaje;
+      });
+    } catch (_) {
+      setState(() {
+        _estadoResumen = EstadoUi.error;
+        _mensajeErrorResumen = 'Error inesperado';
+      });
+    }
+  }
+
+  // ── Carga listado restaurantes ──
+  Future<void> _cargarTodosRestaurantes() async {
+    if (_restaurantesCargados) return;
+    setState(() => _estadoRestaurantes = EstadoUi.cargando);
+    try {
+      final lista = await RestauranteApiService.obtenerRestauranteDestacados();
+      setState(() {
+        _todosRestaurantes = lista;
+        _restaurantesCargados = true;
+        _estadoRestaurantes =
+        lista.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+      });
+    } on SocketException {
+      setState(() {
+        _estadoRestaurantes = EstadoUi.sinConexion;
+        _mensajeErrorRestaurantes = 'No hay conexión a internet';
+      });
+    } on HttpException catch (e) {
+      final uiError = mapearStatusCode(int.parse(e.message));
+      setState(() {
+        _estadoRestaurantes = uiError.estado;
+        _mensajeErrorRestaurantes = uiError.mensaje;
+      });
+    } catch (_) {
+      setState(() {
+        _estadoRestaurantes = EstadoUi.error;
+        _mensajeErrorRestaurantes = 'Error inesperado';
+      });
+    }
+  }
+
+  // ── Carga listado alojamientos ──
+  Future<void> _cargarTodosAlojamientos() async {
+    if (_alojamientosCargados) return;
+    setState(() => _estadoAlojamientos = EstadoUi.cargando);
+    try {
+      final lista = await AlojamientoApiService.obtenerAlojamientoDestacados();
+      setState(() {
+        _todosAlojamientos = lista;
+        _alojamientosCargados = true;
+        _estadoAlojamientos =
+        lista.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+      });
+    } on SocketException {
+      setState(() {
+        _estadoAlojamientos = EstadoUi.sinConexion;
+        _mensajeErrorAlojamientos = 'No hay conexión a internet';
+      });
+    } on HttpException catch (e) {
+      final uiError = mapearStatusCode(int.parse(e.message));
+      setState(() {
+        _estadoAlojamientos = uiError.estado;
+        _mensajeErrorAlojamientos = uiError.mensaje;
+      });
+    } catch (_) {
+      setState(() {
+        _estadoAlojamientos = EstadoUi.error;
+        _mensajeErrorAlojamientos = 'Error inesperado';
+      });
+    }
   }
 
   void _abrirListadoRestaurantes() {
     setState(() {
-      _mostrandoListado = true;
       _mostrandoListadoRestaurantes = true;
       _mostrandoListadoAlojamientos = false;
-      _futureTodosRestaurantes ??=
-          RestauranteApiService.obtenerRestauranteDestacados();
     });
+    _cargarTodosRestaurantes();
   }
 
   void _abrirListadoAlojamientos() {
     setState(() {
-      _mostrandoListado = true;
-      _mostrandoListadoRestaurantes = false;
       _mostrandoListadoAlojamientos = true;
-      _futureTodosAlojamientos ??=
-          AlojamientoApiService.obtenerAlojamientoDestacados();
+      _mostrandoListadoRestaurantes = false;
     });
+    _cargarTodosAlojamientos();
   }
 
   void _volverResumen() {
     setState(() {
-      _mostrandoListado = false;
       _mostrandoListadoRestaurantes = false;
       _mostrandoListadoAlojamientos = false;
     });
@@ -103,108 +210,94 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_mostrandoListado) {
-      if (_mostrandoListadoRestaurantes) {
-        return _buildListadoRestaurantes();
-      }
+    if (_mostrandoListadoRestaurantes) return _buildListadoRestaurantes();
+    if (_mostrandoListadoAlojamientos) return _buildListadoAlojamientos();
 
-      if (_mostrandoListadoAlojamientos) {
-        return _buildListadoAlojamientos();
-      }
-    }
+    return switch (_estadoResumen) {
+      EstadoUi.cargando => const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 166, 226, 70),
+        ),
+      ),
+      EstadoUi.vacio => estadoVacio(),
+      EstadoUi.sinConexion => estadoError(
+        icon: Icons.wifi_off,
+        mensaje: _mensajeErrorResumen,
+        onRetry: _cargarResumen,
+      ),
+      EstadoUi.error => estadoError(
+        icon: Icons.error_outline,
+        mensaje: _mensajeErrorResumen,
+        onRetry: _cargarResumen,
+      ),
+      EstadoUi.contenido => _buildResumen(),
+    };
+  }
 
-    return FutureBuilder(
-      future: Future.wait([
-        _futureRestaurantes,
-        _futureAlojamientos,
-      ]),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70)),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Text('Error: ${snapshot.error}'),
-          );
-        }
-
-        final restaurantes = snapshot.data![0] as List<Restaurante>;
-        final alojamientos = snapshot.data![1] as List<Alojamiento>;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
-          child: Column(
-            children: [
-              const Text(
-                "Establecimientos",
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _tarjetaEstablecimiento(
-                tituloBloque: 'RESTAURANTES DESTACADOS',
-                items: restaurantes.map((r) {
-                  return _ItemEstablecimiento(
-                    titulo: r.nombre,
-                    imagenUrl: r.imagenPrincipal,
-                    onTap: () async {
-                      try {
-                        final restauranteDetalle =
-                        await RestauranteApiService
-                            .obtenerRestauranteDetalle(r.id);
-
-                        widget.onDetalleSeleccionado(restauranteDetalle);
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            showCloseIcon: true,
-                            content: Text('Error al cargar detalle: $e'),
-                          ),
-                        );
-                      }
-                    },
-                  );
-                }).toList(),
-                onVerMas: _abrirListadoRestaurantes,
-              ),
-              const SizedBox(height: 22),
-              _tarjetaEstablecimiento(
-                tituloBloque: 'ALOJAMIENTOS DESTACADOS',
-                items: alojamientos.map((a) {
-                  return _ItemEstablecimiento(
-                    titulo: a.nombre,
-                    imagenUrl: a.imagenPrincipal,
-                    onTap: () async {
-                      try {
-                        final alojamientoDetalle =
-                        await AlojamientoApiService
-                            .obtenerAlojamientoDetalle(a.id);
-
-                        widget.onDetalleSeleccionado(alojamientoDetalle);
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            showCloseIcon: true,
-                            content: Text('Error al cargar detalle: $e'),
-                          ),
-                        );
-                      }
-                    },
-                  );
-                }).toList(),
-                onVerMas: _abrirListadoAlojamientos,
-              ),
-            ],
+  Widget _buildResumen() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+      child: Column(
+        children: [
+          const Text(
+            "Establecimientos",
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
-        );
-      },
+          const SizedBox(height: 12),
+          _tarjetaEstablecimiento(
+            tituloBloque: 'RESTAURANTES DESTACADOS',
+            items: _restaurantes.map((r) {
+              return _ItemEstablecimiento(
+                titulo: r.nombre,
+                imagenUrl: r.imagenPrincipal,
+                onTap: () async {
+                  try {
+                    final detalle =
+                    await RestauranteApiService.restauranteDetalle(r.id);
+                    widget.onDetalleSeleccionado(detalle);
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        showCloseIcon: true,
+                        content: Text('Error al cargar detalle: $e'),
+                      ),
+                    );
+                  }
+                },
+              );
+            }).toList(),
+            onVerMas: _abrirListadoRestaurantes,
+          ),
+          const SizedBox(height: 22),
+          _tarjetaEstablecimiento(
+            tituloBloque: 'ALOJAMIENTOS DESTACADOS',
+            items: _alojamientos.map((a) {
+              return _ItemEstablecimiento(
+                titulo: a.nombre,
+                imagenUrl: a.imagenPrincipal,
+                onTap: () async {
+                  try {
+                    final detalle =
+                    await AlojamientoApiService.obtenerAlojamientoDetalle(
+                        a.id);
+                    widget.onDetalleSeleccionado(detalle);
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        showCloseIcon: true,
+                        content: Text('Error al cargar detalle: $e'),
+                      ),
+                    );
+                  }
+                },
+              );
+            }).toList(),
+            onVerMas: _abrirListadoAlojamientos,
+          ),
+        ],
+      ),
     );
   }
 
@@ -222,73 +315,68 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
           padding: EdgeInsets.only(bottom: 8),
           child: Text(
             'Restaurantes',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
         ),
         Expanded(
-          child: FutureBuilder<List<Restaurante>>(
-            future: _futureTodosRestaurantes,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70)),
+          child: switch (_estadoRestaurantes) {
+            EstadoUi.cargando => const Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 166, 226, 70),
+              ),
+            ),
+            EstadoUi.vacio => estadoVacio(),
+            EstadoUi.sinConexion => estadoError(
+              icon: Icons.wifi_off,
+              mensaje: _mensajeErrorRestaurantes,
+              onRetry: () {
+                _restaurantesCargados = false;
+                _cargarTodosRestaurantes();
+              },
+            ),
+            EstadoUi.error => estadoError(
+              icon: Icons.error_outline,
+              mensaje: _mensajeErrorRestaurantes,
+              onRetry: () {
+                _restaurantesCargados = false;
+                _cargarTodosRestaurantes();
+              },
+            ),
+            EstadoUi.contenido => ListView.builder(
+              padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              itemCount: _todosRestaurantes.length,
+              itemBuilder: (context, index) {
+                final r = _todosRestaurantes[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Tarjeta.restaurante(
+                    titulo: r.nombre,
+                    imagenUrl: r.imagenPrincipal,
+                    textoEtiqueta: r.categoriaRestaurante[0].toUpperCase() +
+                        r.categoriaRestaurante.substring(1).toLowerCase(),
+                    iconoEtiqueta:
+                    iconosRestaurante[r.categoriaRestaurante] ??
+                        'assets/iconos/restaurantes.svg',
+                    onTap: () async {
+                      try {
+                        final detalle = await RestauranteApiService
+                            .restauranteDetalle(r.id);
+                        widget.onDetalleSeleccionado(detalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error al cargar detalle: $e'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 );
-              }
-
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text('Error: ${snapshot.error}'),
-                );
-              }
-
-              final restaurantes = snapshot.data ?? [];
-
-              if (restaurantes.isEmpty) {
-                return const Center(
-                  child: Text('No hay restaurantes disponibles'),
-                );
-              }
-
-              return ListView.builder(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                itemCount: restaurantes.length,
-                itemBuilder: (context, index) {
-                  final restaurante = restaurantes[index];
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Tarjeta.restaurante(
-                      titulo: restaurante.nombre,
-                      imagenUrl: restaurante.imagenPrincipal,
-                      textoEtiqueta: restaurante.categoriaRestaurante[0].toUpperCase() +
-                          restaurante.categoriaRestaurante.substring(1).toLowerCase(),
-                      iconoEtiqueta: iconosRestaurante[restaurante.categoriaRestaurante]!,
-                      onTap: () async {
-                        try {
-                          final restauranteDetalle =
-                          await RestauranteApiService
-                              .obtenerRestauranteDetalle(restaurante.id);
-
-                          widget.onDetalleSeleccionado(restauranteDetalle);
-                        } catch (e) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error al cargar detalle: $e'),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+              },
+            ),
+          },
         ),
       ],
     );
@@ -308,73 +396,68 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
           padding: EdgeInsets.only(bottom: 8),
           child: Text(
             'Alojamientos',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
         ),
         Expanded(
-          child: FutureBuilder<List<Alojamiento>>(
-            future: _futureTodosAlojamientos,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
+          child: switch (_estadoAlojamientos) {
+            EstadoUi.cargando => const Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 166, 226, 70),
+              ),
+            ),
+            EstadoUi.vacio => estadoVacio(),
+            EstadoUi.sinConexion => estadoError(
+              icon: Icons.wifi_off,
+              mensaje: _mensajeErrorAlojamientos,
+              onRetry: () {
+                _alojamientosCargados = false;
+                _cargarTodosAlojamientos();
+              },
+            ),
+            EstadoUi.error => estadoError(
+              icon: Icons.error_outline,
+              mensaje: _mensajeErrorAlojamientos,
+              onRetry: () {
+                _alojamientosCargados = false;
+                _cargarTodosAlojamientos();
+              },
+            ),
+            EstadoUi.contenido => ListView.builder(
+              padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              itemCount: _todosAlojamientos.length,
+              itemBuilder: (context, index) {
+                final a = _todosAlojamientos[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Tarjeta.alojamiento(
+                    titulo: a.nombre,
+                    imagenUrl: a.imagenPrincipal,
+                    textoEtiqueta: a.categoriaAlojamiento[0].toUpperCase() +
+                        a.categoriaAlojamiento.substring(1).toLowerCase(),
+                    iconoEtiqueta:
+                    iconosAlojamiento[a.categoriaAlojamiento] ??
+                        'assets/iconos/casa_rural.svg',
+                    onTap: () async {
+                      try {
+                        final detalle = await AlojamientoApiService
+                            .obtenerAlojamientoDetalle(a.id);
+                        widget.onDetalleSeleccionado(detalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error al cargar detalle: $e'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 );
-              }
-
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text('Error: ${snapshot.error}'),
-                );
-              }
-
-              final alojamientos = snapshot.data ?? [];
-
-              if (alojamientos.isEmpty) {
-                return const Center(
-                  child: Text('No hay alojamientos disponibles'),
-                );
-              }
-
-              return ListView.builder(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                itemCount: alojamientos.length,
-                itemBuilder: (context, index) {
-                  final alojamiento = alojamientos[index];
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Tarjeta.alojamiento(
-                      titulo: alojamiento.nombre,
-                      imagenUrl: alojamiento.imagenPrincipal,
-                      textoEtiqueta: alojamiento.categoriaAlojamiento[0].toUpperCase() +
-                          alojamiento.categoriaAlojamiento.substring(1).toLowerCase(),
-                      iconoEtiqueta: iconosAlojamiento[alojamiento.categoriaAlojamiento]!,
-                      onTap: () async {
-                        try {
-                          final alojamientoDetalle =
-                          await AlojamientoApiService
-                              .obtenerAlojamientoDetalle(alojamiento.id);
-
-                          widget.onDetalleSeleccionado(alojamientoDetalle);
-                        } catch (e) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error al cargar detalle: $e'),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+              },
+            ),
+          },
         ),
       ],
     );
@@ -394,22 +477,14 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: List.generate(filaItems.length * 2 - 1, (index) {
-            if (index.isOdd) {
-              return const SizedBox(width: 10);
-            }
-
+            if (index.isOdd) return const SizedBox(width: 10);
             final item = filaItems[index ~/ 2];
-
-            return Expanded(
-              child: _miniTarjetaEstablecimiento(item: item),
-            );
+            return Expanded(child: _miniTarjetaEstablecimiento(item: item));
           }),
         ),
       );
 
-      if (i + 3 < items.length) {
-        filas.add(const SizedBox(height: 16));
-      }
+      if (i + 3 < items.length) filas.add(const SizedBox(height: 16));
     }
 
     return Container(
@@ -461,9 +536,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     );
   }
 
-  Widget _miniTarjetaEstablecimiento({
-    required _ItemEstablecimiento item,
-  }) {
+  Widget _miniTarjetaEstablecimiento({required _ItemEstablecimiento item}) {
     const Color verdeKultux = Color(0xFFA8D63F);
 
     return GestureDetector(
@@ -497,10 +570,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
             aspectRatio: 1,
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: verdeKultux,
-                  width: 1.4,
-                ),
+                border: Border.all(color: verdeKultux, width: 1.4),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: const [
                   BoxShadow(

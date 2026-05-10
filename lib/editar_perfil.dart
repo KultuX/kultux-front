@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kultux/componentes/text_fields.dart';
 import 'package:kultux/componentes/botones.dart';
+import 'package:kultux/componentes/selector_localidad.dart';
 import 'package:kultux/models/localidad.dart';
 import 'package:kultux/models/usuario.dart';
-import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/repository/usuario_repository.dart';
+import 'package:kultux/api/localidadesApi.dart';
 
 class EditarPerfilPage extends StatefulWidget {
   final VoidCallback onVolver;
@@ -18,36 +19,56 @@ class EditarPerfilPage extends StatefulWidget {
 }
 
 class _EditarPerfilPageState extends State<EditarPerfilPage> {
-
   Localidad? _localidadSeleccionada;
   File? _imagenSeleccionada;
   final ImagePicker _picker = ImagePicker();
 
-  late Future<List<Localidad>> _futureLocalidades;
   late final Map<String, TextEditingController> _controllers;
 
   @override
   void initState() {
     super.initState();
-    _futureLocalidades = LocalidadApiService.obtenerLocalidadNombres();
 
     final u = Usuario.usuarioActual;
+
     _controllers = {
-      'nombre'    : TextEditingController(text: u?.nombre    ?? ''),
-      'apellidos' : TextEditingController(text: u?.apellidos ?? ''),
-      'email'     : TextEditingController(text: u?.email     ?? ''),
-      'password'  : TextEditingController(),
-      'localidad' : TextEditingController(text: u?.localidad?.toString() ?? ''),
+      'nombre': TextEditingController(text: u?.nombre ?? ''),
+      'apellidos': TextEditingController(text: u?.apellidos ?? ''),
+      'email': TextEditingController(text: u?.email ?? ''),
+      'password': TextEditingController(),
+      'localidad': TextEditingController(text: u?.localidad?.toString() ?? ''),
     };
+
+    _cargarLocalidadInicial();
+  }
+
+  /// Cargar la localidad actual del usuario para el selector
+  Future<void> _cargarLocalidadInicial() async {
+    final id = int.tryParse(_controllers['localidad']!.text);
+    if (id == null) return;
+
+    try {
+      final lista = await LocalidadApiService.obtenerLocalidadNombres();
+      if (!mounted) return;
+
+      setState(() {
+        _localidadSeleccionada =
+            lista.firstWhere((l) => l.ine == id, orElse: () => _localidadSeleccionada as Localidad);
+      });
+    } catch (_) {
+      // si falla, simplemente no se preselecciona
+    }
   }
 
   @override
   void dispose() {
-    for (final c in _controllers.values) c.dispose();
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  // ── Selector de imagen ─────────────────────────────────────────────────────
+  // ── Selector de imagen ─────────────────────────────────────────────
   Future<void> _abrirSelectorImagen() async {
     showModalBottomSheet(
       context: context,
@@ -60,7 +81,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           children: [
             const SizedBox(height: 8),
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.black26,
                 borderRadius: BorderRadius.circular(2),
@@ -76,8 +98,10 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                   source: ImageSource.gallery,
                   imageQuality: 85,
                 );
-                if (picked != null) {
-                  setState(() => _imagenSeleccionada = File(picked.path));
+                if (picked != null && mounted) {
+                  setState(() {
+                    _imagenSeleccionada = File(picked.path);
+                  });
                 }
               },
             ),
@@ -90,8 +114,10 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                   source: ImageSource.camera,
                   imageQuality: 85,
                 );
-                if (picked != null) {
-                  setState(() => _imagenSeleccionada = File(picked.path));
+                if (picked != null && mounted) {
+                  setState(() {
+                    _imagenSeleccionada = File(picked.path);
+                  });
                 }
               },
             ),
@@ -102,41 +128,45 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     );
   }
 
-  // ── Guardar cambios ────────────────────────────────────────────────────────
+  // ── Guardar cambios ────────────────────────────────────────────────
   Future<void> _guardarCambios() async {
-    final nombre      = _controllers['nombre']!.text.trim();
-    final apellidos   = _controllers['apellidos']!.text.trim();
-    final email       = _controllers['email']!.text.trim();
-    final password    = _controllers['password']!.text.trim();
-    final localidadTxt = _controllers['localidad']!.text.trim();
+    final datos = <String, dynamic>{};
 
-    final Map<String, dynamic> datos = {};
-    if (nombre.isNotEmpty)    datos['nombre']    = nombre;
-    if (apellidos.isNotEmpty) datos['apellidos'] = apellidos;
-    if (email.isNotEmpty)     datos['email']     = email;
-    if (password.isNotEmpty)  datos['password']  = password;
-    final localidadId = int.tryParse(localidadTxt);
-    if (localidadId != null)  datos['localidad'] = localidadId;
+    void addIfNotEmpty(String key) {
+      final value = _controllers[key]!.text.trim();
+      if (value.isNotEmpty) datos[key] = value;
+    }
+
+    addIfNotEmpty('nombre');
+    addIfNotEmpty('apellidos');
+    addIfNotEmpty('email');
+    addIfNotEmpty('password');
+
+    if (_localidadSeleccionada != null) {
+      datos['localidad'] = _localidadSeleccionada!.ine;
+    }
 
     try {
-      final usuarioActualizado = await UsuarioApiService.editarUsuario(
+      final actualizado = await UsuarioApiService.editarUsuario(
         id: Usuario.usuarioActual!.id!,
         datos: datos,
         imagen: _imagenSeleccionada,
       );
 
-      await UsuarioRepository.guardar(usuarioActualizado);
+      await UsuarioRepository.guardar(actualizado);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           showCloseIcon: true,
-          content: Text('✅ ¡Perfil actualizado correctamente!', textAlign: TextAlign.center),
+          content: Text(
+            '✅ ¡Perfil actualizado correctamente!',
+            textAlign: TextAlign.center,
+          ),
         ),
       );
 
       widget.onVolver();
-
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,15 +175,13 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  // ── Build ─────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-
           const SizedBox(height: 20),
           _avatarEditable(),
           const SizedBox(height: 24),
@@ -182,9 +210,19 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           ),
           const SizedBox(height: 20),
 
-          _desplegableLocalidad(),
-          const SizedBox(height: 32),
+          /// ✅ MISMO selector reutilizado
+          SelectorLocalidad(
+            valorInicial: _localidadSeleccionada,
+            onSelected: (loc) {
+              setState(() {
+                _localidadSeleccionada = loc;
+                _controllers['localidad']!.text =
+                    loc?.ine.toString() ?? '';
+              });
+            },
+          ),
 
+          const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -201,14 +239,13 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  // ── Avatar editable ────────────────────────────────────────────────────────
+  // ── Avatar editable ────────────────────────────────────────────────
   Widget _avatarEditable() {
     return GestureDetector(
       onTap: _abrirSelectorImagen,
@@ -225,7 +262,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                 ? NetworkImage(Usuario.usuarioActual!.imagenPerfil!)
                 : null) as ImageProvider?,
             child: _imagenSeleccionada == null
-                ? const Icon(Icons.person, size: 64, color: Colors.grey)
+                ? const Icon(Icons.person,
+                size: 64, color: Colors.grey)
                 : null,
           ),
           Container(
@@ -234,62 +272,11 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
               color: Color.fromARGB(255, 166, 226, 70),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.edit, size: 18, color: Colors.black),
+            child: const Icon(Icons.edit,
+                size: 18, color: Colors.black),
           ),
         ],
       ),
-    );
-  }
-
-  // ── Desplegable localidad ──────────────────────────────────────────────────
-  Widget _desplegableLocalidad({double ancho = 364}) {
-    return FutureBuilder<List<Localidad>>(
-      future: _futureLocalidades,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator(
-            color: Color.fromARGB(255, 166, 226, 70),
-          );
-        }
-        if (snapshot.hasError) {
-          return const Text('Ups… Error al cargar las localidades.');
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('No hay localidades disponibles.');
-        }
-
-        final localidades = snapshot.data!;
-
-        if (_localidadSeleccionada == null) {
-          final currentId = int.tryParse(_controllers['localidad']!.text);
-          if (currentId != null) {
-            try {
-              _localidadSeleccionada =
-                  localidades.firstWhere((l) => l.ine == currentId);
-            } catch (_) {}
-          }
-        }
-
-        return DropdownMenu<Localidad>(
-          width: ancho,
-          initialSelection: _localidadSeleccionada,
-          label: const Text('Ubicación'),
-          menuHeight: 250,
-          dropdownMenuEntries: localidades
-              .map((l) => DropdownMenuEntry<Localidad>(
-            value: l,
-            label: l.nombre,
-          ))
-              .toList(),
-          onSelected: (Localidad? seleccionada) {
-            setState(() {
-              _localidadSeleccionada = seleccionada;
-              _controllers['localidad']!.text =
-                  seleccionada?.ine.toString() ?? '';
-            });
-          },
-        );
-      },
     );
   }
 }

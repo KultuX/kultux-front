@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:kultux/api/actividadesAPI.dart';
-import 'package:kultux/buscarRestaurante.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
 import 'package:kultux/componentes/app_bar.dart';
 import 'package:kultux/componentes/asset_login.dart';
+import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/mapas.dart';
 import 'package:kultux/perfil.dart';
 import 'package:kultux/buscar.dart';
-import 'package:kultux/buscarActividad.dart';
-import 'package:kultux/buscarAlojamiento.dart';
+
 import 'package:kultux/tarjetas.dart';
 import 'package:kultux/establecimientos.dart';
 import 'package:kultux/detalles.dart';
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/usuario.dart';
-import 'package:kultux/models/pages.dart';
+
 import 'package:kultux/notificaciones.dart';
+
+import 'dart:io';
+import 'package:kultux/core/utils/estado_ui.dart';
+import 'package:kultux/core/utils/http_error_mapper.dart';
+import 'package:kultux/core/utils/estados_widgets.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -38,7 +43,9 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  final List<Actividad>? actividadesIniciales;
+  final int? totalPaginas;
+  const MyHomePage({super.key, this.actividadesIniciales, this.totalPaginas});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -67,38 +74,78 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _mostrandoDetalleEstablecimiento = false;
   dynamic _establecimientoDetalleSeleccionado;
 
+  bool _mostrandoDetalleBuscar = false;
+  dynamic _buscarDetalleSeleccionado;
+
+  EstadoUi estadoInicio = EstadoUi.cargando;
+  String mensajeErrorInicio = '';
+
+
   @override
   void initState() {
     super.initState();
 
-    _cargarActividades();
 
-    _scrollController.addListener((){
-      if(_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200){
+    if (widget.actividadesIniciales != null) {
+      _actividades = widget.actividadesIniciales!;
+      _totalPaginas = widget.totalPaginas ?? 1;
+      _paginaActual = 1;
+      estadoInicio = EstadoUi.contenido;
+    } else {
+      _cargarActividades(); // ← FALTABA ESTO cuando no hay datos precargados
+    }
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
         _cargarMas();
       }
     });
+
   }
 
   Future<void> _cargarActividades() async {
-    if(_cargando) return;
-    setState(() => _cargando = true);
-    try{
-      final page = await ActividadesApiService.obtenerActividadesInicio(_paginaActual);
+    if (_cargando) return;
+
+    setState(() {
+      _cargando = true;
+      estadoInicio = EstadoUi.cargando;
+    });
+
+    try {
+      final page =
+      await ActividadesApiService.obtenerActividadesInicio(_paginaActual);
+
       setState(() {
         _actividades.addAll(page.contenido);
         _totalPaginas = page.totalPaginas;
-        _paginaActual++ ;
+        _paginaActual++;
+        estadoInicio = _actividades.isEmpty
+            ? EstadoUi.vacio
+            : EstadoUi.contenido;
       });
-    }catch(e){
-      if(mounted){
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'))
-        );
-      }
-    }
 
-    setState(() => _cargando = false);
+    } on SocketException {
+      setState(() {
+        estadoInicio = EstadoUi.sinConexion;
+        mensajeErrorInicio = 'No hay conexión a internet';
+      });
+
+    } on HttpException catch (e) {
+      final uiError = mapearStatusCode(int.parse(e.message));
+      setState(() {
+        estadoInicio = uiError.estado;
+        mensajeErrorInicio = uiError.mensaje;
+      });
+
+    } catch (_) {
+      setState(() {
+        estadoInicio = EstadoUi.error;
+        mensajeErrorInicio = 'Error inesperado';
+      });
+    } finally {
+      _cargando = false;
+    }
   }
 
   Future<void> _cargarMas() async {
@@ -151,15 +198,28 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _abrirDetalleBuscar(dynamic objeto) {
+    setState(() {
+      _buscarDetalleSeleccionado = objeto;
+      _mostrandoDetalleBuscar = true;
+    });
+  }
+
+  void _volverAListadoBuscar() {
+    setState(() {
+      _mostrandoDetalleBuscar = false;
+      _buscarDetalleSeleccionado = null;
+    });
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> paginas = [
       _bodyInicio(),
       MapasPage(),
-     BuscarPage(),
-     // BuscarActividadPage(),
-     // BuscarAlojamientoPage(),
-      //BuscarRestaurantePage(),
+      _bodyBuscar(),
       _bodyEstablecimientos(),
       PerfilPage(cerrarSesion: _cerrarSesion, usuario: usuario),
     ];
@@ -176,7 +236,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
       body: _mostrarNotificaciones
-          ? NotificacionesPage(mostrar:_mostrarNotificaciones) // 🔹 muestra notificaciones
+          ? NotificacionesPage(mostrar:_mostrarNotificaciones) //  mostrar notificaciones
           : (
               _indexActual == 0 && !_logeado && !_invitado
                   ? Stack(
@@ -235,6 +295,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       _actividadDetalleSeleccionada = null;
                       _mostrandoDetalleEstablecimiento = false;
                       _establecimientoDetalleSeleccionado = null;
+                      _mostrandoDetalleBuscar = false;
+                      _buscarDetalleSeleccionado = null;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -253,11 +315,109 @@ class _MyHomePageState extends State<MyHomePage> {
 
                     _mostrandoDetalleEstablecimiento = false;
                     _establecimientoDetalleSeleccionado = null;
+                    _mostrandoDetalleBuscar = false;
+                    _buscarDetalleSeleccionado = null;
                   });
                 },
               ),
             );
   }
+
+  Widget _contenidoInicio() {
+    return Expanded(
+      child: Center(
+        child: SizedBox(
+          width: 364,
+          child: Stack(
+            children: [
+              ListView.builder(
+                controller: _scrollController,
+                itemCount: _actividades.length + 1,
+                itemBuilder: (context, index) {
+                  if (index < _actividades.length) {
+                    final actividad = _actividades[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Tarjeta.actividades(
+                        titulo: actividad.titulo,
+                        localidad: actividad.localidad,
+                        fecha: actividad.fechaInicio,
+                        imagenUrl: actividad.imagenPrincipal,
+                        onTap: () async {
+                          final detalle =
+                          await ActividadesApiService.detalleActividad(
+                              actividad.id);
+                          _abrirDetalleActividad(detalle);
+                        },
+                      ),
+                    );
+                  }
+
+                  if (_cargando) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color.fromARGB(255, 166, 226, 70),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (_paginaActual >= _totalPaginas) {
+                    return const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          "¡Ya no hay más actividades para mostrar!",
+                          style: TextStyle(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: ScrollBoton(controller: _scrollController),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _cabeceraInicio() {
+    final fechaActual = DateTime.now();
+    const dias = ['L','M','X','J','V','S','D'];
+    final dia = dias[fechaActual.weekday - 1];
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            "ACTIVIDADES RECIENTES",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            "$dia. ${fechaActual.day}/${fechaActual.month}/${fechaActual.year}",
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
 
   Widget _bodyInicio() {
     if (_mostrandoDetalleInicio && _actividadDetalleSeleccionada != null) {
@@ -271,114 +431,51 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           Expanded(
-            child: Detalle.desdeObjeto(objeto: _actividadDetalleSeleccionada!),
+            child: Detalle.desdeObjeto(
+              objeto: _actividadDetalleSeleccionada!,
+            ),
           ),
         ],
       );
     }
-    final fechaActual = DateTime.now();
-    const dias = ['LUN','MAR','MIE','JUE','VIE','SÁB','DOM'];
-    final dia = dias[fechaActual.weekday -1];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: .spaceBetween,
-            children: [
-              const Text(
-                "ACTIVIDADES RECIENTES",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+        _cabeceraInicio(),
+
+        switch (estadoInicio) {
+          EstadoUi.cargando =>
+          const Expanded(child: Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70)))),
+
+          EstadoUi.vacio =>
+              Expanded(child: estadoVacio()),
+
+          EstadoUi.sinConexion =>
+              Expanded(
+                child: estadoError(
+                  icon: Icons.wifi_off,
+                  mensaje: mensajeErrorInicio,
+                  onRetry: _cargarActividades,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                "${dia}. ${fechaActual.day}/${fechaActual.month}/${fechaActual.year}",
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
+
+          EstadoUi.error =>
+              Expanded(
+                child: estadoError(
+                  icon: Icons.error_outline,
+                  mensaje: mensajeErrorInicio,
+                  onRetry: _cargarActividades,
                 ),
               ),
-            ],
-          ),
-        ),
 
-        Expanded(
-          child: Center(
-            child: SizedBox(
-              width: 364,
-              child: ListView.builder(
-                controller: _scrollController,
-                itemCount: _actividades.length + 1,
-                itemBuilder: (context, index) {
-
-                  if (index < _actividades.length) {
-                    final actividad = _actividades[index];
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Tarjeta.actividades(
-                        titulo: actividad.titulo,
-                        localidad: actividad.localidad,
-                        fecha: actividad.fechaInicio,
-                        imagenUrl: actividad.imagenPrincipal,
-
-                        onTap: () async {
-                          try {
-                            final actividadDetalle =
-                            await ActividadesApiService.detalleActividad(
-                                actividad.id);
-                            _abrirDetalleActividad(actividadDetalle);
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                showCloseIcon: true,
-                                content: Text(
-                                  "Error al cargar el detalle $e",
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    );
-                  }
-
-                  if (_cargando) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70))),
-                    );
-                  }
-
-                  if (_paginaActual >= _totalPaginas) {
-                    return const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Center(
-                        child: Text(
-                          "¡Ya no hay más actividades para mostrar, ve a la sección de buscar!",
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-          ),
-        ),
+          EstadoUi.contenido =>
+              _contenidoInicio(),
+        },
       ],
     );
   }
+
 
   Widget _bodyEstablecimientos() {
     if (_mostrandoDetalleEstablecimiento &&
@@ -405,6 +502,26 @@ class _MyHomePageState extends State<MyHomePage> {
       onDetalleSeleccionado: _abrirDetalleEstablecimiento,
     );
   }
+
+  Widget _bodyBuscar() {
+    if (_mostrandoDetalleBuscar && _buscarDetalleSeleccionado != null) {
+      return Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              onPressed: _volverAListadoBuscar,
+              icon: const Icon(Icons.arrow_back),
+            ),
+          ),
+          Expanded(
+            child: Detalle.desdeObjeto(objeto: _buscarDetalleSeleccionado!),
+          ),
+        ],
+      );
+    }
+    return BuscarPage(onDetalleSeleccionado: _abrirDetalleBuscar);
+  }
 }
 
 class SplashPage extends StatefulWidget {
@@ -418,13 +535,45 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    _cargarDatosInicio();
+  }
+
+
+  Future<void> _cargarDatosInicio() async {
+    try {
+
+      final page =
+      await ActividadesApiService.obtenerActividadesInicio(0);
+
+      // 2️⃣ Precargar SOLO algunas imágenes (muy importante)
+      for (final act in page.contenido.take(5)) {
+        if (act.imagenPrincipal != null) {
+          await precacheImage(
+            NetworkImage(act.imagenPrincipal),
+            context,
+          );
+        }
+      }
+
+      // 3️⃣ Navegar pasando los datos ya cargados
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MyHomePage()),
+        MaterialPageRoute(
+          builder: (_) => MyHomePage(
+            actividadesIniciales: page.contenido,
+            totalPaginas: page.totalPaginas,
+          ),
+        ),
       );
-    });
+    } catch (e) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MyHomePage()),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {

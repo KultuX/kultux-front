@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:kultux/models/imagen.dart';
-import 'package:kultux/models/horario.dart';
+import 'package:kultux/models/franja.dart';
+
 class Restaurante{
   final int id;
   final String nombre;
@@ -9,10 +11,12 @@ class Restaurante{
   String? descripcion;
   String? telefonoEmpresa;
   String? correoCorporativo;
-  Horario? horario;
+  Map<String,List<Franja>>? horario;
   String? localidad;
   List<Imagen>? imagenes;
   bool? abierto;
+  String? urlReserva;
+  String? urlWeb;
 
   Restaurante._({
     required this.id,
@@ -25,7 +29,9 @@ class Restaurante{
     this.horario,
     this.localidad,
     this.imagenes,
-    this.abierto
+    this.abierto,
+    this.urlReserva,
+    this.urlWeb
   });
 
   factory Restaurante.destacado(Map<String, dynamic> json){
@@ -46,22 +52,44 @@ class Restaurante{
         descripcion: json['descripcion'],
         telefonoEmpresa: json['telefonoEmpresa'],
         correoCorporativo: json['correoCorporativo'],
-        horario: Horario.fromJson(json['horario']),
+        horario: _parseHorario(json['horario']),
         localidad: json['localidad'],
-        imagenes: json['imagenes'],
-        abierto: json['abierto'] // -> añadir campo en spring boot
+        imagenes: json['imagenes'] != null
+            ? (json['imagenes'] as List)
+            .map((e) => Imagen.fromJson(e))
+            .toList()
+            : [],
+        abierto: json['abierto'],
+        urlReserva: json['urlReserva'],
+        urlWeb: json['urlWeb']
     );
   }
 
   factory Restaurante.busqueda(Map<String, dynamic> json){
+    debugPrint('Abierto API: ${json['abierto']} | Hora local: ${DateTime.now()}');
     return Restaurante._(
       id: json['id'],
       nombre: json['nombre'],
-      horario: Horario.fromJson(json['horario']),
+      horario: _parseHorario(json['horario']),
       localidad: json['localidad']['nombre'],
       categoriaRestaurante: json['categoria'],
       imagenPrincipal: json['portada'],
       abierto: json['abierto']
     );
   }
+
+
+  static Map<String, List<Franja>> _parseHorario(Map<String, dynamic> jsonHorario) {
+    return jsonHorario.map(
+          (dia, franjas) => MapEntry(
+        dia,
+        (franjas as List)
+            .map((f) => Franja.fromJson(f))
+            .toList(),
+      ),
+    );
+  }
+
+
+
 }

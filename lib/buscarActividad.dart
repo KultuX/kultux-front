@@ -1,14 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:kultux/models/localidad.dart';
 import 'package:kultux/models/actividad.dart';
-import 'package:kultux/models/pages.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/actividadesApi.dart';
-import 'package:kultux/tarjetas.dart';
 import 'package:kultux/tarjetasBusqueda.dart';
+import 'package:kultux/componentes/scroll_boton.dart';
+import 'package:kultux/core/utils/estado_ui.dart';
+
+import 'core/utils/http_error_mapper.dart';
+
+import 'package:kultux/core/utils/estados_widgets.dart';
 
 class BuscarActividadPage extends StatefulWidget {
-  const BuscarActividadPage({super.key});
+  final Function(dynamic)? onDetalleSeleccionado;
+  const BuscarActividadPage({super.key, this.onDetalleSeleccionado});
 
   @override
   State<BuscarActividadPage> createState() => _BuscarPageState();
@@ -31,31 +38,56 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   final ScrollController controller = ScrollController();
 
+  EstadoUi estado = EstadoUi.cargando;
+  String mensajeError = '';
+
+
   @override
   void initState() {
     super.initState();
+
     futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     futureCategorias = ActividadesApiService.categoriasActividad();
-    _cargarActividades();
+
+    _cargaInicial();
+
     controller.addListener(() {
       if (controller.position.pixels >= controller.position.maxScrollExtent - 200) {
         _cargarMas();
       }
     });
+
   }
 
-  Future<void> _cargarActividades() async {
+
+  Future<void> _resetYcargar() async {
     paginaActual = 0;
     actividades.clear();
-    setState(() => cargandoInicial = true);
     await _cargarMas();
+  }
+
+
+  Future<void> _cargarActividades() async {
+    await _resetYcargar();
+  }
+
+
+
+  Future<void> _cargaInicial() async {
+    setState(() => cargandoInicial = true);
+    await _resetYcargar();
     setState(() => cargandoInicial = false);
   }
 
+
   Future<void> _cargarMas() async {
     if (cargando) return;
+
     if (paginaActual >= totalPaginas && paginaActual != 0) return;
-    setState(() => cargando = true);
+    setState(() {
+      cargando = true;
+      estado = EstadoUi.cargando;
+    });
     try {
       final pageResponse = await ActividadesApiService.actividadesFiltradas(
         titulo: titulo.isEmpty ? null : titulo,
@@ -68,64 +100,103 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         actividades.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
         paginaActual++;
+        estado = actividades.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error en búsqueda: $e")),
-      );
+    }on SocketException {
+      setState(() {
+        estado = EstadoUi.sinConexion;
+        mensajeError = 'No hay conexion a internet';
+      });
+    }on HttpException catch (e){
+      final uiError = mapearStatusCode(int.parse(e.message));
+      setState(() {
+        estado = uiError.estado;
+        mensajeError = uiError.mensaje;
+      });
+    }catch (_) {
+        setState(() {
+          estado = EstadoUi.error;
+          mensajeError = 'Error inesperado';
+        });
+    } finally {
+        cargando = false;
     }
-    setState(() => cargando = false);
+
   }
+
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: cargandoInicial
-          ? const Center(
+    if (cargandoInicial) {
+      return const Center(
         child: CircularProgressIndicator(
           color: Color.fromARGB(255, 166, 226, 70),
         ),
-      )
-          : CustomScrollView(
-        controller: controller,
-        slivers: [
-          // ── Barra de búsqueda ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-              child: _searchBar(),
-            ),
+      );
+    }
+
+    switch (estado) {
+      case EstadoUi.cargando:
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 166, 226, 70),
           ),
+        );
 
-          // ── Filtros ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: _filtros(),
-            ),
-          ),
+      case EstadoUi.vacio:
+        return estadoVacio();
 
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+      case EstadoUi.sinConexion:
+        return estadoError(
+          icon: Icons.wifi_off,
+          mensaje: mensajeError,
+          onRetry: _cargaInicial,
+        );
 
-          // ── Lista o vacío ──
-          if (actividades.isEmpty && !cargando)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+      case EstadoUi.error:
+        return estadoError(
+          icon: Icons.error_outline,
+          mensaje: mensajeError,
+          onRetry: _cargaInicial,
+        );
+
+      case EstadoUi.contenido:
+        return _contenido();
+    }
+  }
+
+
+  Widget _contenido() {
+    return Stack(
+      children: [
+        CustomScrollView(
+          controller: controller,
+          slivers: [
+            // Barra de búsqueda
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+                child: Row(
                   children: [
-                    Icon(Icons.search_off, size: 56, color: Colors.grey.shade400),
-                    const SizedBox(height: 12),
-                    Text(
-                      "No hay actividades",
-                      style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-                    ),
+                    Expanded(child: _searchBar()),
+                    const SizedBox(width: 8),
+                    _selectorFecha(),
                   ],
                 ),
               ),
-            )
-          else
+            ),
+
+            // Filtros
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: _filtros(),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+            // Lista
             SliverList(
               delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -138,10 +209,13 @@ class _BuscarPageState extends State<BuscarActividadPage> {
                         localidad: a.localidad,
                         fecha: a.fechaInicio,
                         imagenUrl: a.imagenPrincipal,
-                        onTap: () {},
+                        onTap: () => widget.onDetalleSeleccionado?.call(a),
+                        textoEtiqueta: a.categoriaActividad,
+                        iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
                       ),
                     );
                   }
+
                   if (cargando) {
                     return const Padding(
                       padding: EdgeInsets.all(16),
@@ -152,6 +226,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
                       ),
                     );
                   }
+
                   if (paginaActual >= totalPaginas) {
                     return const Padding(
                       padding: EdgeInsets.all(20),
@@ -163,13 +238,21 @@ class _BuscarPageState extends State<BuscarActividadPage> {
                       ),
                     );
                   }
+
                   return const SizedBox.shrink();
                 },
-                childCount: actividades.length + (cargando || paginaActual >= totalPaginas ? 1 : 0),
+                childCount:
+                actividades.length + (cargando || paginaActual >= totalPaginas ? 1 : 0),
               ),
             ),
-        ],
-      ),
+          ],
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: ScrollBoton(controller: controller),
+        ),
+      ],
     );
   }
 
@@ -214,8 +297,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
             ],
           ],
         ),
-        const SizedBox(height: 8),
-        _selectorFecha(),
       ],
     );
   }
@@ -267,7 +348,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.blue.shade400, width: 1.5),
+        borderSide: BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
       ),
       suffixIcon: hasValue && onClear != null
           ? GestureDetector(
@@ -401,6 +482,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     );
   }
 
+
   Widget _selectorFecha() {
     return GestureDetector(
       onTap: () async {
@@ -415,31 +497,29 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        height: 40,
+        width: 40,
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
+          color: fecha == null ? Colors.grey.shade100 : const Color.fromARGB(30, 166, 226, 70),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: fecha == null
+                ? Colors.grey.shade300
+                : const Color.fromARGB(255, 166, 226, 70),
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.calendar_today, size: 15, color: Colors.grey.shade600),
-            const SizedBox(width: 6),
-            Text(
-              fecha == null
-                  ? 'Seleccionar fecha'
-                  : '${fecha!.day}/${fecha!.month}/${fecha!.year}',
-              style: TextStyle(
-                color: fecha == null ? Colors.grey.shade600 : Colors.black,
-                fontSize: 12,
-              ),
-            ),
-          ],
+        child: Icon(
+          Icons.calendar_today,
+          size: 18,
+          color: fecha == null
+              ? Colors.grey.shade600
+              : const Color.fromARGB(255, 166, 226, 70),
         ),
       ),
     );
   }
+
+
 
   Widget _shimmerLoader() {
     return Container(

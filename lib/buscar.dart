@@ -4,7 +4,8 @@ import 'package:kultux/buscarRestaurante.dart';
 import 'package:kultux/buscarAlojamiento.dart';
 
 class BuscarPage extends StatefulWidget {
-  const BuscarPage({super.key});
+  final Function(dynamic)? onDetalleSeleccionado;
+  const BuscarPage({super.key, this.onDetalleSeleccionado});
 
   @override
   State<BuscarPage> createState() => _BuscarPageState();
@@ -34,7 +35,7 @@ class _BuscarPageState extends State<BuscarPage> {
             children: [
               // Miniatura de fondo
               Positioned(
-                top: 0,
+                top: 2,
                 right: 0,
                 child: Opacity(
                   opacity: 0.15,
@@ -149,11 +150,11 @@ class _BuscarPageState extends State<BuscarPage> {
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return const BuscarActividadPage();
+        return BuscarActividadPage(onDetalleSeleccionado: widget.onDetalleSeleccionado);
       case 1:
-        return const BuscarRestaurantePage();
+        return BuscarRestaurantePage(onDetalleSeleccionado: widget.onDetalleSeleccionado);
       case 2:
-        return const BuscarAlojamientoPage();
+        return BuscarAlojamientoPage(onDetalleSeleccionado: widget.onDetalleSeleccionado);
       default:
         return const SizedBox.shrink();
     }

@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/pages.dart';
+
 
 class ActividadesApiService{
   static final String _BASE_URL_ACTIVIDADES = "micro-actividad-comd.onrender.com";
@@ -45,10 +47,7 @@ class ActividadesApiService{
             (json) => Actividad.inicio(json),
       );
     }
-
-    throw Exception(
-      'Error al obtener actividades: ${response.statusCode}',
-    );
+    throw HttpException(response.statusCode.toString());
   }
 
   static Future<Actividad> detalleActividad(int idActividad) async {
@@ -67,7 +66,7 @@ class ActividadesApiService{
       final dynamic json = jsonDecode(response.body);
       return Actividad.detalle(json);
     }else{
-      throw Exception('Error al obtener la actividad con $idActividad: ${response.statusCode}');
+      throw HttpException(response.statusCode.toString());
     }
   }
 
@@ -87,7 +86,7 @@ class ActividadesApiService{
       final List<dynamic> json = jsonDecode(response.body);
       return json.map((c) => c.toString()).toList();
     }else{
-      throw Exception('Error al obtener las categorias de la actividad');
+      throw HttpException(response.statusCode.toString());
     }
 
   }
@@ -138,13 +137,11 @@ class ActividadesApiService{
       final dynamic json = jsonDecode(response.body);
       return Pages<Actividad>.fromJson(
         json,
-            (e) => Actividad.inicio(e),
+            (e) => Actividad.busqueda(e),
       );
-    }else if(response.statusCode == 204){
-      throw Exception('Error al obtener las categorias de la actividad');
     }
     else{
-      throw Exception('Error al obtener las categorias de la actividad');
+      throw HttpException(response.statusCode.toString());
     }
 
   }

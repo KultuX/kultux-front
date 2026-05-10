@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/models/pages.dart';
@@ -24,7 +25,7 @@ class AlojamientoApiService{
       final List<dynamic> lista = jsonDecode(response.body);
       return lista.map((json) => Alojamiento.destacado(json)).toList();
     }else{
-      throw Exception('Error al obtener los alojamientoss: ${response.statusCode}');
+      throw HttpException(response.statusCode.toString());
     }
   }
 
@@ -44,7 +45,7 @@ class AlojamientoApiService{
       final dynamic json = jsonDecode(response.body);
       return Alojamiento.detalle(json);
     }else{
-      throw Exception('Error al obtener los nombre de las localidades: ${response.statusCode}');
+      throw HttpException(response.statusCode.toString());
     }
   }
 
@@ -64,7 +65,7 @@ class AlojamientoApiService{
       final List<dynamic> json = jsonDecode(response.body);
       return json.map((c) => c.toString()).toList();
     }else{
-      throw Exception('Error al obtener las categorias de los alojamientos: ${response.statusCode}');
+      throw HttpException(response.statusCode.toString());
     }
   }
 
@@ -104,11 +105,8 @@ class AlojamientoApiService{
         json,
             (a) => Alojamiento.busqueda(a),
       );
-    }else if(response.statusCode == 204){
-      throw Exception('No hay alojamientos para esta búsqueda');
-    }
-    else{
-      throw Exception('Error al obtener los alojamientos');
+    }else {
+      throw HttpException(response.statusCode.toString());
     }
 
   }

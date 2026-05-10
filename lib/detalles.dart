@@ -3,7 +3,8 @@ import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/imagen.dart';
-import 'package:kultux/models/horario.dart';
+import 'package:kultux/models/franja.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Detalle extends StatefulWidget {
   final String titulo;
@@ -15,8 +16,11 @@ class Detalle extends StatefulWidget {
   final String? fechaFin;
   final String? localidad;
   final List<Imagen>? imagenes;
-  final Horario? horario;
+  final Map<String,List<Franja>>? horario;
   final bool? abierto;
+  final String? urlCompraReserva;
+  final String? urlWeb;
+
 
   const Detalle._({
     super.key,
@@ -31,6 +35,8 @@ class Detalle extends StatefulWidget {
     this.localidad,
     this.imagenes,
     this.abierto,
+    this.urlCompraReserva,
+    this.urlWeb,
   });
 
   List<String> get imagenesLista {
@@ -58,6 +64,8 @@ class Detalle extends StatefulWidget {
         fechaInicio: objeto.fechaInicio,
         fechaFin: objeto.fechaFin,
         imagenes: objeto.imagenes,
+        urlCompraReserva: objeto.urlCompra,
+        urlWeb: objeto.urlWeb
       );
     }
     if (objeto is Alojamiento) {
@@ -67,6 +75,11 @@ class Detalle extends StatefulWidget {
         localidad: objeto.localidad?.nombre,
         telefonoEmpresa: objeto.telefonoEmpresa,
         correoCorporativo: objeto.correoCorporativo,
+        imagenes: objeto.imagenes,
+        urlCompraReserva: objeto.urlReserva,
+        urlWeb: objeto.urlWeb,
+        descripcion: objeto.descripcion
+
       );
     }
     if (objeto is Restaurante) {
@@ -75,11 +88,14 @@ class Detalle extends StatefulWidget {
         imagenPrincipal: objeto.imagenPrincipal,
         localidad: objeto.localidad,
         descripcion: objeto.descripcion,
-        telefonoEmpresa: objeto.telefonoEmpresa,
-        correoCorporativo: objeto.correoCorporativo,
+        telefonoEmpresa: objeto.telefonoEmpresa ?? '',
+        correoCorporativo: objeto.correoCorporativo ?? '',
         horario: objeto.horario,
         imagenes: objeto.imagenes,
         abierto: objeto.abierto,
+        urlCompraReserva: objeto.urlReserva,
+        urlWeb: objeto.urlWeb
+
       );
     }
     throw Exception('Tipo de objeto no soportado');
@@ -96,6 +112,15 @@ class _DetalleState extends State<Detalle> {
     1: 'Lun', 2: 'Mar', 3: 'Mié',
     4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom',
   };
+
+
+  bool get _tieneUrlReserva =>
+      widget.urlCompraReserva != null &&
+          widget.urlCompraReserva!.trim().isNotEmpty;
+
+
+  bool get _tieneUrlWeb =>
+      widget.urlWeb != null && widget.urlWeb!.trim().isNotEmpty;
 
   @override
   void didUpdateWidget(covariant Detalle oldWidget) {
@@ -280,6 +305,45 @@ class _DetalleState extends State<Detalle> {
             if (widget.descripcion != null && widget.descripcion!.trim().isNotEmpty)
               const SizedBox(height: 22),
 
+            if (_tieneUrlWeb) ...[
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: InkWell(
+                  onTap: () async {
+                    final uri = Uri.parse(widget.urlWeb!);
+                    await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.blue,
+                      ),
+                      children: [
+                        const TextSpan(
+                          text: 'Web oficial: ',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        TextSpan(
+                          text: widget.urlWeb!,
+                          style: const TextStyle(
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
             if (esActividad)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -354,29 +418,69 @@ class _DetalleState extends State<Detalle> {
 
                   Align(
                     alignment: Alignment.centerRight,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: verdeKultux,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () {},
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  esActividad ? 'Comprar entradas' : 'Reservar',
-                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black),
+                    child: Tooltip(
+                      message: _tieneUrlReserva
+                          ? ''
+                          : 'No hay enlace disponible', // ✅ texto tooltip
+                      child: Opacity(
+                        opacity: _tieneUrlReserva ? 1.0 : 0.45,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: verdeKultux,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: _tieneUrlReserva
+                                ? const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              )
+                            ]
+                                : [],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: _tieneUrlReserva
+                                  ? () async {
+                                final uri =
+                                Uri.parse(widget.urlCompraReserva!);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                }
+                              }
+                                  : null, // ✅ desactivado
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 10,
                                 ),
-                                const SizedBox(width: 10),
-                                const Icon(Icons.confirmation_number_outlined, size: 20, color: Colors.black),
-                              ],
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      esActividad ? 'Comprar entradas' : 'Reservar',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Icon(
+                                      esActividad
+                                          ? Icons.confirmation_number_outlined
+                                          : Icons.open_in_new,
+                                      size: 20,
+                                      color: Colors.black,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -392,72 +496,133 @@ class _DetalleState extends State<Detalle> {
     );
   }
 
-  Widget _bloqueHorario(Horario horario, bool? abierto) {
+  Widget _bloqueHorario(Map<String, List<Franja>> horario, bool? abierto) {
     const colorTexto = Color(0xFF1F1F1F);
-    final diasOrdenados = [...horario.dias]..sort();
+    const verdeKultux = Color(0xFFA8D63F);
+    const diasOrden = [1, 2, 3, 4, 5, 6, 7];
+    const diasNombreCorto = {1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S', 7: 'D'};
+
+    // Recopilar todas las franjas únicas posibles (max 2)
+    final Set<String> franjasUnicas = {};
+    for (final franjas in horario.values) {
+      for (final f in franjas) {
+        franjasUnicas.add('${f.inicio}-${f.fin}');
+      }
+    }
+    final List<String> filasHorario = franjasUnicas.toList();
+    // Ordenar por hora de inicio
+    filasHorario.sort();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Fila: icono + días + badge abierto/cerrado
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          // Badge abierto/cerrado
+          if (abierto != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: abierto ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  abierto ? 'Abierto' : 'Cerrado',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+              ),
+            ),
+
+          // Tabla horario
+          Table(
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            columnWidths: const {
+              0: IntrinsicColumnWidth(), // columna franjas
+            },
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 18, color: colorTexto),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: diasOrdenados.map((d) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFA8D63F).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFA8D63F)),
-                      ),
+              // Cabecera: L M X J V S D
+              TableRow(
+                children: [
+                  const SizedBox(), // celda vacía esquina
+                  ...diasOrden.map((d) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                    child: Center(
                       child: Text(
-                        _diasNombre[d] ?? '$d',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: colorTexto),
+                        diasNombreCorto[d]!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colorTexto,
+                        ),
                       ),
-                    );
-                  }).toList(),
-                ),
+                    ),
+                  )),
+                ],
               ),
-              const SizedBox(width: 8),
-              // Badge abierto / cerrado
-              if (abierto != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: abierto ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    abierto ? 'Abierto' : 'Cerrado',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // Franjas horarias
-          Row(
-            children: [
-              const Icon(Icons.access_time_outlined, size: 18, color: colorTexto),
-              const SizedBox(width: 6),
-              Wrap(
-                spacing: 8,
-                children: horario.franjas.map((f) {
-                  return Text(
-                    '${f.inicio} - ${f.fin}',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: colorTexto),
-                  );
-                }).toList(),
-              ),
+              // Una fila por cada franja horaria única
+              ...filasHorario.map((franja) {
+                final partes = franja.split('-');
+                final inicio = partes[0];
+                final fin = partes[1];
+                return TableRow(
+                  children: [
+                    // Etiqueta de la franja
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8, top: 2, bottom: 2),
+                      child: Text(
+                        '$inicio\n$fin',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: colorTexto,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                    // Celda por cada día
+                    ...diasOrden.map((d) {
+                      final franjasDia = horario['$d'] ?? [];
+                      final tieneEstaFranja = franjasDia.any((f) => f.inicio == inicio && f.fin == fin);
+
+                      if (franjasDia.isEmpty) {
+                        // Solo mostrar "Cerrado" en la primera fila
+                        if (franja == filasHorario.first) {
+                          return Center(
+                            child: Text(
+                              'C',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.red.shade400,
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox();
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: Center(
+                          child: tieneEstaFranja
+                              ? Container(
+                            width: 28,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: verdeKultux.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: verdeKultux, width: 0.8),
+                            ),
+                          )
+                              : const SizedBox(width: 28, height: 20),
+                        ),
+                      );
+                    }),
+                  ],
+                );
+              }),
             ],
           ),
         ],
