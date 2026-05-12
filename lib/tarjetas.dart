@@ -3,6 +3,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/models/franja.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+const _verde = Color(0xFFA6E246);
+const _fondoCard = Color(0xFFF8F7F4);
+const _texto = Color(0xFF1A1A1A);
+const _textoSuave = Color(0xFF6B6B6B);
+const _borde = Color(0xFFE0DDD6);
+
 class Tarjeta extends StatelessWidget {
   final String titulo;
   final String? localidad;
@@ -11,7 +17,6 @@ class Tarjeta extends StatelessWidget {
   final VoidCallback onTap;
   final String? textoEtiqueta;
   final String? iconoEtiqueta;
-  final String? estado;
   final Map<String, List<Franja>>? horario;
   final bool? abierto;
 
@@ -24,7 +29,6 @@ class Tarjeta extends StatelessWidget {
     required this.onTap,
     this.textoEtiqueta,
     this.iconoEtiqueta,
-    this.estado,
     this.horario,
     this.abierto,
   });
@@ -37,12 +41,8 @@ class Tarjeta extends StatelessWidget {
     required String imagenUrl,
     required VoidCallback onTap,
   }) : this._(
-    key: key,
-    titulo: titulo,
-    localidad: localidad,
-    fecha: fecha,
-    imagenUrl: imagenUrl,
-    onTap: onTap,
+    key: key, titulo: titulo, localidad: localidad,
+    fecha: fecha, imagenUrl: imagenUrl, onTap: onTap,
   );
 
   const Tarjeta.restaurante({
@@ -53,12 +53,8 @@ class Tarjeta extends StatelessWidget {
     required String iconoEtiqueta,
     required VoidCallback onTap,
   }) : this._(
-    key: key,
-    titulo: titulo,
-    imagenUrl: imagenUrl,
-    textoEtiqueta: textoEtiqueta,
-    iconoEtiqueta: iconoEtiqueta,
-    onTap: onTap,
+    key: key, titulo: titulo, imagenUrl: imagenUrl,
+    textoEtiqueta: textoEtiqueta, iconoEtiqueta: iconoEtiqueta, onTap: onTap,
   );
 
   const Tarjeta.alojamiento({
@@ -70,13 +66,9 @@ class Tarjeta extends StatelessWidget {
     required VoidCallback onTap,
     String? localidad,
   }) : this._(
-    key: key,
-    titulo: titulo,
-    imagenUrl: imagenUrl,
-    textoEtiqueta: textoEtiqueta,
-    iconoEtiqueta: iconoEtiqueta,
-    onTap: onTap,
-    localidad: localidad,
+    key: key, titulo: titulo, imagenUrl: imagenUrl,
+    textoEtiqueta: textoEtiqueta, iconoEtiqueta: iconoEtiqueta,
+    onTap: onTap, localidad: localidad,
   );
 
   const Tarjeta.restauranteBusqueda({
@@ -90,98 +82,104 @@ class Tarjeta extends StatelessWidget {
     required bool abierto,
     String? localidad,
   }) : this._(
-    key: key,
-    titulo: titulo,
-    imagenUrl: imagenUrl,
-    textoEtiqueta: textoEtiqueta,
-    iconoEtiqueta: iconoEtiqueta,
-    onTap: onTap,
-    horario: horario,
-    abierto: abierto,
-    localidad: localidad,
+    key: key, titulo: titulo, imagenUrl: imagenUrl,
+    textoEtiqueta: textoEtiqueta, iconoEtiqueta: iconoEtiqueta,
+    onTap: onTap, horario: horario, abierto: abierto, localidad: localidad,
   );
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 364,
-      height: 160,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: _fondoCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _borde),
+          boxShadow: const [
+            BoxShadow(color: Color(0x10000000), blurRadius: 12, offset: Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ IMAGEN CACHEADA
-            Positioned.fill(
-              child: CachedNetworkImage(
-                imageUrl: imagenUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey.shade200,
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: Color.fromARGB(255, 166, 226, 70),
+            // ── Imagen ──────────────────────────────────────────────────
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: SizedBox(
+                width: double.infinity,
+                height: 130,
+                child: CachedNetworkImage(
+                  imageUrl: imagenUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => Container(
+                    color: const Color(0xFFE8E5DF),
+                    child: const Center(
+                      child: CircularProgressIndicator(color: _verde, strokeWidth: 2),
                     ),
                   ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey.shade200,
-                  child: Icon(
-                    Icons.image_outlined,
-                    color: Colors.grey.shade400,
-                    size: 36,
+                  errorWidget: (_, __, ___) => Container(
+                    color: const Color(0xFFE8E5DF),
+                    child: Icon(Icons.image_outlined,
+                        color: Colors.grey.shade400, size: 36),
                   ),
                 ),
               ),
             ),
 
-            // Borde de la tarjeta
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color(0xFF9ACD32),
-                    width: 2,
+            // ── Info ─────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          titulo,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'RobotoCondensed',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: _texto,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6, runSpacing: 4,
+                          children: [
+                            if (localidad != null) _Chip.localidad(localidad!),
+                            if (fecha != null) _Chip.fecha(fecha!),
+                            if (textoEtiqueta != null && iconoEtiqueta != null)
+                              _Chip.etiqueta(textoEtiqueta!, iconoEtiqueta!),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                  const SizedBox(width: 8),
+                  // Botón flecha
+                  Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      color: _verde,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'assets/iconos/flecha_siguiente.svg',
+                        width: 18, height: 18,
+                        colorFilter: const ColorFilter.mode(_texto, BlendMode.srcIn),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-
-            Positioned(
-              top: 8,
-              left: 8,
-              child: TituloTarjeta(titulo: titulo),
-            ),
-
-            if (fecha != null)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: FechaTarjeta(fecha: fecha!),
-              ),
-
-            if (localidad != null)
-              Positioned(
-                bottom: 8,
-                left: 8,
-                child: LocalidadTarjeta(localidad: localidad!),
-              ),
-
-            if (textoEtiqueta != null && iconoEtiqueta != null)
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: EtiquetaTarjeta(
-                  texto: textoEtiqueta!,
-                  icono: iconoEtiqueta!,
-                ),
-              ),
-
-            Positioned(
-              right: 12,
-              top: 0,
-              bottom: 0,
-              child: Center(child: BotonTarjeta(onTap: onTap)),
             ),
           ],
         ),
@@ -190,145 +188,71 @@ class Tarjeta extends StatelessWidget {
   }
 }
 
-/* ───────────── COMPONENTES ───────────── */
+// ── Chips internos ─────────────────────────────────────────────────────────────
 
-class TituloTarjeta extends StatelessWidget {
-  final String titulo;
-  const TituloTarjeta({super.key, required this.titulo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 190),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(190, 235, 245, 233),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        titulo,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontFamily: "RobotoCondensed",
-          fontSize: 14,
-        ),
-      ),
-    );
-  }
-}
-
-class EtiquetaTarjeta extends StatelessWidget {
+class _Chip extends StatelessWidget {
+  final Widget leading;
   final String texto;
-  final String icono;
-  const EtiquetaTarjeta({super.key, required this.texto, required this.icono});
+  final Color fondo;
+  final Color colorTexto;
+
+  const _Chip({
+    required this.leading,
+    required this.texto,
+    required this.fondo,
+    required this.colorTexto,
+  });
+
+  factory _Chip.localidad(String texto) => _Chip(
+    leading: const Icon(Icons.location_on_outlined,
+        size: 12, color: _textoSuave),
+    texto: texto,
+    fondo: const Color(0xFFF0EDE8),
+    colorTexto: _textoSuave,
+  );
+
+  factory _Chip.fecha(String texto) => _Chip(
+    leading: const Icon(Icons.calendar_today_outlined,
+        size: 12, color: Color(0xFF4A7A10)),
+    texto: texto,
+    fondo: const Color(0xFFF0F8E6),
+    colorTexto: const Color(0xFF4A7A10),
+  );
+
+  factory _Chip.etiqueta(String texto, String iconoPath) => _Chip(
+    leading: SvgPicture.asset(iconoPath,
+        width: 12, height: 12,
+        colorFilter: const ColorFilter.mode(_verde, BlendMode.srcIn)),
+    texto: texto,
+    fondo: _texto,
+    colorTexto: Colors.white,
+  );
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFFA6E246),
-        borderRadius: BorderRadius.circular(10),
+        color: fondo,
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            icono,
-            width: 15,
-            height: 15,
-            colorFilter:
-            const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            texto,
-            style: const TextStyle(
-              fontFamily: "RobotoCondensed",
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class FechaTarjeta extends StatelessWidget {
-  final String fecha;
-  const FechaTarjeta({super.key, required this.fecha});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(190, 235, 245, 233),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        fecha,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontFamily: "RobotoCondensed",
-          fontSize: 14,
-        ),
-      ),
-    );
-  }
-}
-
-class BotonTarjeta extends StatelessWidget {
-  final VoidCallback onTap;
-  const BotonTarjeta({super.key, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(227, 166, 226, 70),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Center(
-          child: SvgPicture.asset(
-            "assets/iconos/flecha_siguiente.svg",
-            width: 22,
-            height: 22,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class LocalidadTarjeta extends StatelessWidget {
-  final String localidad;
-  const LocalidadTarjeta({super.key, required this.localidad});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(190, 235, 245, 233),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          SvgPicture.asset("assets/iconos/ubicar.svg", width: 15),
-          const SizedBox(width: 10),
-          Text(
-            localidad,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontFamily: "RobotoCondensed",
-              fontSize: 14,
+          leading,
+          const SizedBox(width: 4),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 120),
+            child: Text(
+              texto,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'RobotoCondensed',
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: colorTexto,
+              ),
             ),
           ),
         ],

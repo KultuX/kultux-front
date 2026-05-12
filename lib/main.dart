@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kultux/api/actividadesAPI.dart';
+import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
 import 'package:kultux/componentes/app_bar.dart';
 import 'package:kultux/componentes/asset_login.dart';
@@ -7,6 +8,7 @@ import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/mapas.dart';
 import 'package:kultux/perfil.dart';
 import 'package:kultux/buscar.dart';
+import 'package:kultux/repository/usuario_repository.dart';
 
 import 'package:kultux/tarjetas.dart';
 import 'package:kultux/establecimientos.dart';
@@ -20,6 +22,8 @@ import 'dart:io';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
+
+import 'models/pages.dart';
 
 
 void main() {
@@ -80,11 +84,28 @@ class _MyHomePageState extends State<MyHomePage> {
   EstadoUi estadoInicio = EstadoUi.cargando;
   String mensajeErrorInicio = '';
 
+  int _buscarCategoriaIndex = 0;
 
+  late final EstablecimientosPage _establecimientosPage;
+
+  Future<void> _cargarSesion() async{
+    final usuarioGuardado = await UsuarioRepository.cargar();
+    if(!mounted) return;
+    if(usuarioGuardado != null){
+      setState(() {
+        usuario = usuarioGuardado;
+        _logeado = true;
+        _invitado = false;
+      });
+    }
+  }
   @override
   void initState() {
     super.initState();
-
+    _cargarSesion();
+    _establecimientosPage = EstablecimientosPage(
+      onDetalleSeleccionado: _abrirDetalleEstablecimiento,
+    );
 
     if (widget.actividadesIniciales != null) {
       _actividades = widget.actividadesIniciales!;
@@ -92,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _paginaActual = 1;
       estadoInicio = EstadoUi.contenido;
     } else {
-      _cargarActividades(); // ← FALTABA ESTO cuando no hay datos precargados
+      _cargarActividades();
     }
 
     _scrollController.addListener(() {
@@ -180,8 +201,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _actividadDetalleSeleccionada = null;
       _actividades.clear();
       _paginaActual = 0;
-      _cargarActividades();
+
     });
+    _cargarActividades();
   }
 
   void _abrirDetalleEstablecimiento(dynamic objeto) {
@@ -478,28 +500,27 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   Widget _bodyEstablecimientos() {
-    if (_mostrandoDetalleEstablecimiento &&
-        _establecimientoDetalleSeleccionado != null) {
-      return Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: _volverAListadoEstablecimientos,
-              icon: const Icon(Icons.arrow_back),
-            ),
+    return Stack(
+      children: [
+        _establecimientosPage,
+        if (_mostrandoDetalleEstablecimiento && _establecimientoDetalleSeleccionado != null)
+          Column(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  onPressed: _volverAListadoEstablecimientos,
+                  icon: const Icon(Icons.arrow_back),
+                ),
+              ),
+              Expanded(
+                child: Detalle.desdeObjeto(
+                  objeto: _establecimientoDetalleSeleccionado!,
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: Detalle.desdeObjeto(
-              objeto: _establecimientoDetalleSeleccionado!,
-            ),
-          ),
-        ],
-      );
-    }
-
-    return EstablecimientosPage(
-      onDetalleSeleccionado: _abrirDetalleEstablecimiento,
+      ],
     );
   }
 
@@ -520,7 +541,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       );
     }
-    return BuscarPage(onDetalleSeleccionado: _abrirDetalleBuscar);
+    return BuscarPage(
+      onDetalleSeleccionado: _abrirDetalleBuscar,
+      selectedIndex: _buscarCategoriaIndex,
+      onIndexChanged: (index){
+        _buscarCategoriaIndex = index;
+    },);
   }
 }
 
@@ -541,21 +567,23 @@ class _SplashPageState extends State<SplashPage> {
 
   Future<void> _cargarDatosInicio() async {
     try {
+      final results = await Future.wait([
+        ActividadesApiService.obtenerActividadesInicio(0),
+        LocalidadApiService.obtenerLocalidadNombres()
+    ]);
 
-      final page =
-      await ActividadesApiService.obtenerActividadesInicio(0);
+      final page = results[0] as Pages<Actividad>;
+     // final page =
+     // await ActividadesApiService.obtenerActividadesInicio(0);
 
-      // 2️⃣ Precargar SOLO algunas imágenes (muy importante)
       for (final act in page.contenido.take(5)) {
         if (act.imagenPrincipal != null) {
-          await precacheImage(
-            NetworkImage(act.imagenPrincipal),
-            context,
-          );
+          try {
+            await precacheImage(NetworkImage(act.imagenPrincipal), context);
+          } catch (_) {}
         }
       }
 
-      // 3️⃣ Navegar pasando los datos ya cargados
       if (!mounted) return;
       Navigator.pushReplacement(
         context,

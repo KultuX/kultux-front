@@ -84,7 +84,7 @@ class AlojamientoApiService{
     if (categoria != null) params['categoria'] = categoria;
     if (localidad != null) params['localidad'] = localidad.toString();
 
-    final url = Uri.http(
+    final url = Uri.https(
       _BASE_URL_ALOJAMIENTOS,
       '/api/v1/alojamientos/busqueda',
       params,

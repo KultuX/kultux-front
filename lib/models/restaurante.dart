@@ -6,7 +6,7 @@ class Restaurante{
   final int id;
   final String nombre;
   final String categoriaRestaurante;
-  final String imagenPrincipal;
+  String? imagenPrincipal;
 
   String? descripcion;
   String? telefonoEmpresa;
@@ -17,12 +17,13 @@ class Restaurante{
   bool? abierto;
   String? urlReserva;
   String? urlWeb;
+  String? direccion;
 
   Restaurante._({
     required this.id,
     required this.nombre,
     required this.categoriaRestaurante,
-    required this.imagenPrincipal,
+    this.imagenPrincipal,
     this.descripcion,
     this.telefonoEmpresa,
     this.correoCorporativo,
@@ -31,7 +32,8 @@ class Restaurante{
     this.imagenes,
     this.abierto,
     this.urlReserva,
-    this.urlWeb
+    this.urlWeb,
+    this.direccion
   });
 
   factory Restaurante.destacado(Map<String, dynamic> json){
@@ -47,11 +49,10 @@ class Restaurante{
     return Restaurante._(
         id: json['id'],
         nombre: json['nombre'],
-        categoriaRestaurante: json['categoriaRestaurante'],
-        imagenPrincipal: json['imagenPrincipal'],
+        categoriaRestaurante: json['categoria'],
         descripcion: json['descripcion'],
-        telefonoEmpresa: json['telefonoEmpresa'],
-        correoCorporativo: json['correoCorporativo'],
+        telefonoEmpresa: json['telefono'],
+        correoCorporativo: json['email'],
         horario: _parseHorario(json['horario']),
         localidad: json['localidad'],
         imagenes: json['imagenes'] != null
@@ -61,7 +62,8 @@ class Restaurante{
             : [],
         abierto: json['abierto'],
         urlReserva: json['urlReserva'],
-        urlWeb: json['urlWeb']
+        urlWeb: json['urlWeb'],
+       direccion: json['direccion']
     );
   }
 

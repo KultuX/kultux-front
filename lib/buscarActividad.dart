@@ -9,9 +9,11 @@ import 'package:kultux/tarjetasBusqueda.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 
+import 'componentes/selector_localidad.dart';
 import 'core/utils/http_error_mapper.dart';
 
 import 'package:kultux/core/utils/estados_widgets.dart';
+import 'dart:async';
 
 class BuscarActividadPage extends StatefulWidget {
   final Function(dynamic)? onDetalleSeleccionado;
@@ -33,10 +35,17 @@ class _BuscarPageState extends State<BuscarActividadPage> {
   List<Actividad> actividades = [];
   int paginaActual = 0;
   int totalPaginas = 0;
+
   bool cargando = false;
   bool cargandoInicial = true;
-
+  Timer? _debounceTimer;
   final ScrollController controller = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  TextEditingController? _categoriaController;
+  TextEditingController? _localidadController;
+
+  Key _selectorLocalidadKey = UniqueKey();
+
 
   EstadoUi estado = EstadoUi.cargando;
   String mensajeError = '';
@@ -61,8 +70,10 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
 
   Future<void> _resetYcargar() async {
-    paginaActual = 0;
-    actividades.clear();
+    setState(() {
+      paginaActual = 0;
+      actividades.clear();
+    });
     await _cargarMas();
   }
 
@@ -74,7 +85,10 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
 
   Future<void> _cargaInicial() async {
-    setState(() => cargandoInicial = true);
+    setState(() {
+      cargandoInicial = true;
+      estado = EstadoUi.cargando;
+    });
     await _resetYcargar();
     setState(() => cargandoInicial = false);
   }
@@ -86,7 +100,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     if (paginaActual >= totalPaginas && paginaActual != 0) return;
     setState(() {
       cargando = true;
-      estado = EstadoUi.cargando;
+      if (paginaActual == 0) estado = EstadoUi.cargando;
     });
     try {
       final pageResponse = await ActividadesApiService.actividadesFiltradas(
@@ -124,49 +138,98 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   }
 
-
-  @override
-  Widget build(BuildContext context) {
-    if (cargandoInicial) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 166, 226, 70),
-        ),
-      );
-    }
-
+  Widget _sliverSegunEstado() {
     switch (estado) {
       case EstadoUi.cargando:
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 166, 226, 70),
+        return const SliverFillRemaining(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Color.fromARGB(255, 166, 226, 70),
+            ),
           ),
         );
 
       case EstadoUi.vacio:
-        return estadoVacio();
+        return SliverFillRemaining(
+          child: estadoVacio(),
+        );
 
       case EstadoUi.sinConexion:
-        return estadoError(
-          icon: Icons.wifi_off,
-          mensaje: mensajeError,
-          onRetry: _cargaInicial,
+        return SliverFillRemaining(
+          child: estadoError(
+            icon: Icons.wifi_off,
+            mensaje: mensajeError,
+            onRetry: _cargaInicial,
+          ),
         );
 
       case EstadoUi.error:
-        return estadoError(
-          icon: Icons.error_outline,
-          mensaje: mensajeError,
-          onRetry: _cargaInicial,
+        return SliverFillRemaining(
+          child: estadoError(
+            icon: Icons.error_outline,
+            mensaje: mensajeError,
+            onRetry: _cargaInicial,
+          ),
         );
 
       case EstadoUi.contenido:
-        return _contenido();
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+                (context, index) {
+              if (index < actividades.length) {
+                final a = actividades[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  child: TarjetaBusqueda.actividad(
+                    titulo: a.titulo,
+                    localidad: a.localidad,
+                    fecha: a.fechaInicio,
+                    imagenUrl: a.imagenPrincipal,
+                    onTap: () async {
+                      final detalle = await ActividadesApiService.detalleActividad(a.id);
+                      print(detalle.toString());
+                      widget.onDetalleSeleccionado?.call(detalle);
+
+                    },
+                    textoEtiqueta: a.categoriaActividad,
+                    iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+                  ),
+                );
+              }
+
+              if (cargando) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Color.fromARGB(255, 166, 226, 70),
+                    ),
+                  ),
+                );
+              }
+
+              if (paginaActual >= totalPaginas) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text(
+                      "No hay más actividades",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+            childCount:
+            actividades.length + (cargando || paginaActual >= totalPaginas ? 1 : 0),
+          ),
+        );
     }
   }
 
-
-  Widget _contenido() {
+  Widget _contenidoConEstado() {
     return Stack(
       children: [
         CustomScrollView(
@@ -196,55 +259,8 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-            // Lista
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  if (index < actividades.length) {
-                    final a = actividades[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      child: TarjetaBusqueda.actividad(
-                        titulo: a.titulo,
-                        localidad: a.localidad,
-                        fecha: a.fechaInicio,
-                        imagenUrl: a.imagenPrincipal,
-                        onTap: () => widget.onDetalleSeleccionado?.call(a),
-                        textoEtiqueta: a.categoriaActividad,
-                        iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
-                      ),
-                    );
-                  }
-
-                  if (cargando) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color.fromARGB(255, 166, 226, 70),
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (paginaActual >= totalPaginas) {
-                    return const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Center(
-                        child: Text(
-                          "No hay más actividades",
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-                childCount:
-                actividades.length + (cargando || paginaActual >= totalPaginas ? 1 : 0),
-              ),
-            ),
+            // 👇 SOLO cambia esta parte según estado
+            _sliverSegunEstado(),
           ],
         ),
         Positioned(
@@ -256,8 +272,24 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     );
   }
 
+
+  @override
+  Widget build(BuildContext context) {
+    if (cargandoInicial) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 166, 226, 70),
+        ),
+      );
+    }
+
+    return _contenidoConEstado();
+  }
+
+
   Widget _searchBar() {
     return SearchBar(
+      controller: _searchController,
       hintText: 'Buscar actividad...',
       leading: Padding(
         padding: const EdgeInsets.only(left: 8),
@@ -278,7 +310,10 @@ class _BuscarPageState extends State<BuscarActividadPage> {
       constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
         titulo = value;
-        _cargarActividades();
+        _debounceTimer?.cancel();
+        _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+          _cargarActividades();
+        });
       },
     );
   }
@@ -291,7 +326,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
             Expanded(child: _selectorCategorias()),
             const SizedBox(width: 8),
             Expanded(child: _selectorLocalidad()),
-            if (categoria != null || localidad != null || fecha != null) ...[
+            if (categoria != null || localidad != null || fecha != null || titulo.isNotEmpty) ...[
               const SizedBox(width: 8),
               _botonLimpiar(),
             ],
@@ -309,6 +344,10 @@ class _BuscarPageState extends State<BuscarActividadPage> {
           localidad = null;
           fecha = null;
           titulo = "";
+          _searchController.clear();
+          _selectorLocalidadKey = UniqueKey();
+          _localidadController?.clear();
+          _categoriaController?.clear();
         });
         _cargarActividades();
       },
@@ -324,7 +363,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     );
   }
 
-  // ── Decoración compacta compartida ──
   InputDecoration _inputDeco({
     required String label,
     required IconData icon,
@@ -376,6 +414,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
             _cargarActividades();
           },
           fieldViewBuilder: (context, ctrl, focusNode, _) {
+            _categoriaController = ctrl;
             return TextField(
               controller: ctrl,
               focusNode: focusNode,
@@ -422,61 +461,18 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   Widget _selectorLocalidad() {
     return FutureBuilder<List<Localidad>>(
-      future: futureLocalidad,
+      future: LocalidadApiService.cache != null
+          ? Future.value(LocalidadApiService.cache)
+          : LocalidadApiService.obtenerLocalidadNombres(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _shimmerLoader();
-        final localidades = snapshot.data!;
-        return Autocomplete<Localidad>(
-          optionsBuilder: (v) {
-            if (v.text.isEmpty) return const Iterable<Localidad>.empty();
-            return localidades.where((l) =>
-                l.nombre.toLowerCase().contains(v.text.toLowerCase()));
-          },
-          onSelected: (s) {
-            setState(() => localidad = s.ine);
+        return SelectorLocalidad(
+          key: _selectorLocalidadKey,
+          localidades: snapshot.data!,
+          onSelected: (loc) {
+            setState(() => localidad = loc?.ine);
             _cargarActividades();
           },
-          displayStringForOption: (o) => o.nombre,
-          fieldViewBuilder: (context, ctrl, focusNode, _) {
-            return TextField(
-              controller: ctrl,
-              focusNode: focusNode,
-              style: const TextStyle(fontSize: 13),
-              decoration: _inputDeco(
-                label: 'Ubicación',
-                icon: Icons.location_on,
-                hasValue: localidad != null,
-                onClear: () {
-                  setState(() => localidad = null);
-                  ctrl.clear();
-                  _cargarActividades();
-                },
-              ),
-            );
-          },
-          optionsViewBuilder: (context, onSelected, options) => Align(
-            alignment: Alignment.topLeft,
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 180,
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  itemBuilder: (_, i) {
-                    final o = options.elementAt(i);
-                    return ListTile(
-                      dense: true,
-                      title: Text(o.nombre, style: const TextStyle(fontSize: 13)),
-                      onTap: () => onSelected(o),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
         );
       },
     );
@@ -533,6 +529,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     controller.dispose();
     super.dispose();
   }

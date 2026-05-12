@@ -10,7 +10,7 @@ class RestauranteApiService{
   //static final String _BASE_URL_RESTAURANTES = "10.0.2.2:8083";
 
   static Future<List<Restaurante>> obtenerRestauranteDestacados() async {
-    final url = Uri.http(_BASE_URL_RESTAURANTES,'/api/v1/restaurantes/destacados');
+    final url = Uri.https(_BASE_URL_RESTAURANTES,'/api/v1/restaurantes/destacados');
 
     final response = await http.get(
       url,
@@ -30,7 +30,7 @@ class RestauranteApiService{
   }
 
   static Future<Restaurante> restauranteDetalle(int id) async{
-    final url = Uri.http(_BASE_URL_RESTAURANTES, '/api/v1/restaurantes/detalle_restaurante/$id');
+    final url = Uri.https(_BASE_URL_RESTAURANTES, '/api/v1/restaurantes/detalle_restaurante/$id');
 
     final response = await http.get(
       url,
@@ -87,7 +87,7 @@ class RestauranteApiService{
     if (localidad != null) params['localidad'] = localidad.toString();
     if ( soloAbiertos != null ) params['soloAbiertos'] = soloAbiertos.toString();
 
-    final url = Uri.http(
+    final url = Uri.https(
       _BASE_URL_RESTAURANTES,
       '/api/v1/restaurantes/busqueda',
       params,

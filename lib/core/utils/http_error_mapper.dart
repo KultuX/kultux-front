@@ -21,6 +21,10 @@ UiError mapearStatusCode(int statusCode) {
         'Los datos no son correctos'
       );
     case 401:
+      return const UiError(
+        EstadoUi.error,
+        'No tienes permiso para realizar esta acción.'
+      );
     case 403:
       return const UiError(
         EstadoUi.error,

@@ -11,7 +11,7 @@ class ActividadesApiService{
   //static final String _BASE_URL_ACTIVIDADES = "10.0.2.2:8081";
 
   static Future<Pages<Actividad>> obtenerActividadesInicio(int page) async {
-    final url = Uri.http(
+    final url = Uri.https(
       _BASE_URL_ACTIVIDADES,
       '/api/v1/actividades/destacados',
       {
@@ -51,7 +51,7 @@ class ActividadesApiService{
   }
 
   static Future<Actividad> detalleActividad(int idActividad) async {
-    final url = Uri.http(_BASE_URL_ACTIVIDADES, '/api/v1/actividades/actividad_detalle/$idActividad');
+    final url = Uri.https(_BASE_URL_ACTIVIDADES, '/api/v1/actividades/actividad_detalle/$idActividad');
 
     final response = await http.get(
       url,
@@ -71,7 +71,7 @@ class ActividadesApiService{
   }
 
   static Future<List<String>> categoriasActividad() async {
-    final url = Uri.http(_BASE_URL_ACTIVIDADES, '/api/v1/actividades/categoria_actividad');
+    final url = Uri.https(_BASE_URL_ACTIVIDADES, '/api/v1/actividades/categoria_actividad');
 
     final response = await http.get(
       url,
@@ -116,7 +116,7 @@ class ActividadesApiService{
     }
 
 
-    final url = Uri.http(
+    final url = Uri.https(
       _BASE_URL_ACTIVIDADES,
       '/api/v1/actividades/busqueda',
       params,

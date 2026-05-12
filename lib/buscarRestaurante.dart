@@ -9,9 +9,12 @@ import 'package:kultux/tarjetasBusqueda.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
 
 import 'package:kultux/core/utils/iconos.dart';
+import 'componentes/selector_localidad.dart';
 import 'core/utils/estado_ui.dart';
 import 'core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
+
+import 'dart:async';
 
 class BuscarRestaurantePage extends StatefulWidget {
   final Function(dynamic)? onDetalleSeleccionado;
@@ -36,18 +39,23 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
   bool cargando = false;
   bool cargandoInicial = true;
+  Timer? _debounceTimer;
 
   final ScrollController controller = ScrollController();
-
+  final TextEditingController _searchController = TextEditingController();
+  TextEditingController? _categoriaController;
+  TextEditingController? _localidadController;
 
   EstadoUi estado = EstadoUi.cargando;
   String mensajeError = '';
 
+  Key _selectorLocalidadKey = UniqueKey();
+
+
+
   @override
   void initState() {
     super.initState();
-
-    futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     futureCategorias = RestauranteApiService.categoriasRestaurantes();
 
     _cargaInicial();
@@ -61,8 +69,10 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   }
 
   Future<void> _resetYcargar() async {
-    paginaActual = 0;
-    restaurantes.clear();
+    setState(() {
+      paginaActual = 0;
+      restaurantes.clear();
+    });
     await _cargarMas();
   }
 
@@ -78,7 +88,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
     setState(() {
       cargando = true;
-      estado = EstadoUi.cargando;
+      if (paginaActual == 0) estado = EstadoUi.cargando;
     });
 
     try {
@@ -133,155 +143,161 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       );
     }
 
+    return _contenidoConEstado();
+  }
+  Widget _contenidoConEstado() {
+    return Stack(
+      children: [
+        CustomScrollView(
+          controller: controller,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+                child: Row(
+                  children: [
+                    Expanded(child: _searchBar()),
+                    const SizedBox(width: 8),
+                    _chipAbiertoAhora(),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: _filtros(),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            _sliverSegunEstado(),
+          ],
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: ScrollBoton(controller: controller),
+        ),
+      ],
+    );
+  }
+
+  Widget _sliverSegunEstado() {
     switch (estado) {
       case EstadoUi.cargando:
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 166, 226, 70),
+        return const SliverFillRemaining(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Color.fromARGB(255, 166, 226, 70),
+            ),
           ),
         );
 
       case EstadoUi.vacio:
-        return estadoVacio();
-
-      case EstadoUi.sinConexion:
-        return estadoError(
-          icon: Icons.wifi_off,
-          mensaje: mensajeError,
-          onRetry: _cargaInicial,
-        );
-
-      case EstadoUi.error:
-        return estadoError(
-          icon: Icons.error_outline,
-          mensaje: mensajeError,
-          onRetry: _cargaInicial,
-        );
-
-      case EstadoUi.contenido:
-        return _contenido();
-    }
-  }
-
-  Widget _contenido(){
-    return Stack(children:[CustomScrollView(
-      controller: controller,
-      slivers: [
-        // ── Search ──
-
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-            child: Row(
+        return SliverFillRemaining(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Expanded(child: _searchBar()),
-                const SizedBox(width: 8),
-                _chipAbiertoAhora(),
+                Icon(Icons.search_off,
+                    size: 56, color: Colors.grey.shade400),
+                const SizedBox(height: 12),
+                Text(
+                  "No hay restaurantes",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
               ],
             ),
           ),
-        ),
+        );
 
-
-        // ── Filtros ──
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _filtros(),
+      case EstadoUi.sinConexion:
+        return SliverFillRemaining(
+          child: estadoError(
+            icon: Icons.wifi_off,
+            mensaje: mensajeError,
+            onRetry: _cargaInicial,
           ),
-        ),
+        );
 
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+      case EstadoUi.error:
+        return SliverFillRemaining(
+          child: estadoError(
+            icon: Icons.error_outline,
+            mensaje: mensajeError,
+            onRetry: _cargaInicial,
+          ),
+        );
 
-        // ── Empty / List ──
-        if (restaurantes.isEmpty && !cargando)
-          SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search_off,
-                      size: 56, color: Colors.grey.shade400),
-                  const SizedBox(height: 12),
-                  Text(
-                    "No hay restaurantes",
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade600),
+      case EstadoUi.contenido:
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+                (context, index) {
+              if (index < restaurantes.length) {
+                final r = restaurantes[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 5),
+                  child: TarjetaBusqueda.restaurante(
+                    titulo: r.nombre,
+                    imagenUrl: r.imagenPrincipal!,
+                    textoEtiqueta: r.categoriaRestaurante,
+                    iconoEtiqueta:
+                    Iconos.getIconoRestaurante(r.categoriaRestaurante),
+                    horario: r.horario!,
+                    abierto: r.abierto!,
+                    localidad: r.localidad,
+                    onTap: () async {
+                      final detalle = await RestauranteApiService.restauranteDetalle(r.id);
+                      widget.onDetalleSeleccionado?.call(detalle);
+                    },
                   ),
-                ],
-              ),
-            ),
-          )
-        else
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                if (index < restaurantes.length) {
-                  final r = restaurantes[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 5),
-                    child: TarjetaBusqueda.restaurante(
-                      titulo: r.nombre,
-                      imagenUrl: r.imagenPrincipal,
-                      textoEtiqueta: r.categoriaRestaurante,
-                      iconoEtiqueta: Iconos.getIconoRestaurante(
-                          r.categoriaRestaurante),
-                      horario: r.horario!,
-                      abierto: r.abierto!,
-                      localidad: r.localidad,
-                      onTap:() { widget.onDetalleSeleccionado?.call(r);
-                      },
-                    ),
-                  );
-                }
+                );
+              }
 
-                if (cargando) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color:
-                        Color.fromARGB(255, 166, 226, 70),
-                      ),
+              if (cargando) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color:
+                      Color.fromARGB(255, 166, 226, 70),
                     ),
-                  );
-                }
+                  ),
+                );
+              }
 
-                if (paginaActual >= totalPaginas) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        "No hay más restaurantes",
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey),
-                      ),
+              if (paginaActual >= totalPaginas) {
+                return const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text(
+                      "No hay más restaurantes",
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey),
                     ),
-                  );
-                }
+                  ),
+                );
+              }
 
-                return const SizedBox.shrink();
-              },
-              childCount: restaurantes.length +
-                  (cargando || paginaActual >= totalPaginas
-                      ? 1
-                      : 0),
-            ),
+              return const SizedBox.shrink();
+            },
+            childCount: restaurantes.length +
+                (cargando || paginaActual >= totalPaginas ? 1 : 0),
           ),
-      ],
-    ), Positioned(
-        bottom:16,
-        right:16,
-        child: ScrollBoton(controller: controller)
-    )
-    ]);
+        );
+    }
   }
+
+
 
   Widget _searchBar() {
     return SearchBar(
+      controller: _searchController,
       hintText: 'Buscar restaurante...',
       leading: Padding(
         padding: const EdgeInsets.only(left: 8),
@@ -300,7 +316,11 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
         nombre = value;
-        _resetYcargar();
+        _debounceTimer?.cancel();
+        _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+          _resetYcargar();
+        });
+
       },
     );
   }
@@ -315,7 +335,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
             Expanded(child: _selectorLocalidad()),
             if (categoria != null ||
                 localidad != null ||
-                soloAbiertos == true) ...[
+                soloAbiertos == true || nombre.isNotEmpty) ...[
               const SizedBox(width: 8),
               _botonLimpiar(),
             ],
@@ -333,6 +353,9 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
           localidad = null;
           soloAbiertos = null;
           nombre = "";
+          _searchController.clear();
+          _localidadController?.clear();
+          _categoriaController?.clear();
         });
         _resetYcargar();
       },
@@ -349,7 +372,6 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     );
   }
 
-  // ───────────────── SELECTORES ─────────────────
   InputDecoration _inputDeco({
     required String label,
     required IconData icon,
@@ -384,82 +406,96 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     );
   }
 
-  Widget _selectorCategorias() => FutureBuilder<List<String>>(
-    future: futureCategorias,
-    builder: (c, s) {
-      if (!s.hasData) return _shimmerLoader();
-      return Autocomplete<String>(
-        optionsBuilder: (v) => v.text.isEmpty
-            ? const Iterable<String>.empty()
-            : s.data!.where((c) =>
-            c.toLowerCase().contains(v.text.toLowerCase())),
-        onSelected: (s) {
-          categoria = s;
-          _resetYcargar();
-        },
-        fieldViewBuilder:
-            (_, ctrl, focus, __) => TextField(
-          controller: ctrl,
-          focusNode: focus,
-          style: const TextStyle(fontSize: 13),
-          decoration: _inputDeco(
-            label: "Categoría",
-            icon: Icons.category,
-            hasValue: categoria != null,
-            onClear: () {
-              categoria = null;
-              ctrl.clear();
-              _resetYcargar();
-            },
-          ),
-        ),
-      );
-    },
-  );
-
-  Widget _selectorLocalidad() =>
-      FutureBuilder<List<Localidad>>(
-        future: futureLocalidad,
-        builder: (c, s) {
-          if (!s.hasData) return _shimmerLoader();
-          return Autocomplete<Localidad>(
-            optionsBuilder: (v) => v.text.isEmpty
-                ? const Iterable<Localidad>.empty()
-                : s.data!.where((l) => l.nombre
-                .toLowerCase()
-                .contains(v.text.toLowerCase())),
-            onSelected: (l) {
-              localidad = l.ine;
-              _resetYcargar();
-            },
-            displayStringForOption: (l) => l.nombre,
-            fieldViewBuilder:
-                (_, ctrl, focus, __) => TextField(
+  Widget _selectorCategorias() {
+    return FutureBuilder<List<String>>(
+      future: futureCategorias,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return _shimmerLoader();
+        final categorias = snapshot.data!;
+        return Autocomplete<String>(
+          optionsBuilder: (v) {
+            if (v.text.isEmpty) return const Iterable<String>.empty();
+            return categorias.where(
+                    (c) => c.toLowerCase().contains(v.text.toLowerCase()));
+          },
+          onSelected: (s) {
+            setState(() => categoria = s);
+            _resetYcargar();
+          },
+          fieldViewBuilder: (context, ctrl, focusNode, _) {
+            _categoriaController = ctrl;
+            return TextField(
               controller: ctrl,
-              focusNode: focus,
+              focusNode: focusNode,
               style: const TextStyle(fontSize: 13),
               decoration: _inputDeco(
-                label: "Ubicación",
-                icon: Icons.location_on,
-                hasValue: localidad != null,
+                label: 'Categoría',
+                icon: Icons.category,
+                hasValue: categoria != null,
                 onClear: () {
-                  localidad = null;
+                  setState(() => categoria = null);
                   ctrl.clear();
                   _resetYcargar();
                 },
               ),
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) => Align(
+            alignment: Alignment.topLeft,
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 180,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  itemBuilder: (_, i) {
+                    final o = options.elementAt(i);
+                    return ListTile(
+                      dense: true,
+                      title: Text(o, style: const TextStyle(fontSize: 13)),
+                      onTap: () => onSelected(o),
+                    );
+                  },
+                ),
+              ),
             ),
-          );
-        },
-      );
+          ),
+        );
+      },
+    );
+  }
 
-  Widget _shimmerLoader() => Container(
-    height: 36,
-    decoration: BoxDecoration(
-      color: Colors.grey.shade200,
-      borderRadius: BorderRadius.circular(8),
-    ),
-  );
+  Widget _selectorLocalidad() {
+    return FutureBuilder<List<Localidad>>(
+      future: LocalidadApiService.cache != null
+          ? Future.value(LocalidadApiService.cache)
+          : LocalidadApiService.obtenerLocalidadNombres(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return _shimmerLoader();
+        return SelectorLocalidad(
+          key: _selectorLocalidadKey,
+          localidades: snapshot.data!,
+          onSelected: (loc) {
+            setState(() => localidad = loc?.ine);
+            _resetYcargar();
+          },
+        );
+      },
+    );
+  }
+
+  Widget _shimmerLoader() {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+  }
 
 
 
@@ -506,6 +542,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     controller.dispose();
     super.dispose();
   }

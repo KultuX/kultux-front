@@ -15,7 +15,7 @@ class LocalidadApiService {
       return _cache!;
     }
 
-    final url = Uri.http(
+    final url = Uri.https(
       _BASE_URL_LOCALIDADES,
       '/api/v1/localidades/nombres',
     );
@@ -37,5 +37,7 @@ class LocalidadApiService {
       throw HttpException(response.statusCode.toString());
     }
   }
+
+  static List<Localidad>? get cache => _cache;
 
 }

@@ -2,14 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/models/franja.dart';
 
-// ─────────────────────────────────────────────
-//  TarjetaBusqueda — tarjeta base para búsqueda
-//  Tres constructores nombrados:
-//    · TarjetaBusqueda.actividad(...)
-//    · TarjetaBusqueda.restaurante(...)
-//    · TarjetaBusqueda.alojamiento(...)
-// ─────────────────────────────────────────────
-
 class TarjetaBusqueda extends StatelessWidget {
   final String titulo;
   final String? localidad;
@@ -34,7 +26,6 @@ class TarjetaBusqueda extends StatelessWidget {
     this.abierto,
   });
 
-  // ── Actividad ────────────────────────────────
   const TarjetaBusqueda.actividad({
     Key? key,
     required String titulo,
@@ -55,7 +46,6 @@ class TarjetaBusqueda extends StatelessWidget {
           iconoEtiqueta: iconoEtiqueta
         );
 
-  // ── Restaurante ──────────────────────────────
   const TarjetaBusqueda.restaurante({
     Key? key,
     required String titulo,
@@ -78,7 +68,6 @@ class TarjetaBusqueda extends StatelessWidget {
           localidad: localidad,
         );
 
-  // ── Alojamiento ──────────────────────────────
   const TarjetaBusqueda.alojamiento({
     Key? key,
     required String titulo,
@@ -97,9 +86,7 @@ class TarjetaBusqueda extends StatelessWidget {
           localidad: localidad,
         );
 
-  // ─────────────────────────────────────────────
-  //  Build
-  // ─────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -120,16 +107,13 @@ class TarjetaBusqueda extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Imagen superior ──────────────────
             _ImagenSuperior(imagenUrl: imagenUrl),
 
-            // ── Info inferior ────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Título + botón flecha
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -153,12 +137,10 @@ class TarjetaBusqueda extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  // Fila de chips de metadatos
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      // Localidad
                       if (localidad != null)
                         _ChipMeta(
                           icono: Icons.location_on_outlined,
@@ -167,7 +149,6 @@ class TarjetaBusqueda extends StatelessWidget {
                           textoColor: const Color(0xFF444444),
                         ),
 
-                      // Fecha (actividades)
                       if (fecha != null)
                         _ChipMeta(
                           icono: Icons.calendar_today_outlined,
@@ -176,7 +157,6 @@ class TarjetaBusqueda extends StatelessWidget {
                           textoColor: const Color(0xFF4A7A10),
                         ),
 
-                      // Etiqueta categoría (restaurante / alojamiento)
                       if (textoEtiqueta != null && iconoEtiqueta != null)
                         _ChipMetaSvg(
                           iconoPath: iconoEtiqueta!,
@@ -188,10 +168,17 @@ class TarjetaBusqueda extends StatelessWidget {
                     ],
                   ),
 
-                  // Horario (solo restaurante)
                   if (horario != null && abierto != null) ...[
                     const SizedBox(height: 8),
                     _HorarioInline(horario: horario!, abierto: abierto!),
+                    const Text(
+                      "El horario puede sufrir cambios",
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontStyle: FontStyle.italic,
+                          fontSize: 10
+                      ),
+                    )
                   ],
                 ],
               ),
@@ -202,10 +189,6 @@ class TarjetaBusqueda extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-//  Subwidgets privados
-// ─────────────────────────────────────────────
 
 class _ImagenSuperior extends StatelessWidget {
   final String imagenUrl;
@@ -368,7 +351,7 @@ class _HorarioInline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hoy = DateTime.now().weekday; // 1=Lun … 7=Dom
+    final hoy = DateTime.now().weekday;
     final franjasHoy = horario['$hoy'] ?? [];
     final color = abierto ? const Color(0xFFA6E246) : Colors.red.shade400;
     final colorFondo = abierto ? const Color(0xFFF0F8E6) : Colors.red.shade50;
@@ -389,7 +372,7 @@ class _HorarioInline extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Fila 1: estado + franjas de hoy
+
           Row(
             children: [
               Container(

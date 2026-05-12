@@ -8,6 +8,13 @@ import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
 import 'package:kultux/componentes/politica_privacidad_dialog.dart';
 
+const _verde = Color(0xFFA6E246);
+const _fondoPagina = Color(0xFFF1EFE9);
+const _fondoCard = Color(0xFFF8F7F4);
+const _texto = Color(0xFF1A1A1A);
+const _textoSuave = Color(0xFF6B6B6B);
+const _borde = Color(0xFFE0DDD6);
+
 class PerfilPage extends StatefulWidget {
   final VoidCallback cerrarSesion;
   final Usuario? usuario;
@@ -18,122 +25,300 @@ class PerfilPage extends StatefulWidget {
 }
 
 class _PerfilPageState extends State<PerfilPage> {
-
-  // ── Control de vista ───────────────────────────────────────────────────────
   bool _editandoPerfil = false;
 
   final _opciones = {
-    'Editar perfil': 'assets/iconos/editar_perfil.svg',
-    'Guardados': 'assets/iconos/guardados.svg',
-    'Notificaciones activadas': 'assets/iconos/sin_notificaciones.svg',
-    'Contacta con nosotros': 'assets/iconos/contactar_nosotros.svg',
-    'Términos y condiciones': 'assets/iconos/terminos_condiciones.svg',
-    'Política de privacidad': 'assets/iconos/politica_privacidad.svg',
+    'Editar perfil':            ('assets/iconos/editar_perfil.svg',      'ajustes'),
+    'Guardados':                ('assets/iconos/guardados.svg',           'ajustes'),
+    'Notificaciones activadas': ('assets/iconos/sin_notificaciones.svg',  'ajustes'),
+    'Contacta con nosotros':    ('assets/iconos/contactar_nosotros.svg',  'soporte'),
+    'Términos y condiciones':   ('assets/iconos/terminos_condiciones.svg','soporte'),
+    'Política de privacidad':   ('assets/iconos/politica_privacidad.svg', 'soporte'),
   };
 
   @override
   Widget build(BuildContext context) {
-    // ── Si estamos editando, mostramos EditarPerfilPage dentro del Scaffold ──
     if (_editandoPerfil) {
       return EditarPerfilPage(
         onVolver: () => setState(() => _editandoPerfil = false),
       );
     }
 
-    // ── Vista normal del perfil ────────────────────────────────────────────
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Container(
+      color: _fondoPagina,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _HeaderBanner(),
+            _TarjetaAvatar(),
+            _SeccionLabel('Ajustes'),
+            ..._opciones.entries
+                .where((e) => e.value.$2 == 'ajustes')
+                .map((e) => _OpcionTile(
+              texto: e.key,
+              icono: e.value.$1,
+              notif: e.key == 'Notificaciones activadas',
+              onTap: () => _manejarOpcion(e.key),
+            )),
+            _SeccionLabel('Soporte'),
+            ..._opciones.entries
+                .where((e) => e.value.$2 == 'soporte')
+                .map((e) => _OpcionTile(
+              texto: e.key,
+              icono: e.value.$1,
+              onTap: () => _manejarOpcion(e.key),
+            )),
+            const SizedBox(height: 20),
+            _BotonesAccion(
+              onCerrar: _confirmarCerrarSesion,
+              onEliminar: _confirmarEliminarCuenta,
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _manejarOpcion(String texto) {
+    switch (texto) {
+      case 'Editar perfil':
+        setState(() => _editandoPerfil = true);
+      case 'Contacta con nosotros':
+        _mostrarContacto();
+      case 'Términos y condiciones':
+        TerminosCondicionesDialog.mostrar(context);
+      case 'Política de privacidad':
+        PoliticaPrivacidadDialog.mostrar(context);
+      default:
+        _mostrarProximamente();
+    }
+  }
+
+
+  Widget _HeaderBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
         children: [
-          Card(
-            elevation: 4,
-            margin: const EdgeInsets.all(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 90,
-                    backgroundImage: (Usuario.usuarioActual?.imagenPerfil != null &&
-                        Usuario.usuarioActual!.imagenPerfil!.isNotEmpty)
-                        ? NetworkImage(Usuario.usuarioActual!.imagenPerfil!)
-                        : const AssetImage("assets/images/logo_registro.png") as ImageProvider,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    Usuario.usuarioActual?.nombre ?? widget.usuario?.nombre ?? 'Nombre usuario',
-                    style: const TextStyle(fontFamily: 'RobotoCondensed', fontSize: 20),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    Usuario.usuarioActual?.email ?? widget.usuario?.email ?? 'correo@correo.com',
-                    style: const TextStyle(fontFamily: 'RobotoCondensed'),
-                  ),
-                ],
+          Positioned(
+            top: 0, right: 0,
+            child: Opacity(
+              opacity: 0.12,
+              child: Container(
+                width: 70, height: 70,
+                decoration: BoxDecoration(
+                  color: _verde,
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: _opciones.length,
-            itemBuilder: (context, index) {
-              final texto = _opciones.keys.elementAt(index);
-              final icono = _opciones.values.elementAt(index);
-              return Card(
-                elevation: 4,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: ListTile(
-                  leading: SvgPicture.asset(
-                    icono,
-                    colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-                  ),
-                  title: Text(texto),
-                  trailing: SvgPicture.asset("assets/iconos/flecha_siguiente.svg"),
-                  onTap: () {
-                    if (texto == 'Editar perfil') {
-                      setState(() => _editandoPerfil = true);
-                    } else if (texto == 'Contacta con nosotros') {
-                      _mostrarContacto();
-                    } else if (texto == 'Términos y condiciones') {
-                      TerminosCondicionesDialog.mostrar(context);
-                    } else if (texto == 'Política de privacidad') {  // ← nuevo
-                      PoliticaPrivacidadDialog.mostrar(context);
-                    } else {
-                      _mostrarProximamente();
-                    }
-                  },
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BotonesGenerico(
-                titulo: "Cerrar sesión",
-                pulsar: _confirmarCerrarSesion,
-              ),
-              const SizedBox(width: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
+              const Text('Mi cuenta',
+                  style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0))),
+              const SizedBox(height: 2),
+              const Text('Perfil',
+                  style: TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white)),
+              const SizedBox(height: 6),
+              Container(
+                width: 36, height: 2,
+                decoration: BoxDecoration(
+                  color: _verde,
+                  borderRadius: BorderRadius.circular(1),
                 ),
-                onPressed: _confirmarEliminarCuenta,
-                child: const Text('Eliminar cuenta'),
               ),
             ],
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  // ── Dialogs (sin cambios) ──────────────────────────────────────────────────
+  Widget _TarjetaAvatar() {
+    final usuario = Usuario.usuarioActual ?? widget.usuario;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      decoration: BoxDecoration(
+        color: _fondoCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _borde),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80, height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: _verde, width: 3),
+            ),
+            child: ClipOval(
+              child: (usuario?.imagenPerfil != null && usuario!.imagenPerfil!.isNotEmpty)
+                  ? Image.network(usuario.imagenPerfil!, fit: BoxFit.cover)
+                  : Image.asset('assets/images/logo_registro.png', fit: BoxFit.cover),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            usuario?.nombre ?? 'Nombre usuario',
+            style: const TextStyle(
+              fontFamily: 'RobotoCondensed',
+              fontSize: 18, fontWeight: FontWeight.w700, color: _texto,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            usuario?.email ?? 'correo@correo.com',
+            style: const TextStyle(
+              fontFamily: 'RobotoCondensed', fontSize: 13, color: _textoSuave,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _SeccionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 14, 16, 6),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          fontFamily: 'RobotoCondensed',
+          fontSize: 11, fontWeight: FontWeight.w600,
+          color: _textoSuave, letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+
+  Widget _OpcionTile({
+    required String texto,
+    required String icono,
+    required VoidCallback onTap,
+    bool notif = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: _fondoCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _borde),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(
+                color: _texto,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  icono, width: 16, height: 16,
+                  colorFilter: const ColorFilter.mode(_verde, BlendMode.srcIn),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                texto,
+                style: const TextStyle(
+                  fontFamily: 'RobotoCondensed',
+                  fontSize: 14, fontWeight: FontWeight.w500, color: _texto,
+                ),
+              ),
+            ),
+            if (notif)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _verde,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text('ON',
+                    style: TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.w700, color: _texto)),
+              )
+            else
+              SvgPicture.asset('assets/iconos/flecha_siguiente.svg',
+                  width: 16, height: 16,
+                  colorFilter: const ColorFilter.mode(_textoSuave, BlendMode.srcIn)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _BotonesAccion({
+    required VoidCallback onCerrar,
+    required VoidCallback onEliminar,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: onCerrar,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: _verde,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: Text('Cerrar sesión',
+                      style: TextStyle(
+                          fontFamily: 'RobotoCondensed',
+                          fontSize: 14, fontWeight: FontWeight.w700, color: _texto)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onTap: onEliminar,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFC62828), width: 1.5),
+                ),
+                child: const Center(
+                  child: Text('Eliminar cuenta',
+                      style: TextStyle(
+                          fontFamily: 'RobotoCondensed',
+                          fontSize: 14, fontWeight: FontWeight.w700,
+                          color: Color(0xFFC62828))),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Future<void> _mostrarContacto() async {
     await showDialog(
@@ -147,7 +332,6 @@ class _PerfilPageState extends State<PerfilPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
 
-              // ── Cabecera ──────────────────────────────────────────────
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -183,8 +367,6 @@ class _PerfilPageState extends State<PerfilPage> {
                   ],
                 ),
               ),
-
-              // ── Contenido ─────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
@@ -237,7 +419,6 @@ class _PerfilPageState extends State<PerfilPage> {
                 ),
               ),
 
-              // ── Botón Cerrar ──────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: SizedBox(

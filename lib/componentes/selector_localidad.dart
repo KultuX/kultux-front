@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:kultux/models/localidad.dart';
-import 'package:kultux/api/localidadesApi.dart';
 
 class SelectorLocalidad extends StatefulWidget {
-  final Localidad? valorInicial;
+  final List<Localidad> localidades;
+  final int? ineInicial;
   final ValueChanged<Localidad?> onSelected;
   final String label;
 
   const SelectorLocalidad({
     super.key,
+    required this.localidades,
     required this.onSelected,
-    this.valorInicial,
+    this.ineInicial,
     this.label = 'Ubicación',
   });
 
@@ -20,36 +21,18 @@ class SelectorLocalidad extends StatefulWidget {
 
 class _SelectorLocalidadState extends State<SelectorLocalidad> {
   late final TextEditingController _controller;
-  List<Localidad> _localidades = [];
-  bool _cargando = true;
+  Localidad? _seleccionada;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController();
-    _cargarLocalidades();
-  }
-
-  Future<void> _cargarLocalidades() async {
-    try {
-      final lista = await LocalidadApiService.obtenerLocalidadNombres();
-      if (!mounted) return;
-
-      _localidades = lista;
-
-      // ✅ aplicar valor inicial REAL
-      if (widget.valorInicial != null) {
-        final match = lista.firstWhere(
-              (l) => l.ine == widget.valorInicial!.ine,
-          orElse: () => widget.valorInicial!,
-        );
+    if (widget.ineInicial != null) {
+      final match = widget.localidades.where((l) => l.ine == widget.ineInicial).firstOrNull;
+      if (match != null) {
+        _seleccionada = match;
         _controller.text = match.nombre;
-        widget.onSelected(match);
       }
-
-      setState(() => _cargando = false);
-    } catch (_) {
-      if (mounted) setState(() => _cargando = false);
     }
   }
 
@@ -61,63 +44,87 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
 
   @override
   Widget build(BuildContext context) {
-    if (_cargando) return _loader();
-
     return Autocomplete<Localidad>(
-      optionsBuilder: (TextEditingValue value) {
-        if (value.text.isEmpty) return const Iterable<Localidad>.empty();
-        return _localidades.where(
-              (l) => l.nombre.toLowerCase().contains(value.text.toLowerCase()),
+      optionsBuilder: (v) {
+        if (v.text.isEmpty) return const Iterable<Localidad>.empty();
+        return widget.localidades.where(
+              (l) => l.nombre.toLowerCase().contains(v.text.toLowerCase()),
         );
       },
       displayStringForOption: (l) => l.nombre,
       onSelected: (loc) {
+        setState(() => _seleccionada = loc);
         _controller.text = loc.nombre;
         widget.onSelected(loc);
       },
-      fieldViewBuilder: (context, _, focusNode, __) {
+      fieldViewBuilder: (context, ctrl, focusNode, _) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (ctrl.text != _controller.text) ctrl.text = _controller.text;
+        });
         return TextField(
-          controller: _controller,
+          controller: ctrl,
           focusNode: focusNode,
-          decoration: _inputDeco(
-            label: widget.label,
-            icon: Icons.location_on,
-          ),
+          style: const TextStyle(fontSize: 13),
+          decoration: _inputDeco(ctrl),
         );
       },
-    );
-  }
-
-  Widget _loader() {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(8),
+      optionsViewBuilder: (context, onSelected, options) => Align(
+        alignment: Alignment.topLeft,
+        child: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: 280,
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              itemCount: options.length,
+              itemBuilder: (_, i) {
+                final o = options.elementAt(i);
+                return ListTile(
+                  dense: true,
+                  title: Text(o.nombre, style: const TextStyle(fontSize: 13)),
+                  onTap: () => onSelected(o),
+                );
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  InputDecoration _inputDeco({
-    required String label,
-    required IconData icon,
-  }) {
+  InputDecoration _inputDeco(TextEditingController ctrl) {
+    final hasValue = _seleccionada != null;
     return InputDecoration(
-      labelText: label,
+      labelText: widget.label,
+      labelStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+      isDense: true,
       filled: true,
       fillColor: Colors.grey.shade100,
-      isDense: true,
-      contentPadding:
-      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide:
-        const BorderSide(color: Color.fromARGB(255, 166, 226, 70)),
+        borderSide: const BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
       ),
-      suffixIcon: Icon(icon, size: 16),
+      suffixIcon: hasValue
+          ? GestureDetector(
+        onTap: () {
+          setState(() => _seleccionada = null);
+          ctrl.clear();
+          widget.onSelected(null);
+        },
+        child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
+      )
+          : Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
     );
   }
 }

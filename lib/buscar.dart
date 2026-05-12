@@ -5,22 +5,29 @@ import 'package:kultux/buscarAlojamiento.dart';
 
 class BuscarPage extends StatefulWidget {
   final Function(dynamic)? onDetalleSeleccionado;
-  const BuscarPage({super.key, this.onDetalleSeleccionado});
+  final int selectedIndex;
+  final Function(int) onIndexChanged;
+  const BuscarPage({super.key, this.onDetalleSeleccionado, required this.selectedIndex, required this.onIndexChanged});
 
   @override
   State<BuscarPage> createState() => _BuscarPageState();
 }
 
 class _BuscarPageState extends State<BuscarPage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex = 0;
 
   final List<String> _categorias = ["Actividades", "Restaurantes", "Alojamientos"];
+
+  @override
+  void initState(){
+    super.initState();
+    _selectedIndex = widget.selectedIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // ── HEADER compacto ──
         Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -33,7 +40,6 @@ class _BuscarPageState extends State<BuscarPage> {
           ),
           child: Stack(
             children: [
-              // Miniatura de fondo
               Positioned(
                 top: 2,
                 right: 0,
@@ -104,7 +110,6 @@ class _BuscarPageState extends State<BuscarPage> {
           ),
         ),
 
-        // ── SELECTOR DE CATEGORÍAS compacto ──
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -114,7 +119,10 @@ class _BuscarPageState extends State<BuscarPage> {
             children: List.generate(
               _categorias.length,
                   (index) => GestureDetector(
-                onTap: () => setState(() => _selectedIndex = index),
+                onTap: () => setState(()  {
+                  _selectedIndex = index;
+                  widget.onIndexChanged(index);
+                }),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(

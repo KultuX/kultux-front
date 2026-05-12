@@ -35,7 +35,6 @@ class CamposPersonalizados extends StatefulWidget {
 class _CamposPersonalizadosState extends State<CamposPersonalizados> {
   bool _mostrarPass = false;
 
-  /*──────────── ICONOS ────────────*/
 
   Widget? _prefix() {
     if (widget.pass) {
@@ -93,8 +92,6 @@ class _CamposPersonalizadosState extends State<CamposPersonalizados> {
 
     return null;
   }
-
-  /*──────────── UI ────────────*/
 
   @override
   Widget build(BuildContext context) {

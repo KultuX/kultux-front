@@ -29,8 +29,8 @@ class Iconos{
     "VEGANO":"assets/iconos/restaurantes.svg",
     "TAPAS":"assets/iconos/cerveceria.svg",
     "CAFETERIA":"assets/iconos/cafeteria.svg",
-    "HAMBURGUESERIA":"assets/iconos/restaurante.svg",
-    "PIZZERIA":"assets/iconos/restaurante.svg",
+    "HAMBURGUESERIA":"assets/iconos/restaurantes.svg",
+    "PIZZERIA":"assets/iconos/restaurantes.svg",
     "COPAS":"assets/iconos/copas.svg"
   };
 

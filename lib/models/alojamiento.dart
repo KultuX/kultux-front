@@ -4,9 +4,9 @@ class Alojamiento{
   final int id;
   final String nombre;
   final String categoriaAlojamiento;
-  final String imagenPrincipal;
+  String? imagenPrincipal;
 
-  Localidad? localidad;
+  String? localidad;
   String? telefonoEmpresa;
   String? correoCorporativo;
   List<Imagen>? imagenes;
@@ -14,6 +14,8 @@ class Alojamiento{
 
   String? urlReserva;
   String? urlWeb;
+
+  String? direccion;
 
   Alojamiento._({
     required this.id,
@@ -26,7 +28,8 @@ class Alojamiento{
     this.imagenes,
     this.urlReserva,
     this.urlWeb,
-    this.descripcion
+    this.descripcion,
+    this.direccion
   });
 
   factory Alojamiento.destacado(Map<String, dynamic> json){
@@ -43,7 +46,7 @@ class Alojamiento{
       id: json['idAlojamiento'],
       nombre: json['nombre'],
       categoriaAlojamiento: json['categoriaAlojamiento'],
-      localidad: Localidad.fromJson(json['localidad']),
+      localidad: json['localidad'],
       imagenPrincipal: json['portada'] ??  'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg'
     );
   }
@@ -53,10 +56,10 @@ class Alojamiento{
         id: json['id'],
         nombre: json['nombre'],
         categoriaAlojamiento: json['categoriaAlojamiento'],
-        imagenPrincipal: json['imagenPrincipal'],
-        telefonoEmpresa: json['telefonoEmpresa'],
-        correoCorporativo: json['correoCorporativo'],
-        localidad: Localidad.fromJson(json['localidad']),
+        imagenPrincipal: json['portada'],
+        telefonoEmpresa: json['telefono'],
+        correoCorporativo: json['email'],
+        localidad: json['localidad'],
         imagenes: json['imagenes'] != null
           ? (json['imagenes'] as List)
           .map((e) => Imagen.fromJson(e))
@@ -64,7 +67,8 @@ class Alojamiento{
           : null,
       urlReserva: json['urlReserva'],
       urlWeb: json['urlWeb'],
-      descripcion: json['descripcion']
+      descripcion: json['descripcion'],
+      direccion: json['direccion']
 
     );
   }

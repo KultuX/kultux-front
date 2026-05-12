@@ -1,185 +1,305 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:kultux/componentes/botones.dart';
+import 'package:flutter/gestures.dart';
 import 'package:kultux/componentes/text_fields.dart';
 import 'package:kultux/registro.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 
-class AssetLogin extends StatefulWidget{
+const _verde = Color(0xFFA6E246);
+const _fondoCard = Color(0xFFF8F7F4);
+const _texto = Color(0xFF1A1A1A);
+const _textoSuave = Color(0xFF6B6B6B);
+const _borde = Color(0xFFE0DDD6);
+
+class AssetLogin extends StatefulWidget {
   final VoidCallback? cerrar;
   final void Function(Usuario usuario)? logeado;
   final VoidCallback? invitado;
 
   const AssetLogin({super.key, this.cerrar, this.logeado, this.invitado});
+
   @override
   State<AssetLogin> createState() => _AssetLoginState();
 }
 
-class _AssetLoginState extends State<AssetLogin>{
-
-  TextEditingController email = TextEditingController();
-  TextEditingController pass = TextEditingController();
+class _AssetLoginState extends State<AssetLogin> {
+  final TextEditingController email = TextEditingController();
+  final TextEditingController pass = TextEditingController();
 
   bool _errorEmail = false;
   bool _errorPass = false;
   bool _checked = false;
-  @override
-  Widget build(BuildContext context){
 
+  Future<void> _iniciarSesion() async {
+    setState(() { _errorEmail = false; _errorPass = false; });
+
+    if (email.text.trim().isEmpty && pass.text.trim().isEmpty) {
+      setState(() { _errorEmail = true; _errorPass = true; });
+      _snack('⚠️ Debes introducir correo y contraseña.');
+      return;
+    }
+    if (email.text.trim().isEmpty) {
+      setState(() => _errorEmail = true);
+      _snack('⚠️ Introduce un correo.');
+      return;
+    }
+    if (pass.text.trim().isEmpty) {
+      setState(() => _errorPass = true);
+      _snack('⚠️ Introduce una contraseña.');
+      return;
+    }
+
+    try {
+      final usuario = await UsuarioApiService.loginUsuario(
+        Usuario.login(email.text, pass.text),
+      );
+      if (_checked) await UsuarioRepository.guardar(usuario);
+      _snack('👋🏻 ¡¡Bienvenid@, ${usuario.nombre?.toUpperCase() ?? usuario.email}!!');
+      widget.logeado?.call(usuario);
+    } catch (_) {
+      setState(() { _errorEmail = true; _errorPass = true; });
+      _snack('⚠️ Usuario o contraseña incorrectos.');
+    }
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(showCloseIcon: true,
+          content: Text(msg, textAlign: TextAlign.center)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Stack(
-      children:[
+      children: [
+        // Fondo semitransparente
         GestureDetector(
           onTap: widget.cerrar,
-          child: Container(color: Colors.black54)
+          child: Container(color: Colors.black54),
         ),
+
         Center(
           child: Material(
             color: Colors.transparent,
             child: Container(
-              width: 358.16,
-              height: 475.2,
-              padding: const EdgeInsets.all(16),
+              width: 360,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _fondoCard,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)],
+                border: Border.all(color: _borde),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 24,
+                    offset: Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // ⚡ se ajusta al contenido
-                children:[
-                  Image.asset('assets/images/logo_login.png', width:90,height: 90,),
-                  const SizedBox(height: 15),
-                  CamposPersonalizados.normal(
-                      titulo: 'Correo electrónico',
-                      ancho:321,
-                    controller: email,
-                    mostrarError: _errorEmail,
-                  ),
-                  const SizedBox(height: 15),
-                  CamposPersonalizados.password(
-                    titulo: 'Contraseña',
-                    ancho:321,
-                    controller: pass,
-                    mostrarError: _errorPass,
-                  ),
-                  const SizedBox(height: 40),
-                 /* Row(
-                    children:[
-                      Checkbox(
-                          value: _checked,
-                          onChanged: (valor) => setState(()=> _checked = valor ?? false),
-                          checkColor: Colors.black,
-                          fillColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return Color.fromARGB(255, 166, 226, 70); // verde solo al marcar
-                            }
-                            return null; // fondo transparente al desmarcar → borde intacto
-                          }),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5), // hace las esquinas redondeadas
-                            side: BorderSide(color: Colors.black26, width: 1), // borde del checkbox
-                          )
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Header ───────────────────────────────────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      /*Text('Mantener la sesión iniciada',style: TextStyle(fontFamily: 'RobotoCondensed',)),*/
-                      const SizedBox(height: 20),
-                      //Text("He olvidado mi contraseña",style: TextStyle(fontFamily: 'RobotoCondensed'),)
-                    ],
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 0, right: 0,
+                          child: Opacity(
+                            opacity: 0.12,
+                            child: Container(
+                              width: 60, height: 60,
+                              decoration: BoxDecoration(
+                                color: _verde,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.asset('assets/images/logo_login.png',
+                                width: 44, height: 44),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Kultux',
+                                    style: TextStyle(
+                                        fontSize: 11, color: Color(0xFFb0b0b0))),
+                                const SizedBox(height: 2),
+                                const Text('Iniciar sesión',
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white)),
+                                const SizedBox(height: 5),
+                                Container(
+                                  width: 30, height: 2,
+                                  decoration: BoxDecoration(
+                                    color: _verde,
+                                    borderRadius: BorderRadius.circular(1),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 10),*/
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _Campo(child: CamposPersonalizados.normal(
+                          titulo: 'Correo electrónico',
+                          controller: email,
+                          mostrarError: _errorEmail,
+                          tipo: TextInputType.emailAddress,
+                        )),
+                        const SizedBox(height: 10),
+                        _Campo(child: CamposPersonalizados.password(
+                          titulo: 'Contraseña',
+                          controller: pass,
+                          mostrarError: _errorPass,
+                        )),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _checked
+                                  ? _verde.withOpacity(0.6)
+                                  : _borde,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 24, height: 24,
+                                child: Checkbox(
+                                  value: _checked,
+                                  onChanged: (v) =>
+                                      setState(() => _checked = v ?? false),
+                                  checkColor: _texto,
+                                  materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                                  fillColor: WidgetStateProperty.resolveWith(
+                                        (s) => s.contains(WidgetState.selected)
+                                        ? _verde
+                                        : null,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Mantener la sesión iniciada',
+                                  style: TextStyle(
+                                      fontFamily: 'RobotoCondensed',
+                                      fontSize: 13,
+                                      color: _textoSuave)),
+                            ],
+                          ),
+                        ),
 
-                  BotonesGenerico(
-                    titulo:"Iniciar sesión",
-                    ancho:194,
-                    pulsar: () async{
-                      setState(() {
-                        _errorEmail = false;
-                        _errorPass = false;
-                      });
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: _iniciarSesion,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: _verde,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text('Iniciar sesión',
+                                  style: TextStyle(
+                                      fontFamily: 'RobotoCondensed',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: _texto)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: widget.invitado,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _borde, width: 1.5),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.person_outline,
+                                    size: 16, color: _textoSuave),
+                                SizedBox(width: 6),
+                                Text('Entrar como invitado',
+                                    style: TextStyle(
+                                        fontFamily: 'RobotoCondensed',
+                                        fontSize: 13,
+                                        color: _textoSuave)),
+                              ],
+                            ),
+                          ),
+                        ),
 
-                      if (email.text.trim().isEmpty && pass.text.trim().isEmpty) {
-                        _errorEmail = true;
-                        _errorPass = true;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              showCloseIcon: true,
-                              content: Text(textAlign: .center, "⚠️ Debes introducir correo y contraseña.")),
-                        );
-                        return;
-                      }
-
-                      if(email.text.trim().isEmpty) {
-                        setState(() {
-                          _errorEmail = true;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              showCloseIcon: true,
-                              content: Text(textAlign: .center, "⚠️ Introduce un correo.")),
-                        );
-                        return;
-                      }
-
-                     if(pass.text.trim().isEmpty) {
-                        setState(() {
-                          _errorPass = true;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-
-                          const SnackBar(
-                              showCloseIcon: true,
-                              content: Text(textAlign: .center, "⚠️ Introduce una contraseña.")),
-                        );
-                        return;
-                      }
-
-
-
-                      final usuarioLogin = Usuario.login(email.text, pass.text);
-                      try {
-                      // Llamada a la API
-                      Usuario usuario = await UsuarioApiService.loginUsuario(usuarioLogin);
-                      await UsuarioRepository.guardar(usuario);
-
-                      // Mostrar mensaje de bienvenida
-                      ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          showCloseIcon: true,
-                          content: Text(textAlign: .center,"👋🏻 ¡¡Bienvenid@, ${usuario.nombre!.toUpperCase() ?? usuario.email}!!👋🏻")),
-                      );
-
-                      // Ejecutar callback y pasar el usuario
-                      if (widget.logeado != null) widget.logeado!(usuario);
-
-                      } catch (e) {
-                        _errorEmail = true;
-                        _errorPass = true;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            showCloseIcon: true,
-                            content: Text(textAlign: .center,"⚠️ Usuario o contraseña incorrectos.")),
-                        );
-                      }
-                    },
-
-                    //widget.logeado,
+                        const SizedBox(height: 16),
+                        Center(
+                          child: RichText(
+                            text: TextSpan(
+                              text: '¿No tienes cuenta? ',
+                              style: const TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 13,
+                                  color: _textoSuave),
+                              children: [
+                                TextSpan(
+                                  text: 'Regístrate',
+                                  style: const TextStyle(
+                                      fontFamily: 'RobotoCondensed',
+                                      fontSize: 13,
+                                      color: _verde,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: _verde),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => RegistroPage()),
+                                    ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  BotonesGenerico(
-                      titulo:"Registrarse",
-                      ancho:194,
-                      pulsar:(){
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder:(context) => RegistroPage()
-                            )
-                        );}
-                      ),
-                  const SizedBox(height: 10),
-                  BotonesGenerico(titulo:"Entrar como invitado",imagen:"assets/iconos/invitado.svg", ancho:194, pulsar: widget.invitado),
-
                 ],
               ),
             ),
@@ -189,3 +309,15 @@ class _AssetLoginState extends State<AssetLogin>{
     );
   }
 }
+
+Widget _Campo({required Widget child}) => Container(
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(color: _borde),
+  ),
+  child: Padding(
+    padding: const EdgeInsets.all(10),
+    child: child,
+  ),
+);
