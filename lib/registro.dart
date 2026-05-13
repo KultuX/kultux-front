@@ -10,6 +10,7 @@ import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
 import 'package:kultux/componentes/politica_privacidad_dialog.dart';
+import 'package:kultux/componentes/modal_alerta.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
@@ -50,7 +51,7 @@ class _RegistroPageState extends State<RegistroPage> {
 
   Future<bool> registrarUsuario() async {
     if (!_checkedTerminos || !_checkedPolitica) {
-      _snack('⚠️ Debes aceptar los Términos y la Política de privacidad.');
+      Alerta.show(context,mensaje: '⚠️ Debes aceptar los Términos y la Política de privacidad.', tipo: TipoAviso.warning);
       return false;
     }
 
@@ -65,18 +66,18 @@ class _RegistroPageState extends State<RegistroPage> {
 
     for (final entry in campos.entries) {
       if (entry.value.trim().isEmpty) {
-        _snack("⚠️ El campo '${entry.key}' es obligatorio.");
+        Alerta.show(context,mensaje: '⚠️ El campo ${entry.key} es obligatorio.', tipo: TipoAviso.error);
         return false;
       }
     }
 
     if (controllers!['password']!.text != controllers!['password2']!.text) {
-      _snack('Las contraseñas no coinciden. ❌');
+      Alerta.show(context,mensaje: 'Las contraseñas no coinciden. ❌' , tipo: TipoAviso.error);
       return false;
     }
 
     if (_localidadSeleccionada == null) {
-      _snack('⚠️ Selecciona una localidad válida.');
+      Alerta.show(context,mensaje: '⚠️ Selecciona una localidad válida.' , tipo: TipoAviso.error);
       return false;
     }
 
@@ -93,13 +94,9 @@ class _RegistroPageState extends State<RegistroPage> {
       );
       return true;
     } catch (_) {
-      _snack('⚠️ Ups.. algo ha ido mal. Revisa los datos introducidos.');
+      Alerta.show(context,mensaje:'Alguno de los datos no son correctos, revísalos.' , tipo: TipoAviso.error);
       return false;
     }
-  }
-
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -109,7 +106,6 @@ class _RegistroPageState extends State<RegistroPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Header ──────────────────────────────────────────────────────
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 52, 16, 20),
@@ -163,8 +159,6 @@ class _RegistroPageState extends State<RegistroPage> {
                 ],
               ),
             ),
-
-            // ── Formulario ───────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -204,7 +198,10 @@ class _RegistroPageState extends State<RegistroPage> {
                     onChanged: (v) => setState(() => _checkedTerminos = v ?? false),
                     normal: 'Acepto los ',
                     link: 'Términos y Condiciones',
-                    onTap: () => TerminosCondicionesDialog.mostrar(context),
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                          TerminosCondicionesDialog.mostrar(context);
+                    },
                   ),
                   const SizedBox(height: 6),
                   _CheckLegal(
@@ -212,11 +209,13 @@ class _RegistroPageState extends State<RegistroPage> {
                     onChanged: (v) => setState(() => _checkedPolitica = v ?? false),
                     normal: 'Acepto la ',
                     link: 'Política de Privacidad',
-                    onTap: () => PoliticaPrivacidadDialog.mostrar(context),
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                          PoliticaPrivacidadDialog.mostrar(context);
+                    },
                   ),
 
                   const SizedBox(height: 24),
-                  // ── Botones ─────────────────────────────────────────────
                   Row(
                     children: [
                       Expanded(
@@ -246,13 +245,7 @@ class _RegistroPageState extends State<RegistroPage> {
                           onTap: () async {
                             if (await registrarUsuario()) {
                               Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  showCloseIcon: true,
-                                  content: Text('✅ ¡Registro completado!',
-                                      textAlign: TextAlign.center),
-                                ),
-                              );
+                              Alerta.show(context,mensaje:'✅ ¡Registro completado!' , tipo: TipoAviso.success);
                             }
                           },
                           child: Container(
@@ -284,7 +277,6 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
-  // ── Helpers de layout ──────────────────────────────────────────────────────
 
   Widget _SeccionLabel(String label) => Padding(
     padding: const EdgeInsets.only(bottom: 8, left: 2),
@@ -380,7 +372,6 @@ class _RegistroPageState extends State<RegistroPage> {
   }
 }
 
-// ── Widget reutilizable para checkboxes legales ────────────────────────────────
 
 class _CheckLegal extends StatelessWidget {
   final bool checked;

@@ -11,7 +11,7 @@ import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
-
+import 'package:kultux/componentes/modal_alerta.dart';
 class EstablecimientosPage extends StatefulWidget {
 
 
@@ -313,8 +313,9 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                           widget.onDetalleSeleccionado(detalle);
                         } catch (e) {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error al cargar detalle: $e')));
+                          Alerta.show(context,
+                              mensaje: 'No se ha podido cargar correctamente el restaurante.',
+                              tipo: TipoAviso.error);
                         }
                       },
                     )).toList(),
@@ -332,8 +333,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                           widget.onDetalleSeleccionado(detalle);
                         } catch (e) {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error al cargar detalle: $e')));
+                          Alerta.show(context,mensaje:'No se ha podido cargar correctamente el restaurante.', tipo: TipoAviso.error );
                         }
                       },
                     )).toList(),
@@ -462,11 +462,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                         widget.onDetalleSeleccionado(detalle);
                       } catch (e) {
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error al cargar detalle: $e'),
-                          ),
-                        );
+                        Alerta.show(context,mensaje:'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.', tipo: TipoAviso.error );
                       }
                     },
                   ),
@@ -584,11 +580,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                         widget.onDetalleSeleccionado(detalle);
                       } catch (e) {
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error al cargar detalle: $e'),
-                          ),
-                        );
+                        Alerta.show(context,mensaje:'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.', tipo: TipoAviso.error );
                       }
                     },
                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kultux/models/localidad.dart';
+import 'package:kultux/core/utils/normalizador_tildes.dart';
 
 class SelectorLocalidad extends StatefulWidget {
   final List<Localidad> localidades;
@@ -22,13 +23,21 @@ class SelectorLocalidad extends StatefulWidget {
 class _SelectorLocalidadState extends State<SelectorLocalidad> {
   late final TextEditingController _controller;
   Localidad? _seleccionada;
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
+
+    print('ineInicial: ${widget.ineInicial}');
+    print('localidades: ${widget.localidades.length}');
+
+
+    _focusNode = FocusNode();
     _controller = TextEditingController();
     if (widget.ineInicial != null) {
       final match = widget.localidades.where((l) => l.ine == widget.ineInicial).firstOrNull;
+      print('match: ${match?.nombre}');
       if (match != null) {
         _seleccionada = match;
         _controller.text = match.nombre;
@@ -38,6 +47,7 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -48,7 +58,7 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
       optionsBuilder: (v) {
         if (v.text.isEmpty) return const Iterable<Localidad>.empty();
         return widget.localidades.where(
-              (l) => l.nombre.toLowerCase().contains(v.text.toLowerCase()),
+                (l) => normalizar(l.nombre).contains(normalizar(v.text))
         );
       },
       displayStringForOption: (l) => l.nombre,
@@ -57,13 +67,21 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
         _controller.text = loc.nombre;
         widget.onSelected(loc);
       },
-      fieldViewBuilder: (context, ctrl, focusNode, _) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (ctrl.text != _controller.text) ctrl.text = _controller.text;
-        });
+      fieldViewBuilder: (context, ctrl, internalFocusNode, _) {
+
+        if (_seleccionada != null && ctrl.text.isEmpty) {
+          ctrl.text = _seleccionada!.nombre;
+        }
+       /* internalFocusNode.addListener(() {
+          if (internalFocusNode.hasFocus && _seleccionada != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              internalFocusNode.unfocus();
+            });
+          }
+        });*/
         return TextField(
           controller: ctrl,
-          focusNode: focusNode,
+          focusNode: internalFocusNode,
           style: const TextStyle(fontSize: 13),
           decoration: _inputDeco(ctrl),
         );

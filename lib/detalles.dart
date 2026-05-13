@@ -8,6 +8,8 @@ import 'package:kultux/models/usuario.dart';
 import 'package:kultux/API/interaccionesAPI.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:kultux/componentes/modal_alerta.dart';
+
 
 class _KTheme {
   static const verde       = Color(0xFFA8D63F);
@@ -581,9 +583,7 @@ class _BotonGuardarState extends State<_BotonGuardar> {
   Future<void> _toggle(BuildContext context) async {
     if (_cargando || !_soportado) return;
     if (!_logueado) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inicia sesión para guardar')),
-      );
+      Alerta.show(context,mensaje: 'Inicia sesión o registrate para guardar');
       return;
     }
     setState(() => _cargando = true);
@@ -615,9 +615,7 @@ class _BotonGuardarState extends State<_BotonGuardar> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al guardar. Inténtalo de nuevo.')),
-        );
+        Alerta.show(context,mensaje: 'Error al guardar. Inténtalo de nuevo.', tipo: TipoAviso.error);
       }
     } finally {
       if (mounted) setState(() => _cargando = false);

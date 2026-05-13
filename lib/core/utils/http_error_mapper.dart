@@ -30,6 +30,11 @@ UiError mapearStatusCode(int statusCode) {
         EstadoUi.error,
         'Tu sesión ha caducado. Inicia sesión de nuevo.',
       );
+    case 409:
+      return const UiError(
+        EstadoUi.error,
+        'Ya existe este usuario.'
+      );
 
     case >= 500:
       return const UiError(

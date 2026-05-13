@@ -8,6 +8,7 @@ import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
 import 'package:kultux/componentes/politica_privacidad_dialog.dart';
 import 'package:kultux/guardados.dart';
+import 'package:kultux/componentes/modal_alerta.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
@@ -57,7 +58,8 @@ class _PerfilPageState extends State<PerfilPage> {
 
     if (_editandoPerfil) {
       return EditarPerfilPage(
-        onVolver: () => setState(() => _editandoPerfil = false),
+      onVolver: () => setState(() => _editandoPerfil = false),
+        usuario: widget.usuario ?? Usuario.usuarioActual,
       );
     }
 
@@ -594,18 +596,12 @@ class _PerfilPageState extends State<PerfilPage> {
 
       if (!mounted) return;
       widget.cerrarSesion();
+      Alerta.show(context,mensaje:'Cuenta eliminada correctamente.', tipo: TipoAviso.success );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          showCloseIcon: true,
-          content: Text('✅ Cuenta eliminada correctamente.', textAlign: TextAlign.center),
-        ),
-      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('⚠️ Error al eliminar la cuenta: $e')),
-      );
+      Alerta.show(context,mensaje:'Error al eliminar la cuenta', tipo: TipoAviso.error );
+
     }
   }
 }

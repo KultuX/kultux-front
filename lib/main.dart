@@ -23,7 +23,8 @@ import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
 
-// CAMBIO: importar el enum de tab de guardados
+import 'package:kultux/componentes/modal_alerta.dart';
+
 import 'package:kultux/guardados.dart' show GuardadosTab;
 
 import 'models/pages.dart';
@@ -270,7 +271,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBarPersonalizado(
         logeado: !_logeado ? true : _invitado,
       ),
@@ -311,15 +312,8 @@ class _MyHomePageState extends State<MyHomePage> {
         itemSeleccion: (index) {
           if (!_logeado && !_invitado) {
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  "¡Inicia sesión, registrate o entra como invitado!",
-                  textAlign: TextAlign.center,
-                ),
-                showCloseIcon: true,
-              ),
-            );
+            Alerta.show(context,mensaje: '¡Inicia sesión, registrate o entra como invitado!');
+
             return;
           }
 
@@ -335,13 +329,7 @@ class _MyHomePageState extends State<MyHomePage> {
               _mostrandoDetalleBuscar = false;
               _buscarDetalleSeleccionado = null;
             });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  showCloseIcon: true,
-                  content: Text(
-                      textAlign: TextAlign.center,
-                      "⚠️ ¡Inicia sesión o registrate para acceder a más funcionalidades! ⚠️")),
-            );
+            Alerta.show(context,mensaje: '¡Inicia sesión o registrate para acceder a más funcionalidades!');
             return;
           }
 

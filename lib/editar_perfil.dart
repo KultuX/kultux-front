@@ -8,6 +8,7 @@ import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'componentes/selector_localidad.dart';
+import 'package:kultux/componentes/modal_alerta.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
@@ -18,7 +19,8 @@ const _borde = Color(0xFFE0DDD6);
 
 class EditarPerfilPage extends StatefulWidget {
   final VoidCallback onVolver;
-  const EditarPerfilPage({super.key, required this.onVolver});
+  final Usuario? usuario;
+  const EditarPerfilPage({super.key, required this.onVolver, this.usuario});
 
   @override
   State<EditarPerfilPage> createState() => _EditarPerfilPageState();
@@ -35,13 +37,16 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
   @override
   void initState() {
     super.initState();
-    final u = Usuario.usuarioActual;
+
+    final u = widget.usuario ?? Usuario.usuarioActual;
+    print(u.toString());
     _controllers = {
       'nombre':    TextEditingController(text: u?.nombre ?? ''),
       'apellidos': TextEditingController(text: u?.apellidos ?? ''),
       'email':     TextEditingController(text: u?.email ?? ''),
       'password':  TextEditingController(),
     };
+
   }
 
   @override
@@ -51,25 +56,12 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
   }
 
   Widget _selectorLocalidad() {
-    return FutureBuilder<List<Localidad>>(
-      future: LocalidadApiService.cache != null
-          ? Future.value(LocalidadApiService.cache)
-          : LocalidadApiService.obtenerLocalidadNombres(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox(
-            height: 40,
-            child: Center(child: CircularProgressIndicator(
-                color: _verde, strokeWidth: 2)),
-          );
-        }
-        return SelectorLocalidad(
-          key: _selectorLocalidadKey,
-          localidades: snapshot.data!,
-          ineInicial: Usuario.usuarioActual?.localidad,
-          onSelected: (loc) => setState(() => _localidadSeleccionada = loc),
-        );
-      },
+    final localidades = LocalidadApiService.cache ?? [];
+    return SelectorLocalidad(
+      key: _selectorLocalidadKey,
+      localidades: localidades,
+      ineInicial: widget.usuario?.localidad ?? Usuario.usuarioActual?.localidad,
+      onSelected: (loc) => setState(() => _localidadSeleccionada = loc),
     );
   }
 
@@ -95,16 +87,12 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
       );
       await UsuarioRepository.guardar(actualizado);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        showCloseIcon: true,
-        content: Text('✅ ¡Perfil actualizado correctamente!',
-            textAlign: TextAlign.center),
-      ));
+      Alerta.show(context,mensaje:'¡Perfil actualizado correctamente!', tipo: TipoAviso.success );
       widget.onVolver();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('⚠️ Error: $e')));
+      Alerta.show(context,mensaje:'Algo ha salido mal. Prueba a intentarlo más tarde.', tipo: TipoAviso.error );
+
     }
   }
 
@@ -169,6 +157,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
 
   @override
   Widget build(BuildContext context) {
+    final u = widget.usuario ?? Usuario.usuarioActual;
     return Container(
       color: _fondoPagina,
       child: SingleChildScrollView(
@@ -248,17 +237,10 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                           ),
                           child: ClipOval(
                             child: _imagenSeleccionada != null
-                                ? Image.file(_imagenSeleccionada!,
-                                fit: BoxFit.cover)
-                                : (Usuario.usuarioActual?.imagenPerfil != null &&
-                                Usuario.usuarioActual!.imagenPerfil!
-                                    .isNotEmpty)
-                                ? Image.network(
-                                Usuario.usuarioActual!.imagenPerfil!,
-                                fit: BoxFit.cover)
-                                : Image.asset(
-                                'assets/images/logo_registro.png',
-                                fit: BoxFit.cover),
+                                ? Image.file(_imagenSeleccionada!, fit: BoxFit.cover)
+                                : (u?.imagenPerfil != null && u!.imagenPerfil!.isNotEmpty)
+                                ? Image.network(u.imagenPerfil!, fit: BoxFit.cover)
+                                : Image.asset('assets/images/logo_registro.png', fit: BoxFit.cover),
                           ),
                         ),
                         Container(
@@ -273,7 +255,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    Usuario.usuarioActual?.nombre ?? '',
+                    u?.nombre ?? '',
                     style: const TextStyle(
                         fontFamily: 'RobotoCondensed',
                         fontSize: 15,

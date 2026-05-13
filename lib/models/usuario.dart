@@ -26,6 +26,7 @@ class Usuario{
     return Usuario._(
       email: json['email'],
       id: json['id'],
+      apellidos:json['apellidos'],
       password: json['password'],
       nombre: json['nombre'],
       localidad: json['localidad'],
@@ -104,4 +105,21 @@ class Usuario{
       id: Usuario.usuarioActual?.id,
     );
   }
+
+
+  @override
+  String toString() {
+    return '''
+Usuario(
+  id: $id,
+  email: $email,
+  nombre: $nombre,
+  apellidos: $apellidos,
+  localidad: $localidad,
+  fechaNacimiento: $fechaNacimiento,
+  imagenPerfil: $imagenPerfil
+)
+''';
+  }
+
 }

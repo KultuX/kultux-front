@@ -5,6 +5,7 @@ import 'package:kultux/registro.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/repository/usuario_repository.dart';
+import 'package:kultux/componentes/modal_alerta.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoCard = Color(0xFFF8F7F4);
@@ -36,17 +37,18 @@ class _AssetLoginState extends State<AssetLogin> {
 
     if (email.text.trim().isEmpty && pass.text.trim().isEmpty) {
       setState(() { _errorEmail = true; _errorPass = true; });
-      _snack('⚠️ Debes introducir correo y contraseña.');
+      Alerta.show(context,mensaje:'Debes introducir correo y contraseña.' , tipo: TipoAviso.warning);
+
       return;
     }
     if (email.text.trim().isEmpty) {
       setState(() => _errorEmail = true);
-      _snack('⚠️ Introduce un correo.');
+      Alerta.show(context,mensaje:'Introduce un correo' , tipo: TipoAviso.warning);
       return;
     }
     if (pass.text.trim().isEmpty) {
       setState(() => _errorPass = true);
-      _snack('⚠️ Introduce una contraseña.');
+      Alerta.show(context,mensaje:'Introduce una contraseña.' , tipo: TipoAviso.warning);
       return;
     }
 
@@ -55,20 +57,15 @@ class _AssetLoginState extends State<AssetLogin> {
         Usuario.login(email.text, pass.text),
       );
       if (_checked) await UsuarioRepository.guardar(usuario);
-      _snack('👋🏻 ¡¡Bienvenid@, ${usuario.nombre?.toUpperCase() ?? usuario.email}!!');
+
+      Alerta.show(context,mensaje:'👋🏻 ¡¡Bienvenid@, ${usuario.nombre?.toUpperCase() ?? usuario.email}!!', tipo: TipoAviso.success );
       widget.logeado?.call(usuario);
     } catch (_) {
       setState(() { _errorEmail = true; _errorPass = true; });
-      _snack('⚠️ Usuario o contraseña incorrectos.');
+      Alerta.show(context,mensaje:'Usuario o contraseña incorrectos.', tipo: TipoAviso.error );
     }
   }
 
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(showCloseIcon: true,
-          content: Text(msg, textAlign: TextAlign.center)),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +80,7 @@ class _AssetLoginState extends State<AssetLogin> {
         Center(
           child: Material(
             color: Colors.transparent,
+            child: SingleChildScrollView(
             child: Container(
               width: 360,
               decoration: BoxDecoration(
@@ -100,7 +98,6 @@ class _AssetLoginState extends State<AssetLogin> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ── Header ───────────────────────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
@@ -181,15 +178,7 @@ class _AssetLoginState extends State<AssetLogin> {
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: _checked
-                                  ? _verde.withOpacity(0.6)
-                                  : _borde,
-                            ),
-                          ),
+
                           child: Row(
                             children: [
                               SizedBox(
@@ -302,7 +291,7 @@ class _AssetLoginState extends State<AssetLogin> {
                   ),
                 ],
               ),
-            ),
+            )),
           ),
         ),
       ],
@@ -311,11 +300,11 @@ class _AssetLoginState extends State<AssetLogin> {
 }
 
 Widget _Campo({required Widget child}) => Container(
-  decoration: BoxDecoration(
+ /* decoration: BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(12),
     border: Border.all(color: _borde),
-  ),
+  ),*/
   child: Padding(
     padding: const EdgeInsets.all(10),
     child: child,
