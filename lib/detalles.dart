@@ -44,7 +44,9 @@ class Detalle extends StatefulWidget {
   final String? urlCompraReserva;
   final String? urlWeb;
   final String? direccion;
-  final int? idActividad; // Solo se rellena si es Actividad
+  final int? idActividad;
+  final int? idRestaurante;
+  final int? idAlojamiento;
 
   const Detalle._({
     super.key,
@@ -63,6 +65,8 @@ class Detalle extends StatefulWidget {
     this.urlWeb,
     this.direccion,
     this.idActividad,
+    this.idRestaurante,
+    this.idAlojamiento,
   });
 
   List<String> get imagenesLista {
@@ -99,6 +103,7 @@ class Detalle extends StatefulWidget {
     }
     if (objeto is Alojamiento) {
       return Detalle._(
+        idAlojamiento: objeto.id,
         titulo: objeto.nombre,
         imagenPrincipal: objeto.imagenPrincipal,
         localidad: objeto.localidad,
@@ -113,6 +118,7 @@ class Detalle extends StatefulWidget {
     }
     if (objeto is Restaurante) {
       return Detalle._(
+        idRestaurante: objeto.id,
         titulo: objeto.nombre,
         imagenPrincipal: objeto.imagenPrincipal,
         localidad: objeto.localidad,
@@ -161,7 +167,8 @@ class _DetalleState extends State<Detalle> {
   @override
   Widget build(BuildContext context) {
     final bool esActividad   = widget.idActividad != null;
-    final bool esRestaurante = !esActividad && widget.horario != null;
+    final bool esRestaurante = widget.idRestaurante != null;
+    final bool esAlojamiento = widget.idAlojamiento != null;
 
     return Container(
       color: _KTheme.fondoPagina,
@@ -176,12 +183,15 @@ class _DetalleState extends State<Detalle> {
                 localidad:       widget.localidad,
                 esActividad:     esActividad,
                 esRestaurante:   esRestaurante,
+                esAlojamiento:   esAlojamiento,
                 fechaInicio:     widget.fechaInicio,
                 fechaFin:        widget.fechaFin,
                 imagenesLista:   widget.imagenesLista,
                 indiceActual:    _indiceActual,
                 getImagenActual: _getImagenActual,
                 idActividad:     widget.idActividad,
+                idRestaurante:   widget.idRestaurante,
+                idAlojamiento:   widget.idAlojamiento,
                 idUsuario:       Usuario.usuarioActual?.id,
                 onPrev: () => setState(() {
                   final len = widget.imagenesLista.length;
@@ -300,6 +310,7 @@ class _TarjetaPrincipal extends StatelessWidget {
   final String? localidad;
   final bool esActividad;
   final bool esRestaurante;
+  final bool esAlojamiento;
   final String? fechaInicio;
   final String? fechaFin;
   final List<String> imagenesLista;
@@ -308,6 +319,8 @@ class _TarjetaPrincipal extends StatelessWidget {
   final VoidCallback onPrev;
   final VoidCallback onNext;
   final int? idActividad;
+  final int? idRestaurante;
+  final int? idAlojamiento;
   final int? idUsuario;
 
   const _TarjetaPrincipal({
@@ -315,6 +328,7 @@ class _TarjetaPrincipal extends StatelessWidget {
     required this.localidad,
     required this.esActividad,
     required this.esRestaurante,
+    required this.esAlojamiento,
     required this.fechaInicio,
     required this.fechaFin,
     required this.imagenesLista,
@@ -323,6 +337,8 @@ class _TarjetaPrincipal extends StatelessWidget {
     required this.onPrev,
     required this.onNext,
     this.idActividad,
+    this.idRestaurante,
+    this.idAlojamiento,
     this.idUsuario,
   });
 
@@ -416,7 +432,11 @@ class _TarjetaPrincipal extends StatelessWidget {
                   children: [
                     _BotonGuardar(
                       esActividad: esActividad,
+                      esRestaurante: esRestaurante,
+                      esAlojamiento: esAlojamiento,
                       idActividad: idActividad,
+                      idRestaurante: idRestaurante,
+                      idAlojamiento: idAlojamiento,
                       idUsuario: idUsuario,
                     ),
                     const SizedBox(width: 6),
@@ -498,12 +518,20 @@ class _TarjetaPrincipal extends StatelessWidget {
 
 class _BotonGuardar extends StatefulWidget {
   final bool esActividad;
+  final bool esRestaurante;
+  final bool esAlojamiento;
   final int? idActividad;
+  final int? idRestaurante;
+  final int? idAlojamiento;
   final int? idUsuario;
 
   const _BotonGuardar({
     required this.esActividad,
+    this.esRestaurante = false,
+    this.esAlojamiento = false,
     this.idActividad,
+    this.idRestaurante,
+    this.idAlojamiento,
     this.idUsuario,
   });
 
@@ -512,57 +540,77 @@ class _BotonGuardar extends StatefulWidget {
 }
 
 class _BotonGuardarState extends State<_BotonGuardar> {
-  bool? _guardado; // null = cargando inicial
+  bool? _guardado;
   bool _cargando = false;
 
-  bool get _esActividad => widget.esActividad && widget.idActividad != null;
-  bool get _logueado    => widget.idUsuario != null;
+  bool get _logueado => widget.idUsuario != null;
+
+  bool get _soportado =>
+      (widget.esActividad && widget.idActividad != null) ||
+          (widget.esRestaurante && widget.idRestaurante != null) ||
+          (widget.esAlojamiento && widget.idAlojamiento != null);
 
   @override
   void initState() {
     super.initState();
-    if (_esActividad && _logueado) _cargarEstado();
+    if (_logueado && _soportado) _cargarEstado();
   }
 
   Future<void> _cargarEstado() async {
     try {
-      final r = await InteraccionesApiService.estadoGuardado(
-        idActividad: widget.idActividad!,
-        idUsuario: widget.idUsuario!,
-      );
-      if (mounted) setState(() => _guardado = r.guardado);
+      late bool guardado;
+      if (widget.esActividad) {
+        final r = await InteraccionesApiService.estadoGuardadoActividad(
+            idActividad: widget.idActividad!, idUsuario: widget.idUsuario!);
+        guardado = r.guardado;
+      } else if (widget.esRestaurante) {
+        final r = await InteraccionesApiService.estadoGuardadoRestaurante(
+            idRestaurante: widget.idRestaurante!, idUsuario: widget.idUsuario!);
+        guardado = r.guardado;
+      } else {
+        final r = await InteraccionesApiService.estadoGuardadoAlojamiento(
+            idAlojamiento: widget.idAlojamiento!, idUsuario: widget.idUsuario!);
+        guardado = r.guardado;
+      }
+      if (mounted) setState(() => _guardado = guardado);
     } catch (_) {
       if (mounted) setState(() => _guardado = false);
     }
   }
 
   Future<void> _toggle(BuildContext context) async {
-    if (_cargando) return;
-
-    // No es actividad: no hacer nada (el botón no debería verse)
-    if (!_esActividad) return;
-
-    // No logueado: aviso
+    if (_cargando || !_soportado) return;
     if (!_logueado) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inicia sesión para guardar actividades')),
+        const SnackBar(content: Text('Inicia sesión para guardar')),
       );
       return;
     }
-
     setState(() => _cargando = true);
     try {
       if (_guardado == true) {
-        await InteraccionesApiService.quitarActividad(
-          idActividad: widget.idActividad!,
-          idUsuario: widget.idUsuario!,
-        );
+        if (widget.esActividad) {
+          await InteraccionesApiService.quitarActividad(
+              idActividad: widget.idActividad!, idUsuario: widget.idUsuario!);
+        } else if (widget.esRestaurante) {
+          await InteraccionesApiService.quitarRestaurante(
+              idRestaurante: widget.idRestaurante!, idUsuario: widget.idUsuario!);
+        } else {
+          await InteraccionesApiService.quitarAlojamiento(
+              idAlojamiento: widget.idAlojamiento!, idUsuario: widget.idUsuario!);
+        }
         if (mounted) setState(() => _guardado = false);
       } else {
-        await InteraccionesApiService.guardarActividad(
-          idActividad: widget.idActividad!,
-          idUsuario: widget.idUsuario!,
-        );
+        if (widget.esActividad) {
+          await InteraccionesApiService.guardarActividad(
+              idActividad: widget.idActividad!, idUsuario: widget.idUsuario!);
+        } else if (widget.esRestaurante) {
+          await InteraccionesApiService.guardarRestaurante(
+              idRestaurante: widget.idRestaurante!, idUsuario: widget.idUsuario!);
+        } else {
+          await InteraccionesApiService.guardarAlojamiento(
+              idAlojamiento: widget.idAlojamiento!, idUsuario: widget.idUsuario!);
+        }
         if (mounted) setState(() => _guardado = true);
       }
     } catch (_) {
@@ -578,31 +626,25 @@ class _BotonGuardarState extends State<_BotonGuardar> {
 
   @override
   Widget build(BuildContext context) {
-    // Solo se muestra en actividades
-    if (!_esActividad) return const SizedBox.shrink();
+    if (!_soportado) return const SizedBox.shrink();
 
     final IconData icono;
     final Color color;
 
     if (!_logueado) {
-      icono = Icons.bookmark_border;
-      color = Colors.white70;
+      icono = Icons.bookmark_border; color = Colors.white70;
     } else if (_guardado == null || _cargando) {
-      icono = Icons.bookmark_border;
-      color = Colors.white54;
+      icono = Icons.bookmark_border; color = Colors.white54;
     } else if (_guardado == true) {
-      icono = Icons.bookmark;
-      color = _KTheme.verde;
+      icono = Icons.bookmark; color = _KTheme.verde;
     } else {
-      icono = Icons.bookmark_border;
-      color = Colors.white;
+      icono = Icons.bookmark_border; color = Colors.white;
     }
 
     return GestureDetector(
       onTap: () => _toggle(context),
       child: Container(
-        width: 34,
-        height: 34,
+        width: 34, height: 34,
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.35),
           borderRadius: BorderRadius.circular(10),

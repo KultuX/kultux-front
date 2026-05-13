@@ -82,7 +82,7 @@ class Restaurante{
 
   factory Restaurante.guardado(Map<String, dynamic> json){
     return Restaurante._(
-        id:json['id'],
+        id:json['idRestaurante'],
         nombre: json['nombre'],
         imagenPrincipal: json['portada'],
         categoriaRestaurante: json['categoria'],

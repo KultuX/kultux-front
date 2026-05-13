@@ -75,10 +75,10 @@ class Alojamiento{
 
   factory Alojamiento.guardado(Map<String, dynamic> json){
     return Alojamiento._(
-        id:json['id'],
+        id:json['idAlojamiento'],
         nombre: json['nombre'],
         imagenPrincipal: json['portada'],
-        categoriaAlojamiento: json['categoriaAlojamiento'],
+        categoriaAlojamiento: json['categoria'],
         localidad: json['localidad']
     );
   }

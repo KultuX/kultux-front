@@ -111,5 +111,54 @@ class AlojamientoApiService{
 
   }
 
+  static Future<Pages<Alojamiento>> alojamientosGuardados({
+    required List<int> idsGuardados,
+    required int page,
+  }) async {
+
+    final params = <String, String>{
+      'page': page.toString(),
+      'size': '8',
+    };
+
+    final queryParams = <String, dynamic>{
+      ...params,
+    };
+
+    if (idsGuardados.isNotEmpty) {
+      queryParams['idsGuardados'] = idsGuardados.map((e) => e.toString()).toList();
+    }
+
+    final url = Uri.https(
+      _BASE_URL_ALOJAMIENTOS,
+      '/api/v1/alojamientos/listar_guardados',
+      queryParams,
+    );
+
+
+    print("URL FINAL: $url");
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP'
+      },
+    );
+
+    if(response.statusCode == 200){
+      final dynamic json = jsonDecode(response.body);
+      return Pages<Alojamiento>.fromJson(
+        json,
+            (e) => Alojamiento.guardado(e),
+      );
+    }
+    else{
+      throw HttpException(response.statusCode.toString());
+    }
+
+  }
+
 }
 
