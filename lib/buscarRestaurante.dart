@@ -5,7 +5,7 @@ import 'package:kultux/models/localidad.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/restauranteApi.dart';
 import 'package:kultux/models/restaurante.dart';
-import 'package:kultux/tarjetasBusqueda.dart';
+import 'package:kultux/componentes/tarjetasBusqueda.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
 
 import 'package:kultux/core/utils/iconos.dart';

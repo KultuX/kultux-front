@@ -7,7 +7,7 @@ import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/api/restauranteAPI.dart';
 import 'package:kultux/api/alojamientoAPI.dart';
-import 'package:kultux/tarjetas.dart';
+import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';

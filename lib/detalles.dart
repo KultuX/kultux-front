@@ -4,9 +4,11 @@ import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/imagen.dart';
 import 'package:kultux/models/franja.dart';
+import 'package:kultux/models/usuario.dart';
+import 'package:kultux/API/interaccionesAPI.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// ─── Paleta y tipografía centralizadas ────────────────────────────────────────
+
 class _KTheme {
   static const verde       = Color(0xFFA8D63F);
   static const fondoCard   = Color(0xFFF8F7F4);
@@ -42,6 +44,7 @@ class Detalle extends StatefulWidget {
   final String? urlCompraReserva;
   final String? urlWeb;
   final String? direccion;
+  final int? idActividad; // Solo se rellena si es Actividad
 
   const Detalle._({
     super.key,
@@ -59,6 +62,7 @@ class Detalle extends StatefulWidget {
     this.urlCompraReserva,
     this.urlWeb,
     this.direccion,
+    this.idActividad,
   });
 
   List<String> get imagenesLista {
@@ -90,6 +94,7 @@ class Detalle extends StatefulWidget {
         urlCompraReserva: objeto.urlCompra,
         urlWeb: objeto.urlWeb,
         direccion: objeto.direccion,
+        idActividad: objeto.id,
       );
     }
     if (objeto is Alojamiento) {
@@ -155,7 +160,7 @@ class _DetalleState extends State<Detalle> {
 
   @override
   Widget build(BuildContext context) {
-    final bool esActividad   = widget.fechaInicio != null || widget.fechaFin != null;
+    final bool esActividad   = widget.idActividad != null;
     final bool esRestaurante = !esActividad && widget.horario != null;
 
     return Container(
@@ -167,15 +172,17 @@ class _DetalleState extends State<Detalle> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _TarjetaPrincipal(
-                titulo:       widget.titulo,
-                localidad:    widget.localidad,
-                esActividad:  esActividad,
-                esRestaurante: esRestaurante,
-                fechaInicio:  widget.fechaInicio,
-                fechaFin:     widget.fechaFin,
-                imagenesLista: widget.imagenesLista,
-                indiceActual:  _indiceActual,
+                titulo:          widget.titulo,
+                localidad:       widget.localidad,
+                esActividad:     esActividad,
+                esRestaurante:   esRestaurante,
+                fechaInicio:     widget.fechaInicio,
+                fechaFin:        widget.fechaFin,
+                imagenesLista:   widget.imagenesLista,
+                indiceActual:    _indiceActual,
                 getImagenActual: _getImagenActual,
+                idActividad:     widget.idActividad,
+                idUsuario:       Usuario.usuarioActual?.id,
                 onPrev: () => setState(() {
                   final len = widget.imagenesLista.length;
                   _indiceActual = (_indiceActual - 1 + len) % len;
@@ -187,7 +194,6 @@ class _DetalleState extends State<Detalle> {
 
               const SizedBox(height: 16),
 
-              // ── Descripción ────────────────────────────────────────────
               if (widget.descripcion != null && widget.descripcion!.trim().isNotEmpty) ...[
                 _SeccionCard(
                   child: Text(
@@ -203,7 +209,6 @@ class _DetalleState extends State<Detalle> {
                 const SizedBox(height: 12),
               ],
 
-
               if (esRestaurante && widget.horario != null) ...[
                 _SeccionCard(
                   child: _BloqueHorario(
@@ -213,7 +218,6 @@ class _DetalleState extends State<Detalle> {
                 ),
                 const SizedBox(height: 12),
               ],
-
 
               _SeccionCard(
                 child: Column(
@@ -226,7 +230,7 @@ class _DetalleState extends State<Detalle> {
                         valor: 'Ayuntamiento de Mérida',
                       ),
 
-                    if (_tieneUrlWeb) ...[
+                    if (_tieneUrlWeb)
                       _FilaInfo(
                         icono: Icons.language_outlined,
                         label: 'Web oficial',
@@ -237,7 +241,6 @@ class _DetalleState extends State<Detalle> {
                           await launchUrl(uri, mode: LaunchMode.externalApplication);
                         },
                       ),
-                    ],
 
                     if (widget.telefonoEmpresa != null &&
                         widget.telefonoEmpresa!.trim().isNotEmpty)
@@ -267,7 +270,6 @@ class _DetalleState extends State<Detalle> {
 
                     const SizedBox(height: 16),
 
-                    // Botón CTA
                     _BotonCTA(
                       activo: _tieneUrlReserva,
                       esActividad: esActividad,
@@ -293,7 +295,6 @@ class _DetalleState extends State<Detalle> {
   }
 }
 
-// ─── Tarjeta principal con imagen ─────────────────────────────────────────────
 class _TarjetaPrincipal extends StatelessWidget {
   final String titulo;
   final String? localidad;
@@ -306,6 +307,8 @@ class _TarjetaPrincipal extends StatelessWidget {
   final String Function() getImagenActual;
   final VoidCallback onPrev;
   final VoidCallback onNext;
+  final int? idActividad;
+  final int? idUsuario;
 
   const _TarjetaPrincipal({
     required this.titulo,
@@ -319,6 +322,8 @@ class _TarjetaPrincipal extends StatelessWidget {
     required this.getImagenActual,
     required this.onPrev,
     required this.onNext,
+    this.idActividad,
+    this.idUsuario,
   });
 
   @override
@@ -371,7 +376,6 @@ class _TarjetaPrincipal extends StatelessWidget {
                 ),
               ),
 
-
               if (tieneVarias) ...[
                 Positioned(
                   left: 10, top: 0, bottom: 0,
@@ -406,13 +410,15 @@ class _TarjetaPrincipal extends StatelessWidget {
                   ),
                 ),
 
-
               Positioned(
                 top: 10, right: 10,
                 child: Row(
                   children: [
-                    const SizedBox(width: 6),
-                    _BotonAccion(icono: Icons.bookmark_border),
+                    _BotonGuardar(
+                      esActividad: esActividad,
+                      idActividad: idActividad,
+                      idUsuario: idUsuario,
+                    ),
                     const SizedBox(width: 6),
                     _BotonAccion(icono: Icons.share_outlined),
                   ],
@@ -469,7 +475,7 @@ class _TarjetaPrincipal extends StatelessWidget {
                             size: 14, color: _KTheme.verde),
                         const SizedBox(width: 6),
                         Text(
-                          '${fechaInicio ?? ''}${fechaFin != null ? ' — ${fechaFin}' : ''}',
+                          '${fechaInicio ?? ''}${fechaFin != null ? ' — $fechaFin' : ''}',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -488,6 +494,130 @@ class _TarjetaPrincipal extends StatelessWidget {
     );
   }
 }
+
+
+class _BotonGuardar extends StatefulWidget {
+  final bool esActividad;
+  final int? idActividad;
+  final int? idUsuario;
+
+  const _BotonGuardar({
+    required this.esActividad,
+    this.idActividad,
+    this.idUsuario,
+  });
+
+  @override
+  State<_BotonGuardar> createState() => _BotonGuardarState();
+}
+
+class _BotonGuardarState extends State<_BotonGuardar> {
+  bool? _guardado; // null = cargando inicial
+  bool _cargando = false;
+
+  bool get _esActividad => widget.esActividad && widget.idActividad != null;
+  bool get _logueado    => widget.idUsuario != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_esActividad && _logueado) _cargarEstado();
+  }
+
+  Future<void> _cargarEstado() async {
+    try {
+      final r = await InteraccionesApiService.estadoGuardado(
+        idActividad: widget.idActividad!,
+        idUsuario: widget.idUsuario!,
+      );
+      if (mounted) setState(() => _guardado = r.guardado);
+    } catch (_) {
+      if (mounted) setState(() => _guardado = false);
+    }
+  }
+
+  Future<void> _toggle(BuildContext context) async {
+    if (_cargando) return;
+
+    // No es actividad: no hacer nada (el botón no debería verse)
+    if (!_esActividad) return;
+
+    // No logueado: aviso
+    if (!_logueado) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicia sesión para guardar actividades')),
+      );
+      return;
+    }
+
+    setState(() => _cargando = true);
+    try {
+      if (_guardado == true) {
+        await InteraccionesApiService.quitarActividad(
+          idActividad: widget.idActividad!,
+          idUsuario: widget.idUsuario!,
+        );
+        if (mounted) setState(() => _guardado = false);
+      } else {
+        await InteraccionesApiService.guardarActividad(
+          idActividad: widget.idActividad!,
+          idUsuario: widget.idUsuario!,
+        );
+        if (mounted) setState(() => _guardado = true);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al guardar. Inténtalo de nuevo.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Solo se muestra en actividades
+    if (!_esActividad) return const SizedBox.shrink();
+
+    final IconData icono;
+    final Color color;
+
+    if (!_logueado) {
+      icono = Icons.bookmark_border;
+      color = Colors.white70;
+    } else if (_guardado == null || _cargando) {
+      icono = Icons.bookmark_border;
+      color = Colors.white54;
+    } else if (_guardado == true) {
+      icono = Icons.bookmark;
+      color = _KTheme.verde;
+    } else {
+      icono = Icons.bookmark_border;
+      color = Colors.white;
+    }
+
+    return GestureDetector(
+      onTap: () => _toggle(context),
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.35),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: _cargando
+            ? const Padding(
+          padding: EdgeInsets.all(9),
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+        )
+            : Icon(icono, color: color, size: 18),
+      ),
+    );
+  }
+}
+
 
 class _SeccionCard extends StatelessWidget {
   final Widget child;
@@ -509,14 +639,15 @@ class _SeccionCard extends StatelessWidget {
   }
 }
 
+
 class _BloqueHorario extends StatelessWidget {
   final Map<String, List<Franja>> horario;
   final bool? abierto;
 
   const _BloqueHorario({required this.horario, this.abierto});
 
-  static const _diasOrden     = [1, 2, 3, 4, 5, 6, 7];
-  static const _diasNombre    = {1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom'};
+  static const _diasOrden  = [1, 2, 3, 4, 5, 6, 7];
+  static const _diasNombre = {1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom'};
 
   @override
   Widget build(BuildContext context) {
@@ -529,11 +660,7 @@ class _BloqueHorario extends StatelessWidget {
             const SizedBox(width: 6),
             const Text(
               'Horario',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: _KTheme.texto,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _KTheme.texto),
             ),
             const Spacer(),
             if (abierto != null)
@@ -564,8 +691,9 @@ class _BloqueHorario extends StatelessWidget {
         const SizedBox(height: 12),
         const Divider(color: _KTheme.borde, height: 1),
         const SizedBox(height: 12),
+
         ..._diasOrden.map((dia) {
-          final franjas = horario['$dia'] ?? [];
+          final franjas     = horario['$dia'] ?? [];
           final estaCerrado = franjas.isEmpty;
 
           return Padding(
@@ -573,7 +701,6 @@ class _BloqueHorario extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Nombre del día
                 SizedBox(
                   width: 36,
                   child: Text(
@@ -585,22 +712,16 @@ class _BloqueHorario extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
                 Container(
                   width: 2,
                   height: estaCerrado ? 22 : (franjas.length * 26).toDouble(),
                   decoration: BoxDecoration(
-                    color: estaCerrado
-                        ? _KTheme.borde
-                        : _KTheme.verde.withOpacity(0.6),
+                    color: estaCerrado ? _KTheme.borde : _KTheme.verde.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
                 Expanded(
                   child: estaCerrado
                       ? const Padding(
@@ -620,14 +741,14 @@ class _BloqueHorario extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
                             color: _KTheme.verde.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                                color: _KTheme.verde.withOpacity(0.35),
-                                width: 0.8),
+                              color: _KTheme.verde.withOpacity(0.35),
+                              width: 0.8,
+                            ),
                           ),
                           child: Text(
                             '${f.inicio} – ${f.fin}',
@@ -650,6 +771,7 @@ class _BloqueHorario extends StatelessWidget {
     );
   }
 }
+
 
 class _FilaInfo extends StatelessWidget {
   final IconData icono;
@@ -793,6 +915,7 @@ class _BotonCTA extends StatelessWidget {
   }
 }
 
+
 class _BotonFlecha extends StatelessWidget {
   final IconData icono;
   final VoidCallback onTap;
@@ -814,6 +937,7 @@ class _BotonFlecha extends StatelessWidget {
     );
   }
 }
+
 
 class _BotonAccion extends StatelessWidget {
   final IconData icono;

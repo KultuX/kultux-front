@@ -72,4 +72,14 @@ class Alojamiento{
 
     );
   }
+
+  factory Alojamiento.guardado(Map<String, dynamic> json){
+    return Alojamiento._(
+        id:json['id'],
+        nombre: json['nombre'],
+        imagenPrincipal: json['portada'],
+        categoriaAlojamiento: json['categoriaAlojamiento'],
+        localidad: json['localidad']
+    );
+  }
 }

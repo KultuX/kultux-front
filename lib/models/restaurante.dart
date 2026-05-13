@@ -80,6 +80,17 @@ class Restaurante{
     );
   }
 
+  factory Restaurante.guardado(Map<String, dynamic> json){
+    return Restaurante._(
+        id:json['id'],
+        nombre: json['nombre'],
+        imagenPrincipal: json['portada'],
+        categoriaRestaurante: json['categoria'],
+        localidad: json['localidad'],
+        abierto: json['abierto']
+    );
+  }
+
 
   static Map<String, List<Franja>> _parseHorario(Map<String, dynamic> jsonHorario) {
     return jsonHorario.map(

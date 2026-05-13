@@ -7,6 +7,7 @@ import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
 import 'package:kultux/componentes/politica_privacidad_dialog.dart';
+import 'package:kultux/guardados.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
@@ -15,10 +16,26 @@ const _texto = Color(0xFF1A1A1A);
 const _textoSuave = Color(0xFF6B6B6B);
 const _borde = Color(0xFFE0DDD6);
 
+
 class PerfilPage extends StatefulWidget {
   final VoidCallback cerrarSesion;
   final Usuario? usuario;
-  const PerfilPage({super.key, required this.cerrarSesion, this.usuario});
+
+  final Function(dynamic objeto, GuardadosTab tab)? onDetalleSeleccionado;
+  final bool mostrandoGuardados;
+  final VoidCallback? onMostrarGuardados;
+
+  final GuardadosTab tabGuardadosInicial;
+
+  const PerfilPage({
+    super.key,
+    required this.cerrarSesion,
+    this.usuario,
+    this.onDetalleSeleccionado,
+    this.mostrandoGuardados = false,
+    this.onMostrarGuardados,
+    this.tabGuardadosInicial = GuardadosTab.actividades,
+  });
 
   @override
   State<PerfilPage> createState() => _PerfilPageState();
@@ -28,19 +45,31 @@ class _PerfilPageState extends State<PerfilPage> {
   bool _editandoPerfil = false;
 
   final _opciones = {
-    'Editar perfil':            ('assets/iconos/editar_perfil.svg',      'ajustes'),
-    'Guardados':                ('assets/iconos/guardados.svg',           'ajustes'),
-    'Notificaciones activadas': ('assets/iconos/sin_notificaciones.svg',  'ajustes'),
-    'Contacta con nosotros':    ('assets/iconos/contactar_nosotros.svg',  'soporte'),
-    'Términos y condiciones':   ('assets/iconos/terminos_condiciones.svg','soporte'),
-    'Política de privacidad':   ('assets/iconos/politica_privacidad.svg', 'soporte'),
+    'Editar perfil': ('assets/iconos/editar_perfil.svg', 'ajustes'),
+    'Guardados': ('assets/iconos/guardados.svg', 'ajustes'),
+    'Contacta con nosotros': ('assets/iconos/contactar_nosotros.svg', 'soporte'),
+    'Términos y condiciones': ('assets/iconos/terminos_condiciones.svg', 'soporte'),
+    'Política de privacidad': ('assets/iconos/politica_privacidad.svg', 'soporte'),
   };
 
   @override
   Widget build(BuildContext context) {
+
     if (_editandoPerfil) {
       return EditarPerfilPage(
         onVolver: () => setState(() => _editandoPerfil = false),
+      );
+    }
+
+    if (widget.mostrandoGuardados) {
+      return GuardadosPage(
+        tabInicial: widget.tabGuardadosInicial,
+        onDetalleSeleccionado: (objeto, tab) {
+          widget.onDetalleSeleccionado?.call(objeto, tab);
+        },
+        onVolver: () {
+          widget.onMostrarGuardados?.call();
+        },
       );
     }
 
@@ -58,7 +87,6 @@ class _PerfilPageState extends State<PerfilPage> {
                 .map((e) => _OpcionTile(
               texto: e.key,
               icono: e.value.$1,
-              notif: e.key == 'Notificaciones activadas',
               onTap: () => _manejarOpcion(e.key),
             )),
             _SeccionLabel('Soporte'),
@@ -85,6 +113,8 @@ class _PerfilPageState extends State<PerfilPage> {
     switch (texto) {
       case 'Editar perfil':
         setState(() => _editandoPerfil = true);
+      case 'Guardados':
+        widget.onMostrarGuardados?.call();
       case 'Contacta con nosotros':
         _mostrarContacto();
       case 'Términos y condiciones':
@@ -209,7 +239,6 @@ class _PerfilPageState extends State<PerfilPage> {
     required String texto,
     required String icono,
     required VoidCallback onTap,
-    bool notif = false,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -246,18 +275,6 @@ class _PerfilPageState extends State<PerfilPage> {
                 ),
               ),
             ),
-            if (notif)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _verde,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text('ON',
-                    style: TextStyle(
-                        fontSize: 10, fontWeight: FontWeight.w700, color: _texto)),
-              )
-            else
               SvgPicture.asset('assets/iconos/flecha_siguiente.svg',
                   width: 16, height: 16,
                   colorFilter: const ColorFilter.mode(_textoSuave, BlendMode.srcIn)),
@@ -331,7 +348,6 @@ class _PerfilPageState extends State<PerfilPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -418,7 +434,6 @@ class _PerfilPageState extends State<PerfilPage> {
                   ],
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: SizedBox(
@@ -444,7 +459,6 @@ class _PerfilPageState extends State<PerfilPage> {
                   ),
                 ),
               ),
-
             ],
           ),
         );
@@ -494,21 +508,6 @@ class _PerfilPageState extends State<PerfilPage> {
     );
   }
 
-  Widget _textoConLink({required String normal, required String link}) {
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(fontFamily: 'RobotoCondensed', color: Colors.black, fontSize: 14),
-        children: [
-          TextSpan(text: normal),
-          TextSpan(
-            text: link,
-            style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _mostrarProximamente() async {
     await showDialog(
       context: context,
@@ -524,9 +523,6 @@ class _PerfilPageState extends State<PerfilPage> {
               const Text('Próximamente', style: TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               const CircularProgressIndicator(color: Colors.white),
-              const CircularProgressIndicator(
-                  color: Color.fromARGB(255, 166, 226, 70)
-              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.white),

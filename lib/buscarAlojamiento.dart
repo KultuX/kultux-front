@@ -6,7 +6,7 @@ import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/alojamientoApi.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
-import 'package:kultux/tarjetasBusqueda.dart';
+import 'package:kultux/componentes/tarjetasBusqueda.dart';
 import 'package:kultux/core/utils/iconos.dart';
 
 import 'componentes/selector_localidad.dart';

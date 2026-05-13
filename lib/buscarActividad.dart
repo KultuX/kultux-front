@@ -5,7 +5,7 @@ import 'package:kultux/models/localidad.dart';
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/api/actividadesApi.dart';
-import 'package:kultux/tarjetasBusqueda.dart';
+import 'package:kultux/componentes/tarjetasBusqueda.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 
@@ -182,7 +182,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   child: TarjetaBusqueda.actividad(
                     titulo: a.titulo,
-                    localidad: a.localidad,
+                    localidad: a.localidad!,
                     fecha: a.fechaInicio,
                     imagenUrl: a.imagenPrincipal,
                     onTap: () async {
@@ -191,7 +191,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
                       widget.onDetalleSeleccionado?.call(detalle);
 
                     },
-                    textoEtiqueta: a.categoriaActividad,
+                    textoEtiqueta: a.categoriaActividad!,
                     iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
                   ),
                 );

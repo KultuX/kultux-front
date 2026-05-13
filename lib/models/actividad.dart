@@ -2,11 +2,11 @@ import 'package:kultux/models/imagen.dart';
 class Actividad{
   final int id;
   final String titulo;
-  final String categoriaActividad;
+  final String? categoriaActividad;
   final String imagenPrincipal;
   final String fechaInicio;
-  final String localidad;
-  final String estado;
+  final String? localidad;
+  final String? estado;
 
   String? descripcion;
   String? telefonoEmpresa;
@@ -22,11 +22,11 @@ class Actividad{
   Actividad._({
     required this.id,
     required this.titulo,
-    required this.categoriaActividad,
+    this.categoriaActividad,
     required this.imagenPrincipal,
     required this.fechaInicio,
-    required this.localidad,
-    required this.estado,
+    this.localidad,
+    this.estado,
     this.horaInicio,
     this.descripcion,
     this.telefonoEmpresa,
@@ -90,6 +90,17 @@ class Actividad{
     );
   }
 
+  factory Actividad.guardado(Map<String, dynamic> json){
+    return Actividad._(
+      id:json['idActividad'],
+      titulo: json['titulo'],
+      fechaInicio: json['fechaInicio'],
+      horaInicio: json['horaInicio'],
+      imagenPrincipal: json['portada'],
+      categoriaActividad: json['categoria'],
+      localidad: json['localidad']
+    );
+  }
 
 }
 

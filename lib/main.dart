@@ -10,18 +10,21 @@ import 'package:kultux/perfil.dart';
 import 'package:kultux/buscar.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 
-import 'package:kultux/tarjetas.dart';
+import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/establecimientos.dart';
 import 'package:kultux/detalles.dart';
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/usuario.dart';
 
-import 'package:kultux/notificaciones.dart';
+
 
 import 'dart:io';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
+
+// CAMBIO: importar el enum de tab de guardados
+import 'package:kultux/guardados.dart' show GuardadosTab;
 
 import 'models/pages.dart';
 
@@ -61,7 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _invitado = false;
   Usuario? usuario;
 
-  bool _mostrarNotificaciones = false;
 
 
   List<Actividad> _actividades = [];
@@ -70,7 +72,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _cargando = false;
 
   final ScrollController _scrollController = ScrollController();
-
 
   bool _mostrandoDetalleInicio = false;
   Actividad? _actividadDetalleSeleccionada;
@@ -86,12 +87,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int _buscarCategoriaIndex = 0;
 
+  bool _mostrandoDetalleGuardado = false;
+  dynamic _guardadoDetalleSeleccionado;
+
+  bool _mostrandoGuardadosLista = false;
+
+  GuardadosTab _guardadosTabActivo = GuardadosTab.actividades;
+
   late final EstablecimientosPage _establecimientosPage;
 
-  Future<void> _cargarSesion() async{
+  Future<void> _cargarSesion() async {
     final usuarioGuardado = await UsuarioRepository.cargar();
-    if(!mounted) return;
-    if(usuarioGuardado != null){
+    if (!mounted) return;
+    if (usuarioGuardado != null) {
       setState(() {
         usuario = usuarioGuardado;
         _logeado = true;
@@ -99,6 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -122,7 +131,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _cargarMas();
       }
     });
-
   }
 
   Future<void> _cargarActividades() async {
@@ -170,8 +178,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _cargarMas() async {
-    if(_cargando) return;
-    if(_paginaActual >= _totalPaginas) return;
+    if (_cargando) return;
+    if (_paginaActual >= _totalPaginas) return;
     await _cargarActividades();
   }
 
@@ -182,8 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _indexActual = 0;
       _mostrandoDetalleInicio = false;
       _actividadDetalleSeleccionada = null;
-      _mostrandoDetalleEstablecimiento = false;
       _establecimientoDetalleSeleccionado = null;
+      UsuarioRepository.cerrarSesion();
     });
   }
 
@@ -198,10 +206,8 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _mostrandoDetalleInicio = false;
       _actividadDetalleSeleccionada = null;
-      _actividadDetalleSeleccionada = null;
       _actividades.clear();
       _paginaActual = 0;
-
     });
     _cargarActividades();
   }
@@ -235,6 +241,23 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
+  void _abrirDetalleGuardados(dynamic objeto, GuardadosTab tab) {
+    setState(() {
+      _guardadoDetalleSeleccionado = objeto;
+      _mostrandoDetalleGuardado = true;
+      _guardadosTabActivo = tab;
+      _indexActual = 4;
+    });
+  }
+
+
+  void _volverAGuardados() {
+    setState(() {
+      _mostrandoDetalleGuardado = false;
+      _guardadoDetalleSeleccionado = null;
+      _mostrandoGuardadosLista = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -243,106 +266,107 @@ class _MyHomePageState extends State<MyHomePage> {
       MapasPage(),
       _bodyBuscar(),
       _bodyEstablecimientos(),
-      PerfilPage(cerrarSesion: _cerrarSesion, usuario: usuario),
+      _bodyPerfil(),
     ];
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBarPersonalizado(
         logeado: !_logeado ? true : _invitado,
-        mostrar: _mostrarNotificaciones,
-        notificaciones: () {
+      ),
+      body:
+          _indexActual == 0 && !_logeado && !_invitado
+              ? Stack(
+            alignment: Alignment.center,
+            children: [
+              paginas[_indexActual],
+              if (!_logeado && !_invitado)
+                AssetLogin(
+                  cerrar: () {
+                    setState(() {
+                      _logeado = true;
+                      _invitado = true;
+                    });
+                  },
+                  logeado: (Usuario logeado) {
+                    setState(() {
+                      _logeado = true;
+                      _invitado = false;
+                      usuario = logeado;
+                    });
+                  },
+                  invitado: () {
+                    setState(() {
+                      _invitado = true;
+                      _logeado = true;
+                      _indexActual = 0;
+                    });
+                  },
+                ),
+            ],
+          )
+              : paginas[_indexActual],
+      bottomNavigationBar: BottomNav(
+        itemSeleccionado: _indexActual,
+        itemSeleccion: (index) {
+          if (!_logeado && !_invitado) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "¡Inicia sesión, registrate o entra como invitado!",
+                  textAlign: TextAlign.center,
+                ),
+                showCloseIcon: true,
+              ),
+            );
+            return;
+          }
+
+          if (index == 4 && _invitado) {
+            setState(() {
+              _invitado = false;
+              _logeado = false;
+              _indexActual = 0;
+              _mostrandoDetalleInicio = false;
+              _actividadDetalleSeleccionada = null;
+              _mostrandoDetalleEstablecimiento = false;
+              _establecimientoDetalleSeleccionado = null;
+              _mostrandoDetalleBuscar = false;
+              _buscarDetalleSeleccionado = null;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  showCloseIcon: true,
+                  content: Text(
+                      textAlign: TextAlign.center,
+                      "⚠️ ¡Inicia sesión o registrate para acceder a más funcionalidades! ⚠️")),
+            );
+            return;
+          }
+
           setState(() {
-            _mostrarNotificaciones = !_mostrarNotificaciones;
+
+            _indexActual = index;
+
+            _mostrandoDetalleInicio = false;
+            _actividadDetalleSeleccionada = null;
+
+            _mostrandoDetalleEstablecimiento = false;
+            _establecimientoDetalleSeleccionado = null;
+            _mostrandoDetalleBuscar = false;
+            _buscarDetalleSeleccionado = null;
+
+
+            if (index != 4) {
+              _mostrandoDetalleGuardado = false;
+              _guardadoDetalleSeleccionado = null;
+              _mostrandoGuardadosLista = false;
+            }
           });
         },
       ),
-      body: _mostrarNotificaciones
-          ? NotificacionesPage(mostrar:_mostrarNotificaciones) //  mostrar notificaciones
-          : (
-              _indexActual == 0 && !_logeado && !_invitado
-                  ? Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        paginas[_indexActual],
-                        if (!_logeado && !_invitado)
-                          AssetLogin(
-                            cerrar: () {
-                              setState(() {
-                                _logeado = true;
-                                _invitado = true;
-                              });
-                            },
-                            logeado: (Usuario logeado) {
-                              setState(() {
-                                _logeado = true;
-                                _invitado = false;
-                                usuario = logeado;
-                              });
-                            },
-                            invitado: () {
-                              setState(() {
-                                _invitado = true;
-                                _logeado = true;
-                                _indexActual = 0;
-                              });
-                            },
-                          ),
-                      ],
-                    )
-                  : paginas[_indexActual]),
-              bottomNavigationBar: BottomNav(
-                itemSeleccionado: _indexActual,
-                itemSeleccion: (index) {
-                  if (!_logeado && !_invitado) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "¡Inicia sesión, registrate o entra como invitado!",
-                          textAlign: .center,
-                        ),
-                        showCloseIcon: true,
-                      ),
-                    );
-                    return;
-                  }
-
-                  if (index == 4 && _invitado) {
-                    setState(() {
-                      _invitado = false;
-                      _logeado = false;
-                      _indexActual = 0;
-                      _mostrandoDetalleInicio = false;
-                      _actividadDetalleSeleccionada = null;
-                      _mostrandoDetalleEstablecimiento = false;
-                      _establecimientoDetalleSeleccionado = null;
-                      _mostrandoDetalleBuscar = false;
-                      _buscarDetalleSeleccionado = null;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          showCloseIcon: true,
-                          content: Text(textAlign: .center,"⚠️ ¡Inicia sesión o registrate para acceder a más funcionalidades! ⚠️")),
-                    );
-                    return;
-                  }
-
-                  setState(() {
-                    _mostrarNotificaciones = false;
-                    _indexActual = index;
-
-                    _mostrandoDetalleInicio = false;
-                    _actividadDetalleSeleccionada = null;
-
-                    _mostrandoDetalleEstablecimiento = false;
-                    _establecimientoDetalleSeleccionado = null;
-                    _mostrandoDetalleBuscar = false;
-                    _buscarDetalleSeleccionado = null;
-                  });
-                },
-              ),
-            );
+    );
   }
 
   Widget _contenidoInicio() {
@@ -362,7 +386,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Tarjeta.actividades(
                         titulo: actividad.titulo,
-                        localidad: actividad.localidad,
+                        localidad: actividad.localidad!,
                         fecha: actividad.fechaInicio,
                         imagenUrl: actividad.imagenPrincipal,
                         onTap: () async {
@@ -414,10 +438,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-
   Widget _cabeceraInicio() {
     final fechaActual = DateTime.now();
-    const dias = ['L','M','X','J','V','S','D'];
+    const dias = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
     final dia = dias[fechaActual.weekday - 1];
 
     return Padding(
@@ -439,19 +462,57 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
+  Widget _buildHeaderDetalle({required VoidCallback onVolver}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -15,
+            left: -10,
+            child: IconButton(
+              onPressed: onVolver,
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Detalle',
+                  style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0)),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Información',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 
   Widget _bodyInicio() {
     if (_mostrandoDetalleInicio && _actividadDetalleSeleccionada != null) {
       return Column(
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: _volverAListadoInicio,
-              icon: const Icon(Icons.arrow_back),
-            ),
-          ),
+          _buildHeaderDetalle(onVolver: _volverAListadoInicio),
           Expanded(
             child: Detalle.desdeObjeto(
               objeto: _actividadDetalleSeleccionada!,
@@ -467,52 +528,40 @@ class _MyHomePageState extends State<MyHomePage> {
         _cabeceraInicio(),
 
         switch (estadoInicio) {
-          EstadoUi.cargando =>
-          const Expanded(child: Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70)))),
-
-          EstadoUi.vacio =>
-              Expanded(child: estadoVacio()),
-
-          EstadoUi.sinConexion =>
-              Expanded(
-                child: estadoError(
-                  icon: Icons.wifi_off,
-                  mensaje: mensajeErrorInicio,
-                  onRetry: _cargarActividades,
-                ),
-              ),
-
-          EstadoUi.error =>
-              Expanded(
-                child: estadoError(
-                  icon: Icons.error_outline,
-                  mensaje: mensajeErrorInicio,
-                  onRetry: _cargarActividades,
-                ),
-              ),
-
-          EstadoUi.contenido =>
-              _contenidoInicio(),
+          EstadoUi.cargando => const Expanded(
+              child: Center(
+                  child: CircularProgressIndicator(
+                      color: Color.fromARGB(255, 166, 226, 70)))),
+          EstadoUi.vacio => Expanded(child: estadoVacio()),
+          EstadoUi.sinConexion => Expanded(
+            child: estadoError(
+              icon: Icons.wifi_off,
+              mensaje: mensajeErrorInicio,
+              onRetry: _cargarActividades,
+            ),
+          ),
+          EstadoUi.error => Expanded(
+            child: estadoError(
+              icon: Icons.error_outline,
+              mensaje: mensajeErrorInicio,
+              onRetry: _cargarActividades,
+            ),
+          ),
+          EstadoUi.contenido => _contenidoInicio(),
         },
       ],
     );
   }
 
-
   Widget _bodyEstablecimientos() {
     return Stack(
       children: [
         _establecimientosPage,
-        if (_mostrandoDetalleEstablecimiento && _establecimientoDetalleSeleccionado != null)
+        if (_mostrandoDetalleEstablecimiento &&
+            _establecimientoDetalleSeleccionado != null)
           Column(
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: _volverAListadoEstablecimientos,
-                  icon: const Icon(Icons.arrow_back),
-                ),
-              ),
+              _buildHeaderDetalle(onVolver: _volverAListadoEstablecimientos),
               Expanded(
                 child: Detalle.desdeObjeto(
                   objeto: _establecimientoDetalleSeleccionado!,
@@ -528,13 +577,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_mostrandoDetalleBuscar && _buscarDetalleSeleccionado != null) {
       return Column(
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: _volverAListadoBuscar,
-              icon: const Icon(Icons.arrow_back),
-            ),
-          ),
+          _buildHeaderDetalle(onVolver: _volverAListadoBuscar),
           Expanded(
             child: Detalle.desdeObjeto(objeto: _buscarDetalleSeleccionado!),
           ),
@@ -544,9 +587,42 @@ class _MyHomePageState extends State<MyHomePage> {
     return BuscarPage(
       onDetalleSeleccionado: _abrirDetalleBuscar,
       selectedIndex: _buscarCategoriaIndex,
-      onIndexChanged: (index){
+      onIndexChanged: (index) {
         _buscarCategoriaIndex = index;
-    },);
+      },
+    );
+  }
+
+  Widget _bodyPerfil() {
+
+    if (_mostrandoDetalleGuardado && _guardadoDetalleSeleccionado != null) {
+      return Column(
+        children: [
+          _buildHeaderDetalle(onVolver: _volverAGuardados),
+          Expanded(
+            child: Detalle.desdeObjeto(
+              objeto: _guardadoDetalleSeleccionado!,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return PerfilPage(
+      cerrarSesion: _cerrarSesion,
+      usuario: usuario,
+      onDetalleSeleccionado: _abrirDetalleGuardados,
+      mostrandoGuardados: _mostrandoGuardadosLista,
+      tabGuardadosInicial: _guardadosTabActivo,
+      onMostrarGuardados: () {
+        setState(() {
+          _mostrandoGuardadosLista = !_mostrandoGuardadosLista;
+          if (_mostrandoGuardadosLista) {
+            _guardadosTabActivo = GuardadosTab.actividades;
+          }
+        });
+      },
+    );
   }
 }
 
@@ -564,17 +640,14 @@ class _SplashPageState extends State<SplashPage> {
     _cargarDatosInicio();
   }
 
-
   Future<void> _cargarDatosInicio() async {
     try {
       final results = await Future.wait([
         ActividadesApiService.obtenerActividadesInicio(0),
         LocalidadApiService.obtenerLocalidadNombres()
-    ]);
+      ]);
 
       final page = results[0] as Pages<Actividad>;
-     // final page =
-     // await ActividadesApiService.obtenerActividadesInicio(0);
 
       for (final act in page.contenido.take(5)) {
         if (act.imagenPrincipal != null) {
@@ -601,7 +674,6 @@ class _SplashPageState extends State<SplashPage> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
