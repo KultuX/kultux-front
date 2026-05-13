@@ -530,7 +530,11 @@ class _GuardadosPageState extends State<GuardadosPage> {
           categoria: r.categoriaRestaurante,
           imagenUrl: r.imagenPrincipal,
           abierto: r.abierto,
-          onTap: () => widget.onDetalleSeleccionado(r, GuardadosTab.restaurantes),
+          onTap: () async {
+            final detalle = await RestauranteApiService.restauranteDetalle(r.id);
+            widget.onDetalleSeleccionado(detalle, GuardadosTab.restaurantes);
+          },
+
         );
       },
     );
@@ -589,7 +593,11 @@ class _GuardadosPageState extends State<GuardadosPage> {
           localidad: a.localidad,
           categoria: a.categoriaAlojamiento,
           imagenUrl: a.imagenPrincipal,
-          onTap: () => widget.onDetalleSeleccionado(a, GuardadosTab.alojamientos),
+          onTap: () async {
+            final detalle = await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
+            widget.onDetalleSeleccionado(detalle, GuardadosTab.alojamientos);
+          },
+
         );
       },
     );
