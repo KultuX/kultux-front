@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/pages.dart';
 
+import '../models/ActividadTotal.dart';
+
 
 class ActividadesApiService{
   static final String _BASE_URL_ACTIVIDADES = "micro-actividad-comd.onrender.com";
@@ -122,7 +124,7 @@ class ActividadesApiService{
       params,
     );
 
-    print("URL FINAL: $url");
+
 
     final response = await http.get(
       url,
@@ -171,7 +173,7 @@ class ActividadesApiService{
     );
 
 
-    print("URL FINAL: $url");
+
 
     final response = await http.get(
       url,
@@ -194,5 +196,81 @@ class ActividadesApiService{
     }
 
   }
+
+  static Future<List<ActividadTotal>> actividadesTotalMapa({
+    required List<int>ines,
+  }) async {
+
+    final url = Uri.https(
+      _BASE_URL_ACTIVIDADES,
+      '/api/v1/actividades/mapa/total_actividades',
+       { 'ines': ines.map((e) => e.toString()).toList()}
+    );
+
+
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP'
+      },
+    );
+
+    if(response.statusCode == 200){
+      final List<dynamic> json = jsonDecode(response.body);
+      return json.map((e) => ActividadTotal.fromJson(e)).toList();
+    }
+    else{
+      throw HttpException(response.statusCode.toString());
+    }
+
+  }
+
+  static Future<Pages<Actividad>> listaActividadesGuardadas({
+    required int ine,
+    required int page,
+  }) async {
+
+    final params = <String, String>{
+      'page': page.toString(),
+      'size': '8',
+    };
+
+
+
+
+    final url = Uri.https(
+      _BASE_URL_ACTIVIDADES,
+      '/api/v1/actividades/mapa/lista_actividades/$ine',
+      params
+    );
+
+
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP'
+      },
+    );
+
+    if(response.statusCode == 200){
+      final dynamic json = jsonDecode(response.body);
+      return Pages<Actividad>.fromJson(
+        json,
+            (e) => Actividad.inicio(e),
+      );
+    }
+    else{
+      throw HttpException(response.statusCode.toString());
+    }
+
+  }
+
+
 
 }

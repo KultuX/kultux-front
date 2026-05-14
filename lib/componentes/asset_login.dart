@@ -60,6 +60,7 @@ class _AssetLoginState extends State<AssetLogin> {
 
       Alerta.show(context,mensaje:'👋🏻 ¡¡Bienvenid@, ${usuario.nombre?.toUpperCase() ?? usuario.email}!!', tipo: TipoAviso.success );
       widget.logeado?.call(usuario);
+      Usuario.usuarioActual = usuario;
     } catch (_) {
       setState(() { _errorEmail = true; _errorPass = true; });
       Alerta.show(context,mensaje:'Usuario o contraseña incorrectos.', tipo: TipoAviso.error );
@@ -71,7 +72,6 @@ class _AssetLoginState extends State<AssetLogin> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Fondo semitransparente
         GestureDetector(
           onTap: widget.cerrar,
           child: Container(color: Colors.black54),

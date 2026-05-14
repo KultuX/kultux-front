@@ -40,6 +40,9 @@ dependencies:
   url_launcher: ^6.2.6
   http: ^1.1.0
   infinite_scroll_pagination: ^4.0.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  flutter_map_tile_caching: ^9.1.0
 
 dev_dependencies:
   flutter_test:

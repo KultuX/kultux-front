@@ -260,15 +260,27 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+
+  Widget _getPaginaActual() {
+    switch (_indexActual) {
+      case 0:
+        return _bodyInicio();
+      case 1:
+        return const MapasPage();
+      case 2:
+        return _bodyBuscar();
+      case 3:
+        return _bodyEstablecimientos();
+      case 4:
+        return _bodyPerfil();
+      default:
+        return const SizedBox();
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    final List<Widget> paginas = [
-      _bodyInicio(),
-      MapasPage(),
-      _bodyBuscar(),
-      _bodyEstablecimientos(),
-      _bodyPerfil(),
-    ];
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -280,7 +292,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ? Stack(
             alignment: Alignment.center,
             children: [
-              paginas[_indexActual],
+              _getPaginaActual(),
               if (!_logeado && !_invitado)
                 AssetLogin(
                   cerrar: () {
@@ -306,7 +318,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
             ],
           )
-              : paginas[_indexActual],
+              : _getPaginaActual(),
       bottomNavigationBar: BottomNav(
         itemSeleccionado: _indexActual,
         itemSeleccion: (index) {
