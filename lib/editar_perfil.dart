@@ -9,6 +9,7 @@ import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'componentes/selector_localidad.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
+import 'package:kultux/core/utils/validaciones.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
@@ -33,20 +34,29 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
   Key _selectorLocalidadKey = UniqueKey();
 
   late final Map<String, TextEditingController> _controllers;
+  dynamic u;
+
+
+  bool _passwordValidaEstado = false;
+  String _passwordActual = '';
+
+  bool _emailValidoEstado = false;
+  String _emailActual = '';
+
+  String? _emailErrorApi;
 
   @override
   void initState() {
     super.initState();
-
-    final u = widget.usuario ?? Usuario.usuarioActual;
+    u = Usuario.usuarioActual ?? widget.usuario;
     print(u.toString());
     _controllers = {
-      'nombre':    TextEditingController(text: u?.nombre ?? ''),
+      'nombre': TextEditingController(text: u?.nombre ?? ''),
       'apellidos': TextEditingController(text: u?.apellidos ?? ''),
-      'email':     TextEditingController(text: u?.email ?? ''),
-      'password':  TextEditingController(),
+      'email': TextEditingController(text: u?.email ?? ''),
+      'password': TextEditingController(),
     };
-
+    _selectorLocalidadKey = UniqueKey();
   }
 
   @override
@@ -60,17 +70,41 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     return SelectorLocalidad(
       key: _selectorLocalidadKey,
       localidades: localidades,
-      ineInicial: widget.usuario?.localidad ?? Usuario.usuarioActual?.localidad,
+      ineInicial: Usuario.usuarioActual?.localidad,
       onSelected: (loc) => setState(() => _localidadSeleccionada = loc),
     );
   }
 
   Future<void> _guardarCambios() async {
+
+    final password = _controllers['password']!.text.trim();
+    final email = _controllers['email']!.text.trim();
+
+    if (Validaciones.emailError(email) != null) {
+      Alerta.show(
+        context,
+        mensaje: Validaciones.emailError(email)!,
+        tipo: TipoAviso.error,
+      );
+      return;
+    }
+
+    if (Validaciones.passwordError(password) != null) {
+      Alerta.show(
+        context,
+        mensaje: Validaciones.passwordError(password)!,
+        tipo: TipoAviso.error,
+      );
+      return;
+    }
+
+
     final datos = <String, dynamic>{};
     void addIfNotEmpty(String key) {
       final v = _controllers[key]!.text.trim();
       if (v.isNotEmpty) datos[key] = v;
     }
+
     addIfNotEmpty('nombre');
     addIfNotEmpty('apellidos');
     addIfNotEmpty('email');
@@ -85,14 +119,39 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         datos: datos,
         imagen: _imagenSeleccionada,
       );
-      await UsuarioRepository.guardar(actualizado);
+      print('Actualizado ${actualizado.toString()}');
+      if (await UsuarioRepository.haySesion())
+        await UsuarioRepository.guardar(actualizado);
+      Usuario.usuarioActual = actualizado;
       if (!mounted) return;
-      Alerta.show(context,mensaje:'¡Perfil actualizado correctamente!', tipo: TipoAviso.success );
+      Alerta.show(
+        context,
+        mensaje: '¡Perfil actualizado correctamente!',
+        tipo: TipoAviso.success,
+      );
+
+      setState(() {
+        u = actualizado;
+        _selectorLocalidadKey = UniqueKey();
+      });
       widget.onVolver();
     } catch (e) {
       if (!mounted) return;
-      Alerta.show(context,mensaje:'Algo ha salido mal. Prueba a intentarlo más tarde.', tipo: TipoAviso.error );
 
+      final errorStr = e.toString();
+
+      if (errorStr.contains('409')) {
+        setState(() {
+          _emailErrorApi = 'Este correo ya está en uso';
+        });
+        return;
+      }
+
+      Alerta.show(
+        context,
+        mensaje: 'Algo ha salido mal. Prueba a intentarlo más tarde.',
+        tipo: TipoAviso.error,
+      );
     }
   }
 
@@ -109,7 +168,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           children: [
             const SizedBox(height: 10),
             Container(
-              width: 36, height: 4,
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
                 color: _borde,
                 borderRadius: BorderRadius.circular(2),
@@ -126,7 +186,9 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                     onTap: () async {
                       Navigator.pop(context);
                       final p = await _picker.pickImage(
-                          source: ImageSource.gallery, imageQuality: 85);
+                        source: ImageSource.gallery,
+                        imageQuality: 85,
+                      );
                       if (p != null && mounted) {
                         setState(() => _imagenSeleccionada = File(p.path));
                       }
@@ -139,7 +201,9 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                     onTap: () async {
                       Navigator.pop(context);
                       final p = await _picker.pickImage(
-                          source: ImageSource.camera, imageQuality: 85);
+                        source: ImageSource.camera,
+                        imageQuality: 85,
+                      );
                       if (p != null && mounted) {
                         setState(() => _imagenSeleccionada = File(p.path));
                       }
@@ -157,7 +221,9 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
 
   @override
   Widget build(BuildContext context) {
-    final u = widget.usuario ?? Usuario.usuarioActual;
+    final u = Usuario.usuarioActual ?? widget.usuario;
+    final errorEmail = _emailErrorApi ?? Validaciones.emailError(_emailActual);
+    final emailEsValido = errorEmail == null;
     return Container(
       color: _fondoPagina,
       child: SingleChildScrollView(
@@ -177,11 +243,13 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
               child: Stack(
                 children: [
                   Positioned(
-                    top: 0, right: 0,
+                    top: 0,
+                    right: 0,
                     child: Opacity(
                       opacity: 0.12,
                       child: Container(
-                        width: 70, height: 70,
+                        width: 70,
+                        height: 70,
                         decoration: BoxDecoration(
                           color: _verde,
                           borderRadius: BorderRadius.circular(8),
@@ -192,18 +260,26 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Mi cuenta',
-                          style: TextStyle(
-                              fontSize: 12, color: Color(0xFFb0b0b0))),
+                      const Text(
+                        'Mi cuenta',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFb0b0b0),
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      const Text('Editar perfil',
-                          style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white)),
+                      const Text(
+                        'Editar perfil',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       Container(
-                        width: 36, height: 2,
+                        width: 36,
+                        height: 2,
                         decoration: BoxDecoration(
                           color: _verde,
                           borderRadius: BorderRadius.circular(1),
@@ -230,25 +306,41 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                       alignment: Alignment.bottomRight,
                       children: [
                         Container(
-                          width: 88, height: 88,
+                          width: 88,
+                          height: 88,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(color: _verde, width: 3),
                           ),
                           child: ClipOval(
                             child: _imagenSeleccionada != null
-                                ? Image.file(_imagenSeleccionada!, fit: BoxFit.cover)
-                                : (u?.imagenPerfil != null && u!.imagenPerfil!.isNotEmpty)
-                                ? Image.network(u.imagenPerfil!, fit: BoxFit.cover)
-                                : Image.asset('assets/images/logo_registro.png', fit: BoxFit.cover),
+                                ? Image.file(
+                                    _imagenSeleccionada!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : (u?.imagenPerfil != null &&
+                                      u!.imagenPerfil!.isNotEmpty)
+                                ? Image.network(
+                                    u.imagenPerfil!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.asset(
+                                    'assets/images/logo_registro.png',
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: const BoxDecoration(
-                              color: _verde, shape: BoxShape.circle),
-                          child: const Icon(Icons.edit,
-                              size: 16, color: _texto),
+                            color: _verde,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 16,
+                            color: _texto,
+                          ),
                         ),
                       ],
                     ),
@@ -257,17 +349,21 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                   Text(
                     u?.nombre ?? '',
                     style: const TextStyle(
-                        fontFamily: 'RobotoCondensed',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _texto),
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
                   ),
                   const SizedBox(height: 2),
-                  const Text('Toca la foto para cambiarla',
-                      style: TextStyle(
-                          fontFamily: 'RobotoCondensed',
-                          fontSize: 12,
-                          color: _textoSuave)),
+                  const Text(
+                    'Toca la foto para cambiarla',
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 12,
+                      color: _textoSuave,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -278,24 +374,79 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _SeccionLabel('Datos personales'),
-                  _Campo(child: CamposPersonalizados.normal(
+                  _Campo(
+                    child: CamposPersonalizados.normal(
                       titulo: 'Nombre',
-                      controller: _controllers['nombre']!)),
+                      controller: _controllers['nombre']!,
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  _Campo(child: CamposPersonalizados.normal(
+                  _Campo(
+                    child: CamposPersonalizados.normal(
                       titulo: 'Apellidos',
-                      controller: _controllers['apellidos']!)),
+                      controller: _controllers['apellidos']!,
+                    ),
+                  ),
 
                   const SizedBox(height: 16),
                   _SeccionLabel('Cuenta'),
-                  _Campo(child: CamposPersonalizados.normal(
+
+                  _Campo(
+                    child: CamposPersonalizados.normal(
                       titulo: 'Correo electrónico',
                       controller: _controllers['email']!,
-                      tipo: TextInputType.emailAddress)),
+                      tipo: TextInputType.emailAddress,
+                      mostrarError: _emailActual.isNotEmpty && !emailEsValido,
+                      onChanged: (value) {
+                        setState(() {
+                          _emailActual = value;
+                          _emailValidoEstado = Validaciones.email(value);
+                          _emailErrorApi = null;
+                        });
+                      },
+                    ),
+                  ),
+                  if (_emailActual.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 4),
+                      child: Text(
+                        errorEmail ?? 'Email válido',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: emailEsValido ? _verde : Colors.red,
+                        ),
+                      ),
+                    ),
+
                   const SizedBox(height: 10),
-                  _Campo(child: CamposPersonalizados.password(
+                  _Campo(
+                    child: CamposPersonalizados.password(
                       titulo: 'Nueva contraseña (opcional)',
-                      controller: _controllers['password']!)),
+                      controller: _controllers['password']!,
+                      mostrarError: _passwordActual.isNotEmpty && !_passwordValidaEstado,
+                      onChanged: (value) {
+                        setState(() {
+                          _passwordActual = value;
+                          _passwordValidaEstado = Validaciones.password(value);
+                        });
+                      },
+                    ),
+                  ),
+
+
+                  if (_passwordActual.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 4),
+                      child: Text(
+                        Validaciones.passwordError(_passwordActual) ?? 'Contraseña válida ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _passwordValidaEstado ? _verde : Colors.red,
+                        ),
+                      ),
+                    ),
+
+
 
                   const SizedBox(height: 16),
                   _SeccionLabel('Ubicación'),
@@ -315,12 +466,15 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                               border: Border.all(color: _borde, width: 1.5),
                             ),
                             child: const Center(
-                              child: Text('Volver',
-                                  style: TextStyle(
-                                      fontFamily: 'RobotoCondensed',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: _textoSuave)),
+                              child: Text(
+                                'Volver',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: _textoSuave,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -336,12 +490,15 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Center(
-                              child: Text('Guardar cambios',
-                                  style: TextStyle(
-                                      fontFamily: 'RobotoCondensed',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: _texto)),
+                              child: Text(
+                                'Guardar cambios',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: _texto,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -358,14 +515,17 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     );
   }
 }
+
 Widget _SeccionLabel(String label) => Padding(
   padding: const EdgeInsets.only(bottom: 8, top: 2, left: 2),
   child: Text(
     label.toUpperCase(),
     style: const TextStyle(
       fontFamily: 'RobotoCondensed',
-      fontSize: 11, fontWeight: FontWeight.w600,
-      color: _textoSuave, letterSpacing: 0.8,
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: _textoSuave,
+      letterSpacing: 0.8,
     ),
   ),
 );
@@ -406,7 +566,8 @@ class _BottomSheetOpcion extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 34, height: 34,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 color: _texto,
                 borderRadius: BorderRadius.circular(8),
@@ -414,12 +575,15 @@ class _BottomSheetOpcion extends StatelessWidget {
               child: Icon(icono, size: 16, color: _verde),
             ),
             const SizedBox(width: 12),
-            Text(texto,
-                style: const TextStyle(
-                    fontFamily: 'RobotoCondensed',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: _texto)),
+            Text(
+              texto,
+              style: const TextStyle(
+                fontFamily: 'RobotoCondensed',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: _texto,
+              ),
+            ),
           ],
         ),
       ),

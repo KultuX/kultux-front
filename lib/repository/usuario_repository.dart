@@ -27,13 +27,18 @@ class UsuarioRepository {
     if (json == null) return null;
 
     final usuario = Usuario.fromJson(jsonDecode(json));
-    Usuario.usuarioActual = usuario; // lo dejamos en memoria para la sesión
+    Usuario.usuarioActual = usuario;
     return usuario;
+  }
+
+  static Future<bool> haySesion() async{
+    final prefs = await SharedPreferences.getInstance();
+    final String? json = prefs.getString(_key);
+    return json != null ;
   }
 
   static Future<void> cerrarSesion() async {
     Usuario.usuarioActual = null;
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }

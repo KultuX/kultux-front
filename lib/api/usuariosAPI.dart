@@ -46,6 +46,7 @@ class UsuarioApiService{
       },
       body: jsonEncode(userRegistro.toJsonRegistro())
     );
+
     print(jsonEncode(userRegistro.toJsonRegistro()));
     if(response.statusCode == 200 || response.statusCode == 201){
       return userRegistro.email;

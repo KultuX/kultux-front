@@ -101,6 +101,7 @@ class Usuario{
       nombre: json['nombre'],
       apellidos: json['apellidos'],
       localidad: json['localidad'],
+      fechaNacimiento: json['fechaNacimiento'],
       imagenPerfil: json['urlImagenPerfil'],
       id: Usuario.usuarioActual?.id,
     );

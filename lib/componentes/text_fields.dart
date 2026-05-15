@@ -8,6 +8,8 @@ class CamposPersonalizados extends StatefulWidget {
   final bool mostrarError;
   final bool pass;
   final TextEditingController controller;
+  final ValueChanged<String>? onChanged;
+
 
   const CamposPersonalizados.normal({
     super.key,
@@ -17,6 +19,7 @@ class CamposPersonalizados extends StatefulWidget {
     this.mostrarError = false,
     this.pass = false,
     required this.controller,
+    this.onChanged
   });
 
   const CamposPersonalizados.password({
@@ -25,8 +28,10 @@ class CamposPersonalizados extends StatefulWidget {
     this.ancho = 364,
     this.mostrarError = false,
     required this.controller,
+    this.onChanged
   })  : pass = true,
         tipo = TextInputType.text;
+
 
   @override
   State<CamposPersonalizados> createState() => _CamposPersonalizadosState();
@@ -104,6 +109,7 @@ class _CamposPersonalizadosState extends State<CamposPersonalizados> {
         keyboardType: widget.tipo,
         obscureText: widget.pass ? !_mostrarPass : false,
         style: const TextStyle(fontSize: 13),
+        onChanged: widget.onChanged,
         decoration: InputDecoration(
           labelText: widget.titulo,
           labelStyle: TextStyle(
