@@ -107,4 +107,24 @@ class UsuarioApiService{
     }
   }
 
+  static Future<void> recuperarPassword(String email) async {
+    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/recuperar-password');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP'
+      },
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode == 404) {
+      throw Exception('404');
+    } else if (response.statusCode != 200) {
+      throw Exception('ERROR');
+    }
+  }
+
 }
