@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:kultux/models/actividad.dart';
@@ -47,6 +50,7 @@ class _MapasPageState extends State<MapasPage> {
   @override
   void initState() {
     super.initState();
+   // _cargarExtremadura();
     _cargarDatos();
   }
 
@@ -91,8 +95,19 @@ class _MapasPageState extends State<MapasPage> {
       setState(() => _actividadSeleccionada = null);
 
 
+//  List<LatLng> _extremadura = [];
 
-
+ /* Future<void> _cargarExtremadura() async {
+    final str = await rootBundle.loadString('assets/extremadura.geojson');
+    final json = jsonDecode(str);
+    // Es MultiPolygon directo, no tiene 'geometries'
+    final coords = json['coordinates'][0][0] as List;
+    if (mounted) setState(() {
+      _extremadura = coords
+          .map((c) => LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()))
+          .toList();
+    });
+  }*/
 
   void _resetMapa() {
     _mapController.move(
@@ -115,7 +130,7 @@ class _MapasPageState extends State<MapasPage> {
           options: MapOptions(
             initialCenter: const LatLng(39.2, -6.15),
             initialZoom: 7.5,
-            minZoom: 6.5,
+            minZoom: 7.5,
             maxZoom: 13.0,
 
             onPositionChanged: (position, hasGesture) {
@@ -155,6 +170,17 @@ class _MapasPageState extends State<MapasPage> {
               keepBuffer: 5,
               panBuffer: 2,
             ),
+          /*  if (_extremadura.isNotEmpty)
+              PolygonLayer(
+                polygons: [
+                  Polygon(
+                    points: _extremadura,
+                    color: Colors.transparent,
+                    borderColor: const Color(0xFFA8D63F),
+                    borderStrokeWidth: 2.5,
+                  ),
+                ],
+              ),*/
 
             if (!_cargandoMapa && _errorMapa == null)
               MarkerLayer(
@@ -162,6 +188,7 @@ class _MapasPageState extends State<MapasPage> {
                   point: p.coordenadas,
                   width: 36,
                   height: 36,
+                  alignment: Alignment(0, -1.4),
                   child: GestureDetector(
                     onTap: () => _abrirLocalidad(p),
                     child: Container(
