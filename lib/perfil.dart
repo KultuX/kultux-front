@@ -22,21 +22,14 @@ const _borde = Color(0xFFE0DDD6);
 class PerfilPage extends StatefulWidget {
   final VoidCallback cerrarSesion;
   final Usuario? usuario;
+  final VoidCallback onVolver;
 
-  final Function(dynamic objeto, GuardadosTab tab)? onDetalleSeleccionado;
-  final bool mostrandoGuardados;
-  final VoidCallback? onMostrarGuardados;
-
-  final GuardadosTab tabGuardadosInicial;
 
   const PerfilPage({
     super.key,
     required this.cerrarSesion,
     this.usuario,
-    this.onDetalleSeleccionado,
-    this.mostrandoGuardados = false,
-    this.onMostrarGuardados,
-    this.tabGuardadosInicial = GuardadosTab.actividades,
+    required this.onVolver
   });
 
   @override
@@ -48,7 +41,6 @@ class _PerfilPageState extends State<PerfilPage> {
 
   final _opciones = {
     'Editar perfil': ('assets/iconos/editar_perfil.svg', 'ajustes'),
-    'Guardados': ('assets/iconos/guardados.svg', 'ajustes'),
     'Contacta con nosotros': (
       'assets/iconos/contactar_nosotros.svg',
       'soporte',
@@ -80,7 +72,7 @@ class _PerfilPageState extends State<PerfilPage> {
                 _editandoPerfil = false;
               });
             }
-                : null,
+                : widget.onVolver,
           ),
 
           Expanded(
@@ -104,17 +96,6 @@ class _PerfilPageState extends State<PerfilPage> {
       );
     }
 
-    if (widget.mostrandoGuardados) {
-      return GuardadosPage(
-        tabInicial: widget.tabGuardadosInicial,
-        onDetalleSeleccionado: (objeto, tab) {
-          widget.onDetalleSeleccionado?.call(objeto, tab);
-        },
-        onVolver: () {
-          widget.onMostrarGuardados?.call();
-        },
-      );
-    }
 
     return SingleChildScrollView(
       child: Column(
@@ -162,16 +143,19 @@ class _PerfilPageState extends State<PerfilPage> {
     switch (texto) {
       case 'Editar perfil':
         setState(() => _editandoPerfil = true);
-      case 'Guardados':
-        widget.onMostrarGuardados?.call();
+        return;
       case 'Contacta con nosotros':
         _mostrarContacto();
+        return;
       case 'Términos y condiciones':
         TerminosCondicionesDialog.mostrar(context);
+        return;
       case 'Política de privacidad':
         PoliticaPrivacidadDialog.mostrar(context);
+        return;
       default:
         _mostrarProximamente();
+        return;
     }
   }
 
@@ -517,42 +501,106 @@ class _PerfilPageState extends State<PerfilPage> {
   Future<void> _confirmarCerrarSesion() async {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Cerrar sesión', textAlign: TextAlign.center),
-          content: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('⚠️', style: TextStyle(fontSize: 50)),
-              const SizedBox(height: 16),
-              const Text(
-                '¿Estás segur@ de que quieres cerrar sesión?',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 120,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
+        return Dialog(
+          backgroundColor: _fondoCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: _borde),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.logout, size: 50, color: _verde),
+                const SizedBox(height: 12),
+
+                const Text(
+                  'Cerrar sesión',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _texto,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                const Text(
+                  '¿Estás segur@ de que quieres cerrar sesión?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontSize: 13,
+                    color: _textoSuave,
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            border: Border.all(color: _borde),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontFamily: 'RobotoCondensed',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: _texto,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  BotonesGenerico(
-                    titulo: 'Cerrar sesión',
-                    ancho: 120,
-                    pulsar: () {
-                      Navigator.of(context).pop();
-                      widget.cerrarSesion();
-                    },
-                  ),
-                ],
-              ),
-            ],
+
+                    const SizedBox(width: 10),
+
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          widget.cerrarSesion();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _verde,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Cerrar sesión',
+                              style: TextStyle(
+                                fontFamily: 'RobotoCondensed',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -602,48 +650,106 @@ class _PerfilPageState extends State<PerfilPage> {
   Future<void> _confirmarEliminarCuenta() async {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Eliminar cuenta', textAlign: TextAlign.center),
-          content: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🗑️', style: TextStyle(fontSize: 50)),
-              const SizedBox(height: 16),
-              const Text(
-                '¿Estás segur@ de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 120,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
-                    ),
+        return Dialog(
+          backgroundColor: _fondoCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: Color(0xFFC62828)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.delete_forever, size: 50, color: Color(0xFFC62828)),
+                const SizedBox(height: 12),
+
+                const Text(
+                  'Eliminar cuenta',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _texto,
                   ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 120,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
+                ),
+
+                const SizedBox(height: 8),
+
+                const Text(
+                  'Esta acción no se puede deshacer. Se eliminarán todos tus datos.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontSize: 13,
+                    color: _textoSuave,
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            border: Border.all(color: _borde),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontFamily: 'RobotoCondensed',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: _texto,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      onPressed: () async {
-                        Navigator.of(context).pop();
-                        await _eliminarCuenta();
-                      },
-                      child: const Text('Eliminar'),
                     ),
-                  ),
-                ],
-              ),
-            ],
+
+                    const SizedBox(width: 10),
+
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async {
+                          Navigator.of(context).pop();
+                          await _eliminarCuenta();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFC62828),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Eliminar',
+                              style: TextStyle(
+                                fontFamily: 'RobotoCondensed',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

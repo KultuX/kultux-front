@@ -301,9 +301,8 @@ class _GuardadosPageState extends State<GuardadosPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           CabeceraPagina(
-            titulo: 'Editar perfil',
-            subtitulo: 'Mi cuenta',
-            onVolver: widget.onVolver,
+            titulo: 'Guardados',
+            subtitulo: 'Mi colección',
           ),
           _buildTabs(),
           Expanded(child: _buildBody()),

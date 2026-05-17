@@ -44,15 +44,18 @@ class _MapasPageState extends State<MapasPage> {
 
 
 
+
+
   static final _limites = LatLngBounds(
-    LatLng(37.9, -7.6),
-    LatLng(40.5, -4.7),
+    LatLng(37.9, -8.4),
+    LatLng(40.5, -4.0),
   );
 
   @override
   void initState() {
     super.initState();
-   // _cargarExtremadura();
+    _cargarExtremadura();
+    print("Extremadura polygons: ${_extremadura.length}");
     _cargarDatos();
   }
 
@@ -97,29 +100,47 @@ class _MapasPageState extends State<MapasPage> {
       setState(() => _actividadSeleccionada = null);
 
 
-//  List<LatLng> _extremadura = [];
+ List<List<LatLng>> _extremadura = [];
 
- /* Future<void> _cargarExtremadura() async {
-    final str = await rootBundle.loadString('assets/extremadura.geojson');
+  Future<void> _cargarExtremadura() async {
+    final str = await rootBundle.loadString('assets/assets/extremadura.geojson');
     final json = jsonDecode(str);
-    // Es MultiPolygon directo, no tiene 'geometries'
-    final coords = json['coordinates'][0][0] as List;
-    if (mounted) setState(() {
-      _extremadura = coords
-          .map((c) => LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()))
-          .toList();
+
+    final multi = json['coordinates'] as List;
+
+    final result = multi.map<List<LatLng>>((polygon) {
+      final rings = polygon as List;
+      final outerRing = rings[0] as List;
+
+      return outerRing.map<LatLng>((c) {
+        final lon = (c[0] as num).toDouble();
+        final lat = (c[1] as num).toDouble();
+        return LatLng(lat, lon);
+      }).toList();
+    }).toList();
+    print("Polígonos encontrados: ${multi.length}");
+
+    setState(() {
+      _extremadura = result;
     });
-  }*/
+  }
 
   void _resetMapa() {
+    _mapController.camera.center;
+    _mapController.camera.zoom;
     _mapController.move(
       const LatLng(39.2, -6.15),
-      7.5,
+      7.75,
     );
     _mapController.rotate(0);
   }
 
+  LatLng _clampLatLng(LatLng p) {
+    final lat = p.latitude.clamp(_limites.south + 0.1, _limites.north - 0.1);
+    final lng = p.longitude.clamp(_limites.west + 0.1, _limites.east - 0.1);
 
+    return LatLng(lat, lng);
+  }
 
   bool _corrigiendo = false;
 
@@ -131,38 +152,22 @@ class _MapasPageState extends State<MapasPage> {
           mapController: _mapController,
           options: MapOptions(
             initialCenter: const LatLng(39.2, -6.15),
-            initialZoom: 7.5,
+            initialZoom: 7.75,
             minZoom: 7.5,
             maxZoom: 13.0,
-
             onPositionChanged: (position, hasGesture) {
               if (!hasGesture) return;
-              if (_corrigiendo) return;
 
-              final visible = _mapController.camera.visibleBounds;
+              final center = position.center;
 
-              final seSale =
-                  visible.south < _limites.south ||
-                      visible.north > _limites.north ||
-                      visible.west < _limites.west ||
-                      visible.east > _limites.east;
-
-              if (seSale) {
-                _corrigiendo = true;
-
-                _mapController.fitCamera(
-                  CameraFit.bounds(
-                    bounds: _limites,
-                    padding: const EdgeInsets.all(12),
-                  ),
+              final clamped = _clampLatLng(center);
+              if (center != clamped) {
+                _mapController.move(
+                  clamped,
+                  position.zoom,
                 );
-
-                Future.microtask(() => _corrigiendo = false);
               }
             },
-
-
-
 
           ),
           children: [
@@ -172,17 +177,34 @@ class _MapasPageState extends State<MapasPage> {
               keepBuffer: 5,
               panBuffer: 2,
             ),
-          /*  if (_extremadura.isNotEmpty)
+            if (_extremadura.isNotEmpty)
               PolygonLayer(
                 polygons: [
                   Polygon(
-                    points: _extremadura,
-                    color: Colors.transparent,
-                    borderColor: const Color(0xFFA8D63F),
-                    borderStrokeWidth: 2.5,
+                    points: const [
+                      LatLng(-90, -180),
+                      LatLng(-90, 180),
+                      LatLng(90, 180),
+                      LatLng(90, -180),
+                    ],
+                    holePointsList: _extremadura,
+                    color: Colors.black.withOpacity(0.35),
+                    borderStrokeWidth: 0,
                   ),
                 ],
-              ),*/
+              ),
+
+            if (_extremadura.isNotEmpty)
+              PolygonLayer(
+                polygons: _extremadura.map((poly) {
+                  return Polygon(
+                    points: poly,
+                    color: Colors.transparent,
+                    borderColor: const Color(0xFFA8D63F),
+                    borderStrokeWidth: 3,
+                  );
+                }).toList(),
+              ),
 
             if (!_cargandoMapa && _errorMapa == null)
               MarkerLayer(
@@ -190,13 +212,17 @@ class _MapasPageState extends State<MapasPage> {
                   point: p.coordenadas,
                   width: 36,
                   height: 36,
-                  alignment: Alignment(0, -1.4),
+                  alignment: Alignment(0, -1.0),
                   child: GestureDetector(
                     onTap: () => _abrirLocalidad(p),
                     child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFA8D63F),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFA8D63F),
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.black,
+                          width: 1, // fino
+                        ),
                       ),
                       alignment: Alignment.center,
                       child: Text(
@@ -233,14 +259,12 @@ class _MapasPageState extends State<MapasPage> {
           Center(child: Text('Error al cargar mapa')),
 
 
-
        if (_localidadSeleccionada != null)
           Positioned.fill(
             child: Container(
               color: Colors.black.withOpacity(0.4),
             ),
           ),
-
 
         if (_localidadSeleccionada != null && _actividadSeleccionada == null)
           Column(
@@ -258,8 +282,6 @@ class _MapasPageState extends State<MapasPage> {
               ),
             ],
           ),
-
-
         if (_actividadSeleccionada != null)
           Column(
             children: [
@@ -343,8 +365,7 @@ class _ListaActividadesState extends State<_ListaActividades> {
       padding: const EdgeInsets.all(16),
       itemCount: _actividades.length + (_hayMas ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, i) {
-        if (i == _actividades.length) {
+      itemBuilder: (context, i) {        if (i == _actividades.length) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(16),

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AppBarPersonalizado extends StatefulWidget
     implements PreferredSizeWidget {
 
   final bool logeado;
   final bool invitado;
+
   final VoidCallback? onMostrarLogin;
   final VoidCallback? onIrInicio;
+  final VoidCallback? onIrPerfil;
+
+  final bool perfilActivado;
 
   const AppBarPersonalizado({
     super.key,
@@ -14,6 +19,8 @@ class AppBarPersonalizado extends StatefulWidget
     this.invitado = false,
     this.onMostrarLogin,
     this.onIrInicio,
+    this.onIrPerfil,
+    this.perfilActivado = false,
   });
 
   @override
@@ -29,10 +36,14 @@ class _AppBarPersonalizadoState
 
   @override
   Widget build(BuildContext context) {
+
+    final bool activo = widget.perfilActivado;
+
     return AppBar(
       backgroundColor: Colors.black,
       elevation: 0,
       leadingWidth: 70,
+
       leading: Padding(
         padding: const EdgeInsets.only(left: 10),
         child: GestureDetector(
@@ -41,13 +52,51 @@ class _AppBarPersonalizadoState
             alignment: Alignment.centerLeft,
             child: Image.asset(
               'assets/images/logo_kultux.png',
-              width: 32,
-              height: 32,
+              width: 40,
+              height: 40,
             ),
           ),
         ),
       ),
+
       actions: [
+        if (widget.logeado)
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: GestureDetector(
+              onTap: widget.onIrPerfil,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: activo
+                      ? const Color(0xFFA6E246).withOpacity(0.15)
+                      : Colors.white.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: activo
+                        ? const Color(0xFFA6E246)
+                        : Colors.white24,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/iconos/perfil.svg',
+                    width: 18,
+                    height: 18,
+                    colorFilter: ColorFilter.mode(
+                      activo
+                          ? const Color(0xFFA6E246)
+                          : Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
         if (widget.invitado)
           Padding(
             padding: const EdgeInsets.only(right: 14),

@@ -24,7 +24,7 @@ import 'package:kultux/core/utils/estados_widgets.dart';
 
 import 'package:kultux/componentes/modal_alerta.dart';
 
-import 'package:kultux/guardados.dart' show GuardadosTab;
+import 'package:kultux/guardados.dart' show GuardadosTab, GuardadosPage;
 
 import 'componentes/tarjetasBusqueda.dart';
 import 'models/pages.dart';
@@ -89,21 +89,28 @@ class _MyHomePageState extends State<MyHomePage> {
   dynamic _guardadoDetalleSeleccionado;
 
   bool _mostrandoGuardadosLista = false;
+  bool _mostrandoPerfil = false;
 
   GuardadosTab _guardadosTabActivo = GuardadosTab.actividades;
 
   late final EstablecimientosPage _establecimientosPage;
 
+
+
   Future<void> _cargarSesion() async {
     final usuarioGuardado = await UsuarioRepository.cargar();
-    if (!mounted) return;
-    if (usuarioGuardado != null) {
-      setState(() {
+
+    setState(() {
+      if (usuarioGuardado != null) {
         usuario = usuarioGuardado;
         _logeado = true;
         _invitado = false;
-      });
-    }
+      } else {
+        usuario = null;
+        _logeado = false;
+        _invitado = false;
+      }
+    });
   }
 
   @override
@@ -185,16 +192,33 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_paginaActual >= _totalPaginas) return;
     await _cargarActividades();
   }
+  void _cerrarSesion() async {
+    await UsuarioRepository.cerrarSesion();
 
-  void _cerrarSesion() {
     setState(() {
+      usuario = null;
+      Usuario.usuarioActual = null;
+
       _logeado = false;
       _invitado = false;
+
       _indexActual = 0;
+
+      _mostrandoPerfil = false;
+
       _mostrandoDetalleInicio = false;
       _actividadDetalleSeleccionada = null;
+
+      _mostrandoDetalleEstablecimiento = false;
       _establecimientoDetalleSeleccionado = null;
-      UsuarioRepository.cerrarSesion();
+
+      _mostrandoDetalleBuscar = false;
+      _buscarDetalleSeleccionado = null;
+
+      _mostrandoDetalleGuardado = false;
+      _guardadoDetalleSeleccionado = null;
+
+      _mostrandoGuardadosLista = false;
     });
   }
 
@@ -261,6 +285,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _getPaginaActual() {
+
+    if (_mostrandoPerfil) {
+      return _bodyPerfil();
+    }
     switch (_indexActual) {
       case 0:
         return _bodyInicio();
@@ -271,7 +299,39 @@ class _MyHomePageState extends State<MyHomePage> {
       case 3:
         return _bodyEstablecimientos();
       case 4:
-        return _bodyPerfil();
+
+        if (_mostrandoDetalleGuardado &&
+            _guardadoDetalleSeleccionado != null) {
+
+          return Column(
+            children: [
+              CabeceraPagina(
+                titulo: 'Información',
+                subtitulo: 'Detalle',
+                onVolver: _volverAGuardados,
+              ),
+              Expanded(
+                child: Detalle.desdeObjeto(
+                  objeto: _guardadoDetalleSeleccionado!,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return GuardadosPage(
+          tabInicial: _guardadosTabActivo,
+
+          onVolver: () {
+            setState(() {
+              _indexActual = 0;
+            });
+          },
+
+          onDetalleSeleccionado: (objeto, tab) {
+            _abrirDetalleGuardados(objeto, tab);
+          },
+        );
       default:
         return const SizedBox();
     }
@@ -291,9 +351,12 @@ class _MyHomePageState extends State<MyHomePage> {
             _invitado = false;
           });
         },
-
+        perfilActivado: _mostrandoPerfil,
         onIrInicio: () {
           setState(() {
+
+            _mostrandoPerfil = false;
+
             _indexActual = 0;
 
             _mostrandoDetalleInicio = false;
@@ -309,8 +372,24 @@ class _MyHomePageState extends State<MyHomePage> {
             _guardadoDetalleSeleccionado = null;
           });
         },
+
+        onIrPerfil: () {
+          setState(() {
+
+            _mostrandoPerfil = true;
+
+            _mostrandoDetalleInicio = false;
+            _actividadDetalleSeleccionada = null;
+
+            _mostrandoDetalleEstablecimiento = false;
+            _establecimientoDetalleSeleccionado = null;
+
+            _mostrandoDetalleBuscar = false;
+            _buscarDetalleSeleccionado = null;
+          });
+        },
       ),
-      body: _indexActual == 0 && !_logeado && !_invitado
+      body: !_logeado && !_invitado
           ? Stack(
               alignment: Alignment.center,
               children: [
@@ -333,8 +412,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     invitado: () {
                       setState(() {
                         _invitado = true;
-                        _logeado = true;
-                        _indexActual = 0;
+                        _logeado = false;
+                       // _indexActual = 0;
                       });
                     },
                   ),
@@ -342,8 +421,10 @@ class _MyHomePageState extends State<MyHomePage> {
             )
           : _getPaginaActual(),
       bottomNavigationBar: BottomNav(
+
         itemSeleccionado: _indexActual,
         itemSeleccion: (index) {
+          _mostrandoPerfil = false;
           if (!_logeado && !_invitado) {
             if (!context.mounted) return;
             Alerta.show(
@@ -574,34 +655,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _bodyPerfil() {
-    if (_mostrandoDetalleGuardado && _guardadoDetalleSeleccionado != null) {
-      return Column(
-        children: [
-          CabeceraPagina(
-            titulo: 'Información',
-            subtitulo: 'Detalle',
-            onVolver: _volverAGuardados,
-          ),
-
-          Expanded(
-            child: Detalle.desdeObjeto(objeto: _guardadoDetalleSeleccionado!),
-          ),
-        ],
-      );
-    }
 
     return PerfilPage(
       cerrarSesion: _cerrarSesion,
       usuario: usuario,
-      onDetalleSeleccionado: _abrirDetalleGuardados,
-      mostrandoGuardados: _mostrandoGuardadosLista,
-      tabGuardadosInicial: _guardadosTabActivo,
-      onMostrarGuardados: () {
+      onVolver: () {
         setState(() {
-          _mostrandoGuardadosLista = !_mostrandoGuardadosLista;
-          if (_mostrandoGuardadosLista) {
-            _guardadosTabActivo = GuardadosTab.actividades;
-          }
+          _mostrandoPerfil = false;
         });
       },
     );
