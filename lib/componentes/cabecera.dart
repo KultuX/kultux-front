@@ -13,6 +13,10 @@ class CabeceraPagina extends StatelessWidget {
 
   final bool mostrarImagenDerecha;
 
+  final double minHeight;
+
+  final String? registro;
+
   const CabeceraPagina({
     super.key,
     required this.titulo,
@@ -21,7 +25,9 @@ class CabeceraPagina extends StatelessWidget {
     this.mostrarEtiquetaHoy = false,
     this.onVolver,
     this.padding = const EdgeInsets.fromLTRB(16, 10, 16, 12),
-    this.mostrarImagenDerecha = false
+    this.mostrarImagenDerecha = false,
+    this.minHeight = 0,
+    this.registro = ''
   });
 
   @override
@@ -35,6 +41,7 @@ class CabeceraPagina extends StatelessWidget {
     final dia = dias[fechaActual.weekday - 1];
 
     return Container(
+      height: minHeight > 0 ? minHeight : null,
       width: double.infinity,
       padding: padding,
       decoration: const BoxDecoration(
@@ -51,16 +58,17 @@ class CabeceraPagina extends StatelessWidget {
         children: [
           if (mostrarImagenDerecha)
             Positioned(
-              top: 0,
+              top: registro!.isNotEmpty ? null : 0,
               right: 0,
+              bottom: registro!.isNotEmpty ? 0 : null,
               child: Opacity(
-                opacity: 0.15,
+                opacity:  registro!.isNotEmpty ? 1 : 0.15,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular( registro!.isNotEmpty ? 0 : 8),
                   child: SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Image.asset(
+                    width: registro!.isNotEmpty ? 45 : 80,
+                    height: registro!.isNotEmpty ? 45 : 80,
+                    child: Image.asset( registro!.isNotEmpty ? registro! :
                       "assets/images/extrem.png",
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
@@ -99,9 +107,9 @@ class CabeceraPagina extends StatelessWidget {
               crossAxisAlignment:
               CrossAxisAlignment.start,
               children: [
-
                 Expanded(
                   child: Column(
+                    mainAxisAlignment: .end,
                     crossAxisAlignment:
                     CrossAxisAlignment.start,
                     children: [

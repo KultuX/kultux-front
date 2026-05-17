@@ -13,6 +13,8 @@ import 'package:kultux/componentes/politica_privacidad_dialog.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
 import 'package:kultux/core/utils/validaciones.dart';
 
+import 'componentes/cabecera.dart';
+
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
 const _fondoCard = Color(0xFFF8F7F4);
@@ -166,73 +168,14 @@ class _RegistroPageState extends State<RegistroPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 52, 16, 20),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Opacity(
-                      opacity: 0.12,
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: _verde,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Logo pequeño
-                      Image.asset(
-                        'assets/images/logo_registro.png',
-                        width: 56,
-                        height: 56,
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Bienvenid@',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFb0b0b0),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Crear cuenta',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        width: 36,
-                        height: 2,
-                        decoration: BoxDecoration(
-                          color: _verde,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          const SizedBox(),
+          CabeceraPagina(
+            titulo: 'Crear cuenta',
+            subtitulo: 'Bienvenid@',
+            mostrarImagenDerecha: true,
+            minHeight: 120,
+            registro: 'assets/images/logo_kultux.png'
+          ),
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(

@@ -160,12 +160,6 @@ class _AssetLoginState extends State<AssetLogin> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/logo_login.png',
-                      width: 44,
-                      height: 44,
-                    ),
-                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
