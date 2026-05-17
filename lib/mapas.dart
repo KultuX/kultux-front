@@ -10,6 +10,8 @@ import 'package:kultux/API/actividadesAPI.dart';
 import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/detalles.dart';
 
+import 'componentes/cabecera.dart';
+
 class PuntoMapa {
   final int ine;
   final String nombre;
@@ -243,9 +245,9 @@ class _MapasPageState extends State<MapasPage> {
         if (_localidadSeleccionada != null && _actividadSeleccionada == null)
           Column(
             children: [
-              _Cabecera(
+              CabeceraPagina(
+                titulo: '${_localidadSeleccionada!.nombre}',
                 subtitulo: 'Actividades en',
-                titulo: _localidadSeleccionada!.nombre,
                 onVolver: _volverAlMapa,
               ),
               Expanded(
@@ -261,9 +263,9 @@ class _MapasPageState extends State<MapasPage> {
         if (_actividadSeleccionada != null)
           Column(
             children: [
-              _Cabecera(
-                subtitulo: _localidadSeleccionada!.nombre,
-                titulo: 'Detalle',
+              CabeceraPagina(
+                titulo: '${_localidadSeleccionada!.nombre}',
+                subtitulo: 'Detalle',
                 onVolver: _volverALista,
               ),
               Expanded(
@@ -279,71 +281,6 @@ class _MapasPageState extends State<MapasPage> {
   }
 }
 
-class _Cabecera extends StatelessWidget {
-  final String subtitulo;
-  final String titulo;
-  final VoidCallback onVolver;
-
-  const _Cabecera({required this.subtitulo, required this.titulo, required this.onVolver});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)]),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -15, left: -10,
-            child: IconButton(
-              onPressed: onVolver,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
-          ),
-          Positioned(
-            top: 0, right: 0,
-            child: Opacity(
-              opacity: 0.12,
-              child: Container(
-                width: 70, height: 70,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA6E246),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(subtitulo, style: const TextStyle(fontSize: 12, color: Color(0xFFb0b0b0))),
-                const SizedBox(height: 2),
-                Text(
-                  titulo,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  width: 36, height: 2,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFA6E246),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-}
 
 class _ListaActividades extends StatefulWidget {
   final PuntoMapa punto;

@@ -4,6 +4,7 @@ import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
 import 'package:kultux/componentes/app_bar.dart';
 import 'package:kultux/componentes/asset_login.dart';
+import 'package:kultux/componentes/cabecera.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/mapas.dart';
 import 'package:kultux/perfil.dart';
@@ -16,8 +17,6 @@ import 'package:kultux/detalles.dart';
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/usuario.dart';
 
-
-
 import 'dart:io';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
@@ -27,8 +26,8 @@ import 'package:kultux/componentes/modal_alerta.dart';
 
 import 'package:kultux/guardados.dart' show GuardadosTab;
 
+import 'componentes/tarjetasBusqueda.dart';
 import 'models/pages.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -64,8 +63,6 @@ class _MyHomePageState extends State<MyHomePage> {
   int _indexActual = 0;
   bool _invitado = false;
   Usuario? usuario;
-
-
 
   List<Actividad> _actividades = [];
   int _paginaActual = 0;
@@ -123,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _paginaActual = 1;
       estadoInicio = EstadoUi.contenido;
     } else {
-      _cargarActividades();
+      _cargarActividades(inicial: true);
     }
 
     _scrollController.addListener(() {
@@ -134,40 +131,45 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _cargarActividades() async {
+  Future<void> _cargarActividades({bool inicial = false}) async {
     if (_cargando) return;
 
-    setState(() {
-      _cargando = true;
-      estadoInicio = EstadoUi.cargando;
-    });
+    if (inicial) {
+      setState(() {
+        estadoInicio = EstadoUi.cargando;
+      });
+    }
+
+    _cargando = true;
 
     try {
-      final page =
-      await ActividadesApiService.obtenerActividadesInicio(_paginaActual);
+      final page = await ActividadesApiService.obtenerActividadesInicio(
+        _paginaActual,
+      );
 
       setState(() {
         _actividades.addAll(page.contenido);
         _totalPaginas = page.totalPaginas;
         _paginaActual++;
-        estadoInicio = _actividades.isEmpty
-            ? EstadoUi.vacio
-            : EstadoUi.contenido;
-      });
 
+        if (_actividades.isEmpty) {
+          estadoInicio = EstadoUi.vacio;
+        } else {
+          estadoInicio = EstadoUi.contenido;
+        }
+      });
     } on SocketException {
       setState(() {
         estadoInicio = EstadoUi.sinConexion;
         mensajeErrorInicio = 'No hay conexión a internet';
       });
-
     } on HttpException catch (e) {
       final uiError = mapearStatusCode(int.parse(e.message));
+
       setState(() {
         estadoInicio = uiError.estado;
         mensajeErrorInicio = uiError.mensaje;
       });
-
     } catch (_) {
       setState(() {
         estadoInicio = EstadoUi.error;
@@ -241,7 +243,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
   void _abrirDetalleGuardados(dynamic objeto, GuardadosTab tab) {
     setState(() {
       _guardadoDetalleSeleccionado = objeto;
@@ -251,7 +252,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
   void _volverAGuardados() {
     setState(() {
       _mostrandoDetalleGuardado = false;
@@ -259,7 +259,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _mostrandoGuardadosLista = true;
     });
   }
-
 
   Widget _getPaginaActual() {
     switch (_indexActual) {
@@ -278,53 +277,79 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBarPersonalizado(
-        logeado: !_logeado ? true : _invitado,
+        logeado: _logeado,
+        invitado: _invitado,
+
+        onMostrarLogin: () {
+          setState(() {
+            _logeado = false;
+            _invitado = false;
+          });
+        },
+
+        onIrInicio: () {
+          setState(() {
+            _indexActual = 0;
+
+            _mostrandoDetalleInicio = false;
+            _actividadDetalleSeleccionada = null;
+
+            _mostrandoDetalleEstablecimiento = false;
+            _establecimientoDetalleSeleccionado = null;
+
+            _mostrandoDetalleBuscar = false;
+            _buscarDetalleSeleccionado = null;
+
+            _mostrandoDetalleGuardado = false;
+            _guardadoDetalleSeleccionado = null;
+          });
+        },
       ),
-      body:
-          _indexActual == 0 && !_logeado && !_invitado
-              ? Stack(
-            alignment: Alignment.center,
-            children: [
-              _getPaginaActual(),
-              if (!_logeado && !_invitado)
-                AssetLogin(
-                  cerrar: () {
-                    setState(() {
-                      _logeado = true;
-                      _invitado = true;
-                    });
-                  },
-                  logeado: (Usuario logeado) {
-                    setState(() {
-                      _logeado = true;
-                      _invitado = false;
-                      usuario = logeado;
-                    });
-                  },
-                  invitado: () {
-                    setState(() {
-                      _invitado = true;
-                      _logeado = true;
-                      _indexActual = 0;
-                    });
-                  },
-                ),
-            ],
-          )
-              : _getPaginaActual(),
+      body: _indexActual == 0 && !_logeado && !_invitado
+          ? Stack(
+              alignment: Alignment.center,
+              children: [
+                _getPaginaActual(),
+                if (!_logeado && !_invitado)
+                  AssetLogin(
+                    cerrar: () {
+                      setState(() {
+                        _logeado = true;
+                        _invitado = true;
+                      });
+                    },
+                    logeado: (Usuario logeado) {
+                      setState(() {
+                        _logeado = true;
+                        _invitado = false;
+                        usuario = logeado;
+                      });
+                    },
+                    invitado: () {
+                      setState(() {
+                        _invitado = true;
+                        _logeado = true;
+                        _indexActual = 0;
+                      });
+                    },
+                  ),
+              ],
+            )
+          : _getPaginaActual(),
       bottomNavigationBar: BottomNav(
         itemSeleccionado: _indexActual,
         itemSeleccion: (index) {
           if (!_logeado && !_invitado) {
             if (!context.mounted) return;
-            Alerta.show(context,mensaje: '¡Inicia sesión, registrate o entra como invitado!');
+            Alerta.show(
+              context,
+              mensaje: '¡Inicia sesión, registrate o entra como invitado!',
+            );
 
             return;
           }
@@ -341,12 +366,15 @@ class _MyHomePageState extends State<MyHomePage> {
               _mostrandoDetalleBuscar = false;
               _buscarDetalleSeleccionado = null;
             });
-            Alerta.show(context,mensaje: '¡Inicia sesión o registrate para acceder a más funcionalidades!');
+            Alerta.show(
+              context,
+              mensaje:
+                  '¡Inicia sesión o registrate para acceder a más funcionalidades!',
+            );
             return;
           }
 
           setState(() {
-
             _indexActual = index;
 
             _mostrandoDetalleInicio = false;
@@ -356,7 +384,6 @@ class _MyHomePageState extends State<MyHomePage> {
             _establecimientoDetalleSeleccionado = null;
             _mostrandoDetalleBuscar = false;
             _buscarDetalleSeleccionado = null;
-
 
             if (index != 4) {
               _mostrandoDetalleGuardado = false;
@@ -373,29 +400,30 @@ class _MyHomePageState extends State<MyHomePage> {
     return Expanded(
       child: Center(
         child: SizedBox(
-          width: 364,
+          width: 380,
           child: Stack(
             children: [
               ListView.builder(
                 controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
                 itemCount: _actividades.length + 1,
                 itemBuilder: (context, index) {
                   if (index < _actividades.length) {
                     final actividad = _actividades[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Tarjeta.actividades(
-                        titulo: actividad.titulo,
-                        localidad: actividad.localidad!,
-                        fecha: actividad.fechaInicio,
-                        imagenUrl: actividad.imagenPrincipal,
-                        onTap: () async {
-                          final detalle =
-                          await ActividadesApiService.detalleActividad(
-                              actividad.id);
-                          _abrirDetalleActividad(detalle);
-                        },
-                      ),
+                      child: TarjetaBusqueda.actividad(
+                      titulo: actividad.titulo,
+                      localidad: actividad.localidad!,
+                      fecha: actividad.fechaInicio,
+                      imagenUrl: actividad.imagenPrincipal,
+                      onTap: () async {
+                        final detalle = await ActividadesApiService.detalleActividad(actividad.id);
+                        _abrirDetalleActividad(detalle);
+                      },
+                      textoEtiqueta: actividad.categoriaActividad!,
+                      iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+                    ),
                     );
                   }
 
@@ -412,7 +440,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   if (_paginaActual >= _totalPaginas) {
                     return const Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.all(10),
                       child: Center(
                         child: Text(
                           "¡Ya no hay más actividades para mostrar!",
@@ -438,85 +466,21 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _cabeceraInicio() {
-    final fechaActual = DateTime.now();
-    const dias = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-    final dia = dias[fechaActual.weekday - 1];
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "ACTIVIDADES RECIENTES",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "$dia. ${fechaActual.day}/${fechaActual.month}/${fechaActual.year}",
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
 
 
-  Widget _buildHeaderDetalle({required VoidCallback onVolver}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -15,
-            left: -10,
-            child: IconButton(
-              onPressed: onVolver,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Detalle',
-                  style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0)),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Información',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
 
   Widget _bodyInicio() {
     if (_mostrandoDetalleInicio && _actividadDetalleSeleccionada != null) {
       return Column(
         children: [
-          _buildHeaderDetalle(onVolver: _volverAListadoInicio),
+          CabeceraPagina(
+            titulo: 'Información',
+            subtitulo: 'Detalle',
+            onVolver: _volverAListadoInicio,
+          ),
           Expanded(
-            child: Detalle.desdeObjeto(
-              objeto: _actividadDetalleSeleccionada!,
-            ),
+            child: Detalle.desdeObjeto(objeto: _actividadDetalleSeleccionada!),
           ),
         ],
       );
@@ -525,13 +489,21 @@ class _MyHomePageState extends State<MyHomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _cabeceraInicio(),
+        CabeceraPagina(
+          titulo: 'Actividades recientes',
+          subtitulo: 'Inicio',
+          mostrarFecha: true,
+          mostrarEtiquetaHoy: true,
+        ),
 
         switch (estadoInicio) {
           EstadoUi.cargando => const Expanded(
-              child: Center(
-                  child: CircularProgressIndicator(
-                      color: Color.fromARGB(255, 166, 226, 70)))),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 166, 226, 70),
+              ),
+            ),
+          ),
           EstadoUi.vacio => Expanded(child: estadoVacio()),
           EstadoUi.sinConexion => Expanded(
             child: estadoError(
@@ -561,7 +533,11 @@ class _MyHomePageState extends State<MyHomePage> {
             _establecimientoDetalleSeleccionado != null)
           Column(
             children: [
-              _buildHeaderDetalle(onVolver: _volverAListadoEstablecimientos),
+              CabeceraPagina(
+                titulo: 'Información',
+                subtitulo: 'Detalle',
+                onVolver: _volverAListadoEstablecimientos,
+              ),
               Expanded(
                 child: Detalle.desdeObjeto(
                   objeto: _establecimientoDetalleSeleccionado!,
@@ -577,7 +553,11 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_mostrandoDetalleBuscar && _buscarDetalleSeleccionado != null) {
       return Column(
         children: [
-          _buildHeaderDetalle(onVolver: _volverAListadoBuscar),
+          CabeceraPagina(
+            titulo: 'Información',
+            subtitulo: 'Detalle',
+            onVolver: _volverAListadoBuscar,
+          ),
           Expanded(
             child: Detalle.desdeObjeto(objeto: _buscarDetalleSeleccionado!),
           ),
@@ -594,15 +574,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _bodyPerfil() {
-
     if (_mostrandoDetalleGuardado && _guardadoDetalleSeleccionado != null) {
       return Column(
         children: [
-          _buildHeaderDetalle(onVolver: _volverAGuardados),
+          CabeceraPagina(
+            titulo: 'Información',
+            subtitulo: 'Detalle',
+            onVolver: _volverAGuardados,
+          ),
+
           Expanded(
-            child: Detalle.desdeObjeto(
-              objeto: _guardadoDetalleSeleccionado!,
-            ),
+            child: Detalle.desdeObjeto(objeto: _guardadoDetalleSeleccionado!),
           ),
         ],
       );
@@ -644,7 +626,7 @@ class _SplashPageState extends State<SplashPage> {
     try {
       final results = await Future.wait([
         ActividadesApiService.obtenerActividadesInicio(0),
-        LocalidadApiService.obtenerLocalidadNombres()
+        LocalidadApiService.obtenerLocalidadNombres(),
       ]);
 
       final page = results[0] as Pages<Actividad>;

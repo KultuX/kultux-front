@@ -7,6 +7,7 @@ import 'package:kultux/models/usuario.dart';
 import 'package:kultux/api/usuariosAPI.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/api/localidadesApi.dart';
+import 'componentes/cabecera.dart';
 import 'componentes/selector_localidad.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
 import 'package:kultux/core/utils/validaciones.dart';
@@ -224,72 +225,10 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     final u = Usuario.usuarioActual ?? widget.usuario;
     final errorEmail = _emailErrorApi ?? Validaciones.emailError(_emailActual);
     final emailEsValido = errorEmail == null;
-    return Container(
-      color: _fondoPagina,
-      child: SingleChildScrollView(
+    return SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Opacity(
-                      opacity: 0.12,
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: _verde,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Mi cuenta',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFb0b0b0),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Editar perfil',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        width: 36,
-                        height: 2,
-                        decoration: BoxDecoration(
-                          color: _verde,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
             Container(
               margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -511,7 +450,6 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
             ),
           ],
         ),
-      ),
     );
   }
 }

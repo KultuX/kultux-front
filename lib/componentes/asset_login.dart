@@ -103,16 +103,14 @@ class _AssetLoginState extends State<AssetLogin> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        GestureDetector(
-          onTap: widget.cerrar,
-          child: Container(color: Colors.black54),
-        ),
+ Container(color: Colors.black54),
+
         Center(
           child: Material(
             color: Colors.transparent,
             child: SingleChildScrollView(
               child:
-                  _mostrandoRecuperar // NUEVO: switch entre los dos assets
+                  _mostrandoRecuperar
                   ? AssetRecuperarPassword(
                       cerrar: widget.cerrar,
                       onVolverLogin: () =>
@@ -144,7 +142,6 @@ class _AssetLoginState extends State<AssetLogin> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header — igual que antes
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),

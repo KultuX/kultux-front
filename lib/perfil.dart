@@ -10,13 +10,14 @@ import 'package:kultux/componentes/politica_privacidad_dialog.dart';
 import 'package:kultux/guardados.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
 
+import 'componentes/cabecera.dart';
+
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
 const _fondoCard = Color(0xFFF8F7F4);
 const _texto = Color(0xFF1A1A1A);
 const _textoSuave = Color(0xFF6B6B6B);
 const _borde = Color(0xFFE0DDD6);
-
 
 class PerfilPage extends StatefulWidget {
   final VoidCallback cerrarSesion;
@@ -48,17 +49,57 @@ class _PerfilPageState extends State<PerfilPage> {
   final _opciones = {
     'Editar perfil': ('assets/iconos/editar_perfil.svg', 'ajustes'),
     'Guardados': ('assets/iconos/guardados.svg', 'ajustes'),
-    'Contacta con nosotros': ('assets/iconos/contactar_nosotros.svg', 'soporte'),
-    'Términos y condiciones': ('assets/iconos/terminos_condiciones.svg', 'soporte'),
-    'Política de privacidad': ('assets/iconos/politica_privacidad.svg', 'soporte'),
+    'Contacta con nosotros': (
+      'assets/iconos/contactar_nosotros.svg',
+      'soporte',
+    ),
+    'Términos y condiciones': (
+      'assets/iconos/terminos_condiciones.svg',
+      'soporte',
+    ),
+    'Política de privacidad': (
+      'assets/iconos/politica_privacidad.svg',
+      'soporte',
+    ),
   };
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      color: _fondoPagina,
+      child: Column(
+        children: [
+          CabeceraPagina(
+            titulo: _editandoPerfil
+                ? 'Editar perfil'
+                : 'Perfil',
+            subtitulo: 'Mi cuenta',
+            onVolver: _editandoPerfil
+                ? () {
+              setState(() {
+                _editandoPerfil = false;
+              });
+            }
+                : null,
+          ),
+
+          Expanded(
+            child: _buildContenido(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContenido() {
 
     if (_editandoPerfil) {
       return EditarPerfilPage(
-      onVolver: () => setState(() => _editandoPerfil = false),
+        onVolver: () {
+          setState(() {
+            _editandoPerfil = false;
+          });
+        },
         usuario: widget.usuario ?? Usuario.usuarioActual,
       );
     }
@@ -75,38 +116,44 @@ class _PerfilPageState extends State<PerfilPage> {
       );
     }
 
-    return Container(
-      color: _fondoPagina,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _HeaderBanner(),
-            _TarjetaAvatar(),
-            _SeccionLabel('Ajustes'),
-            ..._opciones.entries
-                .where((e) => e.value.$2 == 'ajustes')
-                .map((e) => _OpcionTile(
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TarjetaAvatar(),
+          _SeccionLabel('Ajustes'),
+
+          ..._opciones.entries
+              .where((e) => e.value.$2 == 'ajustes')
+              .map(
+                (e) => _OpcionTile(
               texto: e.key,
               icono: e.value.$1,
               onTap: () => _manejarOpcion(e.key),
-            )),
-            _SeccionLabel('Soporte'),
-            ..._opciones.entries
-                .where((e) => e.value.$2 == 'soporte')
-                .map((e) => _OpcionTile(
-              texto: e.key,
-              icono: e.value.$1,
-              onTap: () => _manejarOpcion(e.key),
-            )),
-            const SizedBox(height: 20),
-            _BotonesAccion(
-              onCerrar: _confirmarCerrarSesion,
-              onEliminar: _confirmarEliminarCuenta,
             ),
-            const SizedBox(height: 32),
-          ],
-        ),
+          ),
+
+          _SeccionLabel('Soporte'),
+
+          ..._opciones.entries
+              .where((e) => e.value.$2 == 'soporte')
+              .map(
+                (e) => _OpcionTile(
+              texto: e.key,
+              icono: e.value.$1,
+              onTap: () => _manejarOpcion(e.key),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          _BotonesAccion(
+            onCerrar: _confirmarCerrarSesion,
+            onEliminar: _confirmarEliminarCuenta,
+          ),
+
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
@@ -128,57 +175,6 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-
-  Widget _HeaderBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0, right: 0,
-            child: Opacity(
-              opacity: 0.12,
-              child: Container(
-                width: 70, height: 70,
-                decoration: BoxDecoration(
-                  color: _verde,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Mi cuenta',
-                  style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0))),
-              const SizedBox(height: 2),
-              const Text('Perfil',
-                  style: TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white)),
-              const SizedBox(height: 6),
-              Container(
-                width: 36, height: 2,
-                decoration: BoxDecoration(
-                  color: _verde,
-                  borderRadius: BorderRadius.circular(1),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _TarjetaAvatar() {
     final usuario = Usuario.usuarioActual ?? widget.usuario;
     return Container(
@@ -192,15 +188,21 @@ class _PerfilPageState extends State<PerfilPage> {
       child: Column(
         children: [
           Container(
-            width: 80, height: 80,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: _verde, width: 3),
             ),
             child: ClipOval(
-              child: (usuario?.imagenPerfil != null && usuario!.imagenPerfil!.isNotEmpty)
+              child:
+                  (usuario?.imagenPerfil != null &&
+                      usuario!.imagenPerfil!.isNotEmpty)
                   ? Image.network(usuario.imagenPerfil!, fit: BoxFit.cover)
-                  : Image.asset('assets/images/logo_registro.png', fit: BoxFit.cover),
+                  : Image.asset(
+                      'assets/images/logo_registro.png',
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
           const SizedBox(height: 10),
@@ -208,14 +210,18 @@ class _PerfilPageState extends State<PerfilPage> {
             usuario?.nombre ?? 'Nombre usuario',
             style: const TextStyle(
               fontFamily: 'RobotoCondensed',
-              fontSize: 18, fontWeight: FontWeight.w700, color: _texto,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _texto,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             usuario?.email ?? 'correo@correo.com',
             style: const TextStyle(
-              fontFamily: 'RobotoCondensed', fontSize: 13, color: _textoSuave,
+              fontFamily: 'RobotoCondensed',
+              fontSize: 13,
+              color: _textoSuave,
             ),
           ),
         ],
@@ -230,8 +236,10 @@ class _PerfilPageState extends State<PerfilPage> {
         label.toUpperCase(),
         style: const TextStyle(
           fontFamily: 'RobotoCondensed',
-          fontSize: 11, fontWeight: FontWeight.w600,
-          color: _textoSuave, letterSpacing: 0.8,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: _textoSuave,
+          letterSpacing: 0.8,
         ),
       ),
     );
@@ -255,14 +263,17 @@ class _PerfilPageState extends State<PerfilPage> {
         child: Row(
           children: [
             Container(
-              width: 34, height: 34,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 color: _texto,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: SvgPicture.asset(
-                  icono, width: 16, height: 16,
+                  icono,
+                  width: 16,
+                  height: 16,
                   colorFilter: const ColorFilter.mode(_verde, BlendMode.srcIn),
                 ),
               ),
@@ -273,13 +284,18 @@ class _PerfilPageState extends State<PerfilPage> {
                 texto,
                 style: const TextStyle(
                   fontFamily: 'RobotoCondensed',
-                  fontSize: 14, fontWeight: FontWeight.w500, color: _texto,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _texto,
                 ),
               ),
             ),
-              SvgPicture.asset('assets/iconos/flecha_siguiente.svg',
-                  width: 16, height: 16,
-                  colorFilter: const ColorFilter.mode(_textoSuave, BlendMode.srcIn)),
+            SvgPicture.asset(
+              'assets/iconos/flecha_siguiente.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(_textoSuave, BlendMode.srcIn),
+            ),
           ],
         ),
       ),
@@ -304,10 +320,15 @@ class _PerfilPageState extends State<PerfilPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Center(
-                  child: Text('Cerrar sesión',
-                      style: TextStyle(
-                          fontFamily: 'RobotoCondensed',
-                          fontSize: 14, fontWeight: FontWeight.w700, color: _texto)),
+                  child: Text(
+                    'Cerrar sesión',
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -321,14 +342,21 @@ class _PerfilPageState extends State<PerfilPage> {
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFC62828), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFC62828),
+                    width: 1.5,
+                  ),
                 ),
                 child: const Center(
-                  child: Text('Eliminar cuenta',
-                      style: TextStyle(
-                          fontFamily: 'RobotoCondensed',
-                          fontSize: 14, fontWeight: FontWeight.w700,
-                          color: Color(0xFFC62828))),
+                  child: Text(
+                    'Eliminar cuenta',
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFC62828),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -338,21 +366,28 @@ class _PerfilPageState extends State<PerfilPage> {
     );
   }
 
-
   Future<void> _mostrarContacto() async {
     await showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 40,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
                 decoration: const BoxDecoration(
                   color: Color.fromARGB(255, 166, 226, 70),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -386,7 +421,10 @@ class _PerfilPageState extends State<PerfilPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -402,7 +440,11 @@ class _PerfilPageState extends State<PerfilPage> {
                     const SizedBox(height: 12),
                     RichText(
                       text: TextSpan(
-                        style: const TextStyle(fontFamily: 'RobotoCondensed', color: Colors.black, fontSize: 14),
+                        style: const TextStyle(
+                          fontFamily: 'RobotoCondensed',
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
                         children: [
                           const TextSpan(text: '1: '),
                           TextSpan(
@@ -419,7 +461,11 @@ class _PerfilPageState extends State<PerfilPage> {
                     const SizedBox(height: 4),
                     RichText(
                       text: TextSpan(
-                        style: const TextStyle(fontFamily: 'RobotoCondensed', color: Colors.black, fontSize: 14),
+                        style: const TextStyle(
+                          fontFamily: 'RobotoCondensed',
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
                         children: [
                           const TextSpan(text: '2: '),
                           TextSpan(
@@ -480,7 +526,10 @@ class _PerfilPageState extends State<PerfilPage> {
             children: [
               const Text('⚠️', style: TextStyle(fontSize: 50)),
               const SizedBox(height: 16),
-              const Text('¿Estás segur@ de que quieres cerrar sesión?', textAlign: TextAlign.center),
+              const Text(
+                '¿Estás segur@ de que quieres cerrar sesión?',
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -516,20 +565,32 @@ class _PerfilPageState extends State<PerfilPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color.fromARGB(255, 166, 226, 70),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.construction, size: 60, color: Colors.black),
               const SizedBox(height: 20),
-              const Text('Próximamente', style: TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
+              const Text(
+                'Próximamente',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 10),
               const CircularProgressIndicator(color: Colors.white),
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cerrar', style: TextStyle(color: Colors.black)),
+                child: const Text(
+                  'Cerrar',
+                  style: TextStyle(color: Colors.black),
+                ),
               ),
             ],
           ),
@@ -596,12 +657,18 @@ class _PerfilPageState extends State<PerfilPage> {
 
       if (!mounted) return;
       widget.cerrarSesion();
-      Alerta.show(context,mensaje:'Cuenta eliminada correctamente.', tipo: TipoAviso.success );
-
+      Alerta.show(
+        context,
+        mensaje: 'Cuenta eliminada correctamente.',
+        tipo: TipoAviso.success,
+      );
     } catch (e) {
       if (!mounted) return;
-      Alerta.show(context,mensaje:'Error al eliminar la cuenta', tipo: TipoAviso.error );
-
+      Alerta.show(
+        context,
+        mensaje: 'Error al eliminar la cuenta',
+        tipo: TipoAviso.error,
+      );
     }
   }
 }

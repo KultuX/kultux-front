@@ -10,3 +10,14 @@ String normalizar(String input) {
 
   return input.toLowerCase();
 }
+
+String formatearCategoria(String texto) {
+  return texto
+      .replaceAll('_', ' ')
+      .split(' ')
+      .map((palabra) =>
+  palabra.isEmpty
+      ? ''
+      : palabra[0].toUpperCase() + palabra.substring(1))
+      .join(' ');
+}

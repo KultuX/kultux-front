@@ -5,7 +5,8 @@ import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/models/pages.dart';
 
 class AlojamientoApiService{
-  static final String _BASE_URL_ALOJAMIENTOS = "micro-alojamiento-xxal.onrender.com";
+  static final String _BASE_URL_ALOJAMIENTOS = "micro-alojamiento-d25y.onrender.com";
+  //static final String _BASE_URL_ALOJAMIENTOS = "micro-alojamiento-xxal.onrender.com";
   // static final String _BASE_URL_ALOJAMIENTOS = "micro-alojamiento.onrender.com";
   //static final String _BASE_URL_ALOJAMIENTOS = "10.0.2.2:8082";
 

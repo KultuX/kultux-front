@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/localidad.dart';
 
 class LocalidadApiService {
-
-  static final String _BASE_URL_LOCALIDADES = "micro-localidades-58ih.onrender.com";
+  static final String _BASE_URL_LOCALIDADES = "micro-localidades-hpsr.onrender.com";
+  //static final String _BASE_URL_LOCALIDADES = "micro-localidades-58ih.onrender.com";
 //static final String _BASE_URL_LOCALIDADES = "micro-localidades.onrender.com";
 //static final String _BASE_URL_LOCALIDADES = "10.0.2.2:8080";
   static List<Localidad>? _cache;

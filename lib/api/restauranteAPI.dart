@@ -5,7 +5,8 @@ import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/pages.dart';
 
 class RestauranteApiService{
-  static final String _BASE_URL_RESTAURANTES = "micro-restaurante-nhzz.onrender.com";
+  static final String _BASE_URL_RESTAURANTES = "micro-restaurante-hs3x.onrender.com";
+  //static final String _BASE_URL_RESTAURANTES = "micro-restaurante-nhzz.onrender.com";
   // static final String _BASE_URL_RESTAURANTES = "micro-restaurante-n4bv.onrender.com";
   //static final String _BASE_URL_RESTAURANTES = "10.0.2.2:8083";
 

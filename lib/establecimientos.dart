@@ -12,6 +12,9 @@ import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
+
+import 'componentes/cabecera.dart';
+import 'core/utils/iconos.dart';
 class EstablecimientosPage extends StatefulWidget {
 
 
@@ -57,41 +60,6 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   bool _restaurantesCargados = false;
   bool _alojamientosCargados = false;
 
-  final Map<String, String> iconosAlojamiento = {
-    "HOTEL": "assets/iconos/hotel.svg",
-    "HOSTAL": "assets/iconos/hostal.svg",
-    "APARTAMENTO_TURISTICO": "assets/iconos/apartamento.svg",
-    "CASA_RURAL": "assets/iconos/casa_rural.svg",
-    "PENSION": "assets/iconos/hostal.svg",
-    "CAMPING": "assets/iconos/casa_rural.svg",
-    "ALBERGUE": "assets/iconos/casa_rural.svg",
-    "PARADOR": "assets/iconos/casa_rural.svg",
-    "RESORT": "assets/iconos/hotel.svg",
-    "BALNEARIO": "assets/iconos/hotel.svg",
-    "APARTAHOTEL": "assets/iconos/hostal.svg",
-    "BUNGALOW": "assets/iconos/hostal.svg",
-    "FINCA": "assets/iconos/casa_rural.svg",
-  };
-
-  final Map<String, String> iconosRestaurante = {
-    "TRADICIONAL": "assets/iconos/restaurantes.svg",
-    "EXTREMEÑA": "assets/iconos/restaurantes.svg",
-    "INTERNACIONAL": "assets/iconos/restaurantes.svg",
-    "ESPAÑOLA": "assets/iconos/restaurantes.svg",
-    "ALTA_COCINA": "assets/iconos/restaurantes.svg",
-    "ASADORES_Y_PARRILLAS": "assets/iconos/restaurantes.svg",
-    "MARISQUERIAS": "assets/iconos/restaurantes.svg",
-    "ITALIANO": "assets/iconos/restaurantes.svg",
-    "MEXICANO": "assets/iconos/restaurantes.svg",
-    "ASIATICO": "assets/iconos/restaurantes.svg",
-    "VEGETARIANO": "assets/iconos/restaurantes.svg",
-    "VEGANO": "assets/iconos/restaurantes.svg",
-    "TAPAS": "assets/iconos/cerveceria.svg",
-    "CAFETERIA": "assets/iconos/cafeteria.svg",
-    "HAMBURGUESERIA": "assets/iconos/restaurantes.svg",
-    "PIZZERIA": "assets/iconos/restaurantes.svg",
-    "COPAS": "assets/iconos/copas.svg",
-  };
 
   @override
   void initState() {
@@ -222,22 +190,25 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     if (_mostrandoListadoAlojamientos) return _buildListadoAlojamientos();
 
     return switch (_estadoResumen) {
-      EstadoUi.cargando => const Center(
+      EstadoUi.cargando =>
+      const Center(
         child: CircularProgressIndicator(
           color: Color.fromARGB(255, 166, 226, 70),
         ),
       ),
       EstadoUi.vacio => estadoVacio(),
-      EstadoUi.sinConexion => estadoError(
-        icon: Icons.wifi_off,
-        mensaje: _mensajeErrorResumen,
-        onRetry: _cargarResumen,
-      ),
-      EstadoUi.error => estadoError(
-        icon: Icons.error_outline,
-        mensaje: _mensajeErrorResumen,
-        onRetry: _cargarResumen,
-      ),
+      EstadoUi.sinConexion =>
+          estadoError(
+            icon: Icons.wifi_off,
+            mensaje: _mensajeErrorResumen,
+            onRetry: _cargarResumen,
+          ),
+      EstadoUi.error =>
+          estadoError(
+            icon: Icons.error_outline,
+            mensaje: _mensajeErrorResumen,
+            onRetry: _cargarResumen,
+          ),
       EstadoUi.contenido => _buildResumen(),
     };
   }
@@ -248,55 +219,11 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 0, right: 0,
-                    child: Opacity(
-                      opacity: 0.12,
-                      child: Container(
-                        width: 70, height: 70,
-                        decoration: BoxDecoration(
-                          color: _verde,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Descubre',
-                          style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0))),
-                      const SizedBox(height: 2),
-                      const Text('Establecimientos',
-                          style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white)),
-                      const SizedBox(height: 6),
-                      Container(
-                        width: 36, height: 2,
-                        decoration: BoxDecoration(
-                          color: _verde, borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            CabeceraPagina(
+              titulo: 'Descubre',
+              subtitulo: 'Establecimientos',
             ),
+
 
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
@@ -304,39 +231,45 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                 children: [
                   _tarjetaEstablecimiento(
                     tituloBloque: 'Restaurantes destacados',
-                    items: _restaurantes.map((r) => _ItemEstablecimiento(
-                      titulo: r.nombre,
-                      imagenUrl: r.imagenPrincipal!,
-                      onTap: () async {
-                        try {
-                          final detalle = await RestauranteApiService.restauranteDetalle(r.id);
-                          widget.onDetalleSeleccionado(detalle);
-                        } catch (e) {
-                          if (!context.mounted) return;
-                          Alerta.show(context,
-                              mensaje: 'No se ha podido cargar correctamente el restaurante.',
-                              tipo: TipoAviso.error);
-                        }
-                      },
-                    )).toList(),
+                    items: _restaurantes.map((r) =>
+                        _ItemEstablecimiento(
+                          titulo: r.nombre,
+                          imagenUrl: r.imagenPrincipal!,
+                          onTap: () async {
+                            try {
+                              final detalle = await RestauranteApiService
+                                  .restauranteDetalle(r.id);
+                              widget.onDetalleSeleccionado(detalle);
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              Alerta.show(context,
+                                  mensaje: 'No se ha podido cargar correctamente el restaurante.',
+                                  tipo: TipoAviso.error);
+                            }
+                          },
+                        )).toList(),
                     onVerMas: _abrirListadoRestaurantes,
                   ),
                   const SizedBox(height: 16),
                   _tarjetaEstablecimiento(
                     tituloBloque: 'Alojamientos destacados',
-                    items: _alojamientos.map((a) => _ItemEstablecimiento(
-                      titulo: a.nombre,
-                      imagenUrl: a.imagenPrincipal!,
-                      onTap: () async {
-                        try {
-                          final detalle = await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
-                          widget.onDetalleSeleccionado(detalle);
-                        } catch (e) {
-                          if (!context.mounted) return;
-                          Alerta.show(context,mensaje:'No se ha podido cargar correctamente el restaurante.', tipo: TipoAviso.error );
-                        }
-                      },
-                    )).toList(),
+                    items: _alojamientos.map((a) =>
+                        _ItemEstablecimiento(
+                          titulo: a.nombre,
+                          imagenUrl: a.imagenPrincipal!,
+                          onTap: () async {
+                            try {
+                              final detalle = await AlojamientoApiService
+                                  .obtenerAlojamientoDetalle(a.id);
+                              widget.onDetalleSeleccionado(detalle);
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              Alerta.show(context,
+                                  mensaje: 'No se ha podido cargar correctamente el restaurante.',
+                                  tipo: TipoAviso.error);
+                            }
+                          },
+                        )).toList(),
                     onVerMas: _abrirListadoAlojamientos,
                   ),
                 ],
@@ -349,126 +282,73 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   }
 
 
-
   Widget _buildListadoRestaurantes() {
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: 0, right: 0,
-                child: Opacity(
-                  opacity: 0.12,
-                  child: Container(
-                    width: 70, height: 70,
-                    decoration: BoxDecoration(
-                      color: _verde,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      onPressed: _volverResumen,
-                      icon: const Icon(Icons.arrow_back,color: Colors.white,),
-                    ),
-                  ),
-                  const Text('Restaurantes',
-                      style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0))),
-                  const SizedBox(height: 2),
-                  const Text('Destacados',
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white)),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 36, height: 2,
-                    decoration: BoxDecoration(
-                      color: _verde, borderRadius: BorderRadius.circular(1),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.only(bottom: 8),
-          child: Text(
-            'Restaurantes',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
+        CabeceraPagina(
+          titulo: 'Restaurantes',
+          subtitulo: 'Descubre',
+          onVolver: _volverResumen,
         ),
         Expanded(
           child: switch (_estadoRestaurantes) {
-            EstadoUi.cargando => const Center(
+            EstadoUi.cargando =>
+            const Center(
               child: CircularProgressIndicator(
                 color: Color.fromARGB(255, 166, 226, 70),
               ),
             ),
             EstadoUi.vacio => estadoVacio(),
-            EstadoUi.sinConexion => estadoError(
-              icon: Icons.wifi_off,
-              mensaje: _mensajeErrorRestaurantes,
-              onRetry: () {
-                _restaurantesCargados = false;
-                _cargarTodosRestaurantes();
-              },
-            ),
-            EstadoUi.error => estadoError(
-              icon: Icons.error_outline,
-              mensaje: _mensajeErrorRestaurantes,
-              onRetry: () {
-                _restaurantesCargados = false;
-                _cargarTodosRestaurantes();
-              },
-            ),
-            EstadoUi.contenido => ListView.builder(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _todosRestaurantes.length,
-              itemBuilder: (context, index) {
-                final r = _todosRestaurantes[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Tarjeta.restaurante(
-                    titulo: r.nombre,
-                    imagenUrl: r.imagenPrincipal!,
-                    textoEtiqueta: r.categoriaRestaurante[0].toUpperCase() +
-                        r.categoriaRestaurante.substring(1).toLowerCase(),
-                    iconoEtiqueta:
-                    iconosRestaurante[r.categoriaRestaurante] ??
-                        'assets/iconos/restaurantes.svg',
-                    onTap: () async {
-                      try {
-                        final detalle = await RestauranteApiService
-                            .restauranteDetalle(r.id);
-                        widget.onDetalleSeleccionado(detalle);
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        Alerta.show(context,mensaje:'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.', tipo: TipoAviso.error );
-                      }
-                    },
-                  ),
-                );
-              },
-            ),
+            EstadoUi.sinConexion =>
+                estadoError(
+                  icon: Icons.wifi_off,
+                  mensaje: _mensajeErrorRestaurantes,
+                  onRetry: () {
+                    _restaurantesCargados = false;
+                    _cargarTodosRestaurantes();
+                  },
+                ),
+            EstadoUi.error =>
+                estadoError(
+                  icon: Icons.error_outline,
+                  mensaje: _mensajeErrorRestaurantes,
+                  onRetry: () {
+                    _restaurantesCargados = false;
+                    _cargarTodosRestaurantes();
+                  },
+                ),
+            EstadoUi.contenido =>
+                ListView.builder(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  itemCount: _todosRestaurantes.length,
+                  itemBuilder: (context, index) {
+                    final r = _todosRestaurantes[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Tarjeta.restaurante(
+                        titulo: r.nombre,
+                        imagenUrl: r.imagenPrincipal!,
+                        textoEtiqueta: r.categoriaRestaurante[0].toUpperCase() +
+                            r.categoriaRestaurante.substring(1).toLowerCase(),
+                        iconoEtiqueta:
+                        Iconos.getIconoRestaurante(r.categoriaRestaurante),
+                        onTap: () async {
+                          try {
+                            final detalle = await RestauranteApiService
+                                .restauranteDetalle(r.id);
+                            widget.onDetalleSeleccionado(detalle);
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            Alerta.show(context,
+                                mensaje: 'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
+                                tipo: TipoAviso.error);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
           },
         ),
       ],
@@ -478,115 +358,70 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   Widget _buildListadoAlojamientos() {
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: 0, right: 0,
-                child: Opacity(
-                  opacity: 0.12,
-                  child: Container(
-                    width: 70, height: 70,
-                    decoration: BoxDecoration(
-                      color: _verde,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      onPressed: _volverResumen,
-                      icon: const Icon(Icons.arrow_back,color: Colors.white,),
-                    ),
-                  ),
-                  const Text('Alojamientos',
-                      style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0))),
-                  const SizedBox(height: 2),
-                  const Text('Destacados',
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white)),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 36, height: 2,
-                    decoration: BoxDecoration(
-                      color: _verde, borderRadius: BorderRadius.circular(1),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        CabeceraPagina(
+          titulo: 'Alojamientos',
+          subtitulo: 'Descubre',
+          onVolver: _volverResumen,
         ),
         Expanded(
           child: switch (_estadoAlojamientos) {
-            EstadoUi.cargando => const Center(
+            EstadoUi.cargando =>
+            const Center(
               child: CircularProgressIndicator(
                 color: Color.fromARGB(255, 166, 226, 70),
               ),
             ),
             EstadoUi.vacio => estadoVacio(),
-            EstadoUi.sinConexion => estadoError(
-              icon: Icons.wifi_off,
-              mensaje: _mensajeErrorAlojamientos,
-              onRetry: () {
-                _alojamientosCargados = false;
-                _cargarTodosAlojamientos();
-              },
-            ),
-            EstadoUi.error => estadoError(
-              icon: Icons.error_outline,
-              mensaje: _mensajeErrorAlojamientos,
-              onRetry: () {
-                _alojamientosCargados = false;
-                _cargarTodosAlojamientos();
-              },
-            ),
-            EstadoUi.contenido => ListView.builder(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _todosAlojamientos.length,
-              itemBuilder: (context, index) {
-                final a = _todosAlojamientos[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Tarjeta.alojamiento(
-                    titulo: a.nombre,
-                    imagenUrl: a.imagenPrincipal!,
-                    textoEtiqueta: a.categoriaAlojamiento[0].toUpperCase() +
-                        a.categoriaAlojamiento.substring(1).toLowerCase(),
-                    iconoEtiqueta:
-                    iconosAlojamiento[a.categoriaAlojamiento] ??
-                        'assets/iconos/casa_rural.svg',
-                    onTap: () async {
-                      try {
-                        final detalle = await AlojamientoApiService
-                            .obtenerAlojamientoDetalle(a.id);
-                        widget.onDetalleSeleccionado(detalle);
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        Alerta.show(context,mensaje:'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.', tipo: TipoAviso.error );
-                      }
-                    },
-                  ),
-                );
-              },
-            ),
+            EstadoUi.sinConexion =>
+                estadoError(
+                  icon: Icons.wifi_off,
+                  mensaje: _mensajeErrorAlojamientos,
+                  onRetry: () {
+                    _alojamientosCargados = false;
+                    _cargarTodosAlojamientos();
+                  },
+                ),
+            EstadoUi.error =>
+                estadoError(
+                  icon: Icons.error_outline,
+                  mensaje: _mensajeErrorAlojamientos,
+                  onRetry: () {
+                    _alojamientosCargados = false;
+                    _cargarTodosAlojamientos();
+                  },
+                ),
+            EstadoUi.contenido =>
+                ListView.builder(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  itemCount: _todosAlojamientos.length,
+                  itemBuilder: (context, index) {
+                    final a = _todosAlojamientos[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Tarjeta.alojamiento(
+                        titulo: a.nombre,
+                        imagenUrl: a.imagenPrincipal!,
+                        textoEtiqueta: a.categoriaAlojamiento[0].toUpperCase() +
+                            a.categoriaAlojamiento.substring(1).toLowerCase(),
+                        iconoEtiqueta:
+                        Iconos.getIconoAlojamiento(a.categoriaAlojamiento),
+                        onTap: () async {
+                          try {
+                            final detalle = await AlojamientoApiService
+                                .obtenerAlojamientoDetalle(a.id);
+                            widget.onDetalleSeleccionado(detalle);
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            Alerta.show(context,
+                                mensaje: 'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
+                                tipo: TipoAviso.error);
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
           },
         ),
       ],
@@ -620,7 +455,8 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _borde),
         boxShadow: const [
-          BoxShadow(color: Color(0x0C000000), blurRadius: 12, offset: Offset(0, 4)),
+          BoxShadow(
+              color: Color(0x0C000000), blurRadius: 12, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -641,7 +477,8 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
               GestureDetector(
                 onTap: onVerMas,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: _verde,
                     borderRadius: BorderRadius.circular(20),
@@ -676,7 +513,9 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                 border: Border.all(color: _verde, width: 2),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: const [
-                  BoxShadow(color: Color(0x14000000), blurRadius: 6, offset: Offset(0, 2)),
+                  BoxShadow(color: Color(0x14000000),
+                      blurRadius: 6,
+                      offset: Offset(0, 2)),
                 ],
               ),
               child: ClipRRect(
@@ -684,11 +523,12 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                 child: Image.network(
                   item.imagenUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: const Color(0xFFE8E5DF),
-                    child: const Icon(Icons.image_not_supported_outlined,
-                        color: _textoSuave),
-                  ),
+                  errorBuilder: (_, __, ___) =>
+                      Container(
+                        color: const Color(0xFFE8E5DF),
+                        child: const Icon(Icons.image_not_supported_outlined,
+                            color: _textoSuave),
+                      ),
                 ),
               ),
             ),
@@ -719,130 +559,44 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     );
   }
 
-// ── Headers de listados (_buildListadoRestaurantes / _buildListadoAlojamientos)
-// Reemplazar el Align+IconButton+Text existente por este bloque en ambos:
-  Widget _headerListado(String titulo, VoidCallback onVolver) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+
+  Widget imagenEstablecimiento(String? url) {
+    if (url == null || url
+        .trim()
+        .isEmpty) {
+      return Container(
+        color: Colors.grey.shade200,
+        child: Icon(
+          Icons.image_outlined,
+          color: Colors.grey.shade400,
+          size: 36,
         ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: onVolver,
-            child: Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white24),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.cover,
+      placeholder: (context, _) =>
+          Container(
+            color: Colors.grey.shade200,
+            child: const Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 166, 226, 70),
               ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
             ),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Establecimientos',
-                  style: TextStyle(fontSize: 11, color: Color(0xFFb0b0b0))),
-              Text(titulo,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
-            ],
+      errorWidget: (context, _, __) =>
+          Container(
+            color: Colors.grey.shade200,
+            child: Icon(
+              Icons.image_outlined,
+              color: Colors.grey.shade400,
+              size: 36,
+            ),
           ),
-        ],
-      ),
     );
   }
 }
-
-
-Widget imagenEstablecimiento(String? url) {
-  if (url == null || url.trim().isEmpty) {
-    return Container(
-      color: Colors.grey.shade200,
-      child: Icon(
-        Icons.image_outlined,
-        color: Colors.grey.shade400,
-        size: 36,
-      ),
-    );
-  }
-  return CachedNetworkImage(
-    imageUrl: url,
-    fit: BoxFit.cover,
-    placeholder: (context, _) => Container(
-      color: Colors.grey.shade200,
-      child: const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 166, 226, 70),
-        ),
-      ),
-    ),
-    errorWidget: (context, _, __) => Container(
-      color: Colors.grey.shade200,
-      child: Icon(
-        Icons.image_outlined,
-        color: Colors.grey.shade400,
-        size: 36,
-      ),
-    ),
-  );
-}
-
-Widget _headerListado(String titulo, VoidCallback onVolver) {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-    child: Row(
-      children: [
-        GestureDetector(
-          onTap: onVolver,
-          child: Container(
-            width: 34, height: 34,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white24),
-            ),
-            child: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Establecimientos',
-                style: TextStyle(fontSize: 11, color: Color(0xFFb0b0b0))),
-            Text(titulo,
-                style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-
 class _ItemEstablecimiento {
   final String titulo;
   final String imagenUrl;

@@ -13,6 +13,8 @@ import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/componentes/tarjeta_guardados.dart';
 
+import 'componentes/cabecera.dart';
+
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
@@ -298,78 +300,13 @@ class _GuardadosPageState extends State<GuardadosPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildHeader(),
+          CabeceraPagina(
+            titulo: 'Editar perfil',
+            subtitulo: 'Mi cuenta',
+            onVolver: widget.onVolver,
+          ),
           _buildTabs(),
           Expanded(child: _buildBody()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -15,
-            left: -10,
-            child: IconButton(
-              onPressed: widget.onVolver,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Opacity(
-              opacity: 0.12,
-              child: Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: _verde,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Mi colección',
-                  style: TextStyle(fontSize: 12, color: Color(0xFFb0b0b0)),
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  'Guardados',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  width: 36,
-                  height: 2,
-                  decoration: BoxDecoration(
-                    color: _verde,
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

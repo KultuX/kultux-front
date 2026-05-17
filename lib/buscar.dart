@@ -3,6 +3,8 @@ import 'package:kultux/buscarActividad.dart';
 import 'package:kultux/buscarRestaurante.dart';
 import 'package:kultux/buscarAlojamiento.dart';
 
+import 'componentes/cabecera.dart';
+
 class BuscarPage extends StatefulWidget {
   final Function(dynamic)? onDetalleSeleccionado;
   final int selectedIndex;
@@ -28,86 +30,10 @@ class _BuscarPageState extends State<BuscarPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: 2,
-                right: 0,
-                child: Opacity(
-                  opacity: 0.15,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: Image.asset(
-                        "assets/images/extrem.png",
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: Colors.grey.shade700,
-                          child: const Icon(Icons.image, color: Colors.grey),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Texto
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        "Buscar ",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        _categorias[_selectedIndex],
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    "Conoce Extremadura",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFFb0b0b0),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 40,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 166, 226, 70),
-                      borderRadius: BorderRadius.circular(1),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        CabeceraPagina(
+          titulo: 'Buscar ${_categorias[_selectedIndex]}',
+          subtitulo: 'Conoce Extremadura',
+          mostrarImagenDerecha: true,
         ),
 
         Container(
@@ -147,7 +73,6 @@ class _BuscarPageState extends State<BuscarPage> {
           ),
         ),
 
-        // ── CONTENIDO ──
         Expanded(
           child: _buildContent(),
         ),

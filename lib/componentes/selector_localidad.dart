@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kultux/models/localidad.dart';
-import 'package:kultux/core/utils/normalizador_tildes.dart';
+import 'package:kultux/core/utils/normalizador.dart';
 
 class SelectorLocalidad extends StatefulWidget {
   final List<Localidad> localidades;

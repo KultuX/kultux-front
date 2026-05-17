@@ -5,7 +5,8 @@ import 'package:kultux/models/usuario.dart';
 import 'package:http_parser/http_parser.dart';
 
 class UsuarioApiService{
-  static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
+  static final String _BASE_URL_USUARIOS = "micro-usuario-5ihn.onrender.com";
+  //static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
   // static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
   // static final String _BASE_URL_USUARIOS = "10.0.2.2:8080";
 

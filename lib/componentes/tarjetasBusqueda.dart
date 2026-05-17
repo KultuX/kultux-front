@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kultux/core/utils/normalizador.dart';
 import 'package:kultux/models/franja.dart';
 
 class TarjetaBusqueda extends StatelessWidget {
@@ -160,7 +161,7 @@ class TarjetaBusqueda extends StatelessWidget {
                       if (textoEtiqueta != null && iconoEtiqueta != null)
                         _ChipMetaSvg(
                           iconoPath: iconoEtiqueta!,
-                          texto: textoEtiqueta!,
+                          texto: formatearCategoria(textoEtiqueta!),
                           fondoColor: const Color(0xFF1A1A1A),
                           textoColor: Colors.white,
                           iconoColor: const Color(0xFFA6E246),

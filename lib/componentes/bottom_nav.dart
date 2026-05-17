@@ -23,7 +23,7 @@ class _BottomNavState extends State<BottomNav>{
           _bottomItem('assets/iconos/home.svg', 'Inicio'),
           _bottomItem('assets/iconos/maps.svg', 'Mapa'),
           _bottomItem('assets/iconos/buscar.svg','Buscar'),
-          _bottomItem('assets/iconos/servicios.svg','Servicios'),
+          _bottomItem('assets/iconos/servicios.svg','Establecimientos'),
           _bottomItem('assets/iconos/perfil.svg','Perfil'),
         ]
     );
