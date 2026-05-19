@@ -10,6 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:kultux/componentes/modal_alerta.dart';
 
+import 'package:kultux/core/utils/compartir.dart';
+
 
 class _KTheme {
   static const verde       = Color(0xFFA8D63F);
@@ -330,6 +332,8 @@ class _TarjetaPrincipal extends StatelessWidget {
   final int? idRestaurante;
   final int? idAlojamiento;
   final int? idUsuario;
+  final String? descripcion;
+  final String? portada;
 
   const _TarjetaPrincipal({
     required this.titulo,
@@ -348,6 +352,8 @@ class _TarjetaPrincipal extends StatelessWidget {
     this.idRestaurante,
     this.idAlojamiento,
     this.idUsuario,
+    this.descripcion,
+    this.portada
   });
 
   @override
@@ -448,7 +454,41 @@ class _TarjetaPrincipal extends StatelessWidget {
                       idUsuario: idUsuario,
                     ),
                     const SizedBox(width: 6),
-                    _BotonAccion(icono: Icons.share_outlined),
+                    GestureDetector(
+                      onTap: () {
+                        final tipo = esActividad
+                            ? Tipo.actividad
+                            : esRestaurante
+                            ? Tipo.restaurante
+                            : Tipo.alojamiento;
+
+                        if (portada != null) {
+                          Compartir.compartirImagen(
+                            titulo: titulo,
+                            tipo: tipo,
+                            imagenUrl: portada!,
+                            descripcion: descripcion,
+                            fecha: fechaInicio,
+                          );
+                        } else {
+                          Compartir.compartir(
+                            titulo: titulo,
+                            tipo: tipo,
+                            descripcion: descripcion,
+                            fecha: fechaInicio,
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.share_outlined, color: Colors.white, size: 18),
+                      ),
+                    ),
                   ],
                 ),
               ),
