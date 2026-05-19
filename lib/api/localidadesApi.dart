@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/localidad.dart';
-
+import 'package:kultux/core/utils/api_url.dart';
 class LocalidadApiService {
   static final String _BASE_URL_LOCALIDADES = "micro-localidades-hpsr.onrender.com";
   //static final String _BASE_URL_LOCALIDADES = "micro-localidades-58ih.onrender.com";
@@ -17,8 +17,8 @@ class LocalidadApiService {
     }
 
     final url = Uri.https(
-      _BASE_URL_LOCALIDADES,
-      '/api/v1/localidades/nombres',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-localidades/nombres',
     );
 
     final response = await http.get(
@@ -45,8 +45,8 @@ class LocalidadApiService {
     }
 
     final url = Uri.https(
-      _BASE_URL_LOCALIDADES,
-      '/api/v1/localidades/mapas',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-localidades/mapas',
     );
 
     final response = await http.get(

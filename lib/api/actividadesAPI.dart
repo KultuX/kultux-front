@@ -6,7 +6,7 @@ import 'package:kultux/models/pages.dart';
 
 import '../models/ActividadTotal.dart';
 
-
+import 'package:kultux/core/utils/api_url.dart';
 class ActividadesApiService{
 
   static final String _BASE_URL_ACTIVIDADES = "micro-actividad-41rb.onrender.com";
@@ -16,14 +16,14 @@ class ActividadesApiService{
 
   static Future<Pages<Actividad>> obtenerActividadesInicio(int page) async {
     final url = Uri.https(
-      _BASE_URL_ACTIVIDADES,
-      '/api/v1/actividades/destacados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-actividades/destacados',
       {
         'page': page.toString(),
         'size': '8',
       },
     );
-
+    print(ApiUrl.BASE_URL);
     final response = await http.get(
       url,
       headers: {
@@ -55,8 +55,11 @@ class ActividadesApiService{
   }
 
   static Future<Actividad> detalleActividad(int idActividad) async {
-    final url = Uri.https(_BASE_URL_ACTIVIDADES, '/api/v1/actividades/actividad_detalle/$idActividad');
-
+    final url = Uri.https(
+        ApiUrl.BASE_URL,
+        '/api/v1/gateway-actividades/actividad_detalle/$idActividad'
+    );
+    print(ApiUrl.BASE_URL);
     final response = await http.get(
       url,
       headers: {
@@ -75,7 +78,10 @@ class ActividadesApiService{
   }
 
   static Future<List<String>> categoriasActividad() async {
-    final url = Uri.https(_BASE_URL_ACTIVIDADES, '/api/v1/actividades/categoria_actividad');
+    final url = Uri.https(
+        ApiUrl.BASE_URL,
+        '/api/v1/gateway-actividades/categoria_actividad'
+    );
 
     final response = await http.get(
       url,
@@ -121,8 +127,8 @@ class ActividadesApiService{
 
 
     final url = Uri.https(
-      _BASE_URL_ACTIVIDADES,
-      '/api/v1/actividades/busqueda',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-actividades/busqueda',
       params,
     );
 
@@ -151,11 +157,12 @@ class ActividadesApiService{
   }
 
   static Future<Pages<Actividad>> actividadesGuardadas({
-    required List<int> idsGuardados,
+    required int idUsuario,
     required int page,
   }) async {
 
     final params = <String, String>{
+      'idUsuario': idUsuario.toString(),
       'page': page.toString(),
       'size': '8',
     };
@@ -164,13 +171,9 @@ class ActividadesApiService{
       ...params,
     };
 
-    if (idsGuardados.isNotEmpty) {
-      queryParams['idsGuardados'] = idsGuardados.map((e) => e.toString()).toList();
-    }
-
     final url = Uri.https(
-      _BASE_URL_ACTIVIDADES,
-      '/api/v1/actividades/listar_guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-actividades/listar_guardados',
       queryParams,
     );
 
@@ -204,8 +207,8 @@ class ActividadesApiService{
   }) async {
 
     final url = Uri.https(
-      _BASE_URL_ACTIVIDADES,
-      '/api/v1/actividades/mapa/total_actividades',
+        ApiUrl.BASE_URL,
+      '/api/v1/gateway-actividades/mapa/total_actividades',
        { 'ines': ines.map((e) => e.toString()).toList()}
     );
 
@@ -244,8 +247,8 @@ class ActividadesApiService{
 
 
     final url = Uri.https(
-      _BASE_URL_ACTIVIDADES,
-      '/api/v1/actividades/mapa/lista_actividades/$ine',
+        ApiUrl.BASE_URL,
+      '/api/v1/gateway-actividades/mapa/lista_actividades/$ine',
       params
     );
 

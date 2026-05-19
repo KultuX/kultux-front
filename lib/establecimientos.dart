@@ -91,6 +91,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
       setState(() {
         _estadoResumen = uiError.estado;
         _mensajeErrorResumen = uiError.mensaje;
+
       });
     } catch (e, stack) {
       print('ERROR RESUMEN: $e\nSTACK: $stack');

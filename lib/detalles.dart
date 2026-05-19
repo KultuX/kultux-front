@@ -49,6 +49,8 @@ class Detalle extends StatefulWidget {
   final int? idActividad;
   final int? idRestaurante;
   final int? idAlojamiento;
+  final String? nombreEmpresa;
+  final String? logotipoEmpresa;
 
   const Detalle._({
     super.key,
@@ -69,6 +71,8 @@ class Detalle extends StatefulWidget {
     this.idActividad,
     this.idRestaurante,
     this.idAlojamiento,
+    this.nombreEmpresa,
+    this.logotipoEmpresa
   });
 
   List<String> get imagenesLista {
@@ -101,6 +105,8 @@ class Detalle extends StatefulWidget {
         urlWeb: objeto.urlWeb,
         direccion: objeto.direccion,
         idActividad: objeto.id,
+        nombreEmpresa: objeto.nombreEmpresa,
+        logotipoEmpresa: objeto.logotipoEmpresa,
       );
     }
     if (objeto is Alojamiento) {
@@ -235,11 +241,11 @@ class _DetalleState extends State<Detalle> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (esActividad)
+                    if (esActividad && widget.nombreEmpresa != null)
                       _FilaInfo(
                         icono: Icons.store_outlined,
                         label: 'Organizado por',
-                        valor: 'Ayuntamiento de Mérida',
+                        valor: widget.nombreEmpresa!,
                       ),
 
                     if (_tieneUrlWeb)

@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/guardados.dart';
-
+import 'package:kultux/core/utils/api_url.dart';
 class InteraccionesApiService {
-  static const String _BASE_URL = "micro-interaccion.onrender.com"; // ajusta
+  static const String _BASE_URL = "micro-interaccion.onrender.com";
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -18,8 +18,8 @@ class InteraccionesApiService {
     required int idUsuario,
   }) async {
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/actividad/$idActividad/guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/actividad/$idActividad/guardados',
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
@@ -33,14 +33,13 @@ class InteraccionesApiService {
 
   static Future<List<int>> listarGuardadosActividad({required int idUsuario}) async {
 
-    print(idUsuario);
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/actividad/listar_guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/actividad/listar_guardados',
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
-    print(url);
+
     if (response.statusCode == 200) {
       final List<dynamic> lista = jsonDecode(response.body);
       return lista.map((e) => e as int).toList();
@@ -53,7 +52,7 @@ class InteraccionesApiService {
     required int idActividad,
     required int idUsuario,
   }) async {
-    final url = Uri.https(_BASE_URL, '/api/v1/interaccion/actividad/guardar');
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-interaccion/actividad/guardar');
     final response = await http.post(
       url,
       headers: _headers,
@@ -72,8 +71,8 @@ class InteraccionesApiService {
     required int idUsuario,
   }) async {
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/actividad/eliminar',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/actividad/eliminar',
       {
         'idActividad': idActividad.toString(),
         'idUsuario': idUsuario.toString(),
@@ -92,8 +91,8 @@ class InteraccionesApiService {
     required int idUsuario,
   }) async {
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/restaurante/$idRestaurante/guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/restaurante/$idRestaurante/guardados',
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
@@ -106,11 +105,9 @@ class InteraccionesApiService {
 
 
   static Future<List<int>> listarGuardadosRestaurante({required int idUsuario}) async {
-
-    print(idUsuario);
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/restaurante/listar_guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/restaurante/listar_guardados',
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
@@ -127,7 +124,7 @@ class InteraccionesApiService {
     required int idRestaurante,
     required int idUsuario,
   }) async {
-    final url = Uri.https(_BASE_URL, '/api/v1/interaccion/restaurante/guardar');
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-interaccion/restaurante/guardar');
     final response = await http.post(
       url,
       headers: _headers,
@@ -146,8 +143,8 @@ class InteraccionesApiService {
     required int idUsuario,
   }) async {
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/restaurante/eliminar',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/restaurante/eliminar',
       {
         'idRestaurante': idRestaurante.toString(),
         'idUsuario': idUsuario.toString(),
@@ -167,8 +164,8 @@ class InteraccionesApiService {
     required int idUsuario,
   }) async {
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/alojamiento/$idAlojamiento/guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/alojamiento/$idAlojamiento/guardados',
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
@@ -184,8 +181,8 @@ class InteraccionesApiService {
 
     print(idUsuario);
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/alojamiento/listar_guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/alojamiento/listar_guardados',
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
@@ -202,7 +199,7 @@ class InteraccionesApiService {
     required int idAlojamiento,
     required int idUsuario,
   }) async {
-    final url = Uri.https(_BASE_URL, '/api/v1/interaccion/alojamiento/guardar');
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-interaccion/alojamiento/guardar');
     final response = await http.post(
       url,
       headers: _headers,
@@ -221,8 +218,8 @@ class InteraccionesApiService {
     required int idUsuario,
   }) async {
     final url = Uri.https(
-      _BASE_URL,
-      '/api/v1/interaccion/alojamiento/eliminar',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/alojamiento/eliminar',
       {
         'idAlojamiento': idAlojamiento.toString(),
         'idUsuario': idUsuario.toString(),

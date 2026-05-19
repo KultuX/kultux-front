@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/pages.dart';
-
+import 'package:kultux/core/utils/api_url.dart';
 class RestauranteApiService{
   static final String _BASE_URL_RESTAURANTES = "micro-restaurante-hs3x.onrender.com";
   //static final String _BASE_URL_RESTAURANTES = "micro-restaurante-nhzz.onrender.com";
@@ -11,7 +11,7 @@ class RestauranteApiService{
   //static final String _BASE_URL_RESTAURANTES = "10.0.2.2:8083";
 
   static Future<List<Restaurante>> obtenerRestauranteDestacados() async {
-    final url = Uri.https(_BASE_URL_RESTAURANTES,'/api/v1/restaurantes/destacados');
+    final url = Uri.https( ApiUrl.BASE_URL,'/api/v1/gateway-restaurantes/destacados');
 
     final response = await http.get(
       url,
@@ -31,7 +31,7 @@ class RestauranteApiService{
   }
 
   static Future<Restaurante> restauranteDetalle(int id) async{
-    final url = Uri.https(_BASE_URL_RESTAURANTES, '/api/v1/restaurantes/detalle_restaurante/$id');
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-restaurantes/detalle_restaurante/$id');
 
     final response = await http.get(
       url,
@@ -52,7 +52,7 @@ class RestauranteApiService{
 
 
   static Future<List<String>> categoriasRestaurantes() async{
-    final url = Uri.https(_BASE_URL_RESTAURANTES, 'api/v1/restaurantes/categoria_restaurante');
+    final url = Uri.https( ApiUrl.BASE_URL, 'api/v1/gateway-restaurantes/categoria_restaurante');
 
     final response = await http.get(
         url,
@@ -89,8 +89,8 @@ class RestauranteApiService{
     if ( soloAbiertos != null ) params['soloAbiertos'] = soloAbiertos.toString();
 
     final url = Uri.https(
-      _BASE_URL_RESTAURANTES,
-      '/api/v1/restaurantes/busqueda',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-restaurantes/busqueda',
       params,
     );
 
@@ -105,6 +105,7 @@ class RestauranteApiService{
 
     if(response.statusCode == 200){
       final dynamic json = jsonDecode(response.body);
+      print(json);
       return Pages<Restaurante>.fromJson(
         json,
             (a) => Restaurante.busqueda(a),
@@ -119,11 +120,12 @@ class RestauranteApiService{
   }
 
   static Future<Pages<Restaurante>> restaurantesGuardados({
-    required List<int> idsGuardados,
+    required int idUsuario,
     required int page,
   }) async {
 
     final params = <String, String>{
+      'idUsuario': idUsuario.toString(),
       'page': page.toString(),
       'size': '8',
     };
@@ -132,18 +134,11 @@ class RestauranteApiService{
       ...params,
     };
 
-    if (idsGuardados.isNotEmpty) {
-      queryParams['idsGuardados'] = idsGuardados.map((e) => e.toString()).toList();
-    }
-
     final url = Uri.https(
-      _BASE_URL_RESTAURANTES,
-      '/api/v1/restaurantes/listar_guardados',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-restaurantes/listar_guardados',
       queryParams,
     );
-
-
-    print("URL FINAL: $url");
 
     final response = await http.get(
       url,

@@ -131,13 +131,8 @@ class _GuardadosPageState extends State<GuardadosPage> {
         setState(() => _estadoActividades = EstadoUi.vacio);
         return;
       }
-      final ids = await InteraccionesApiService.listarGuardadosActividad(idUsuario: _idUsuario!);
-      if (ids.isEmpty) {
-        setState(() => _estadoActividades = EstadoUi.vacio);
-        return;
-      }
       final page = await ActividadesApiService.actividadesGuardadas(
-        idsGuardados: ids,
+        idUsuario: _idUsuario!,
         page: _paginaActividades,
       );
       setState(() {
@@ -188,13 +183,8 @@ class _GuardadosPageState extends State<GuardadosPage> {
         setState(() => _estadoRestaurantes = EstadoUi.vacio);
         return;
       }
-      final ids = await InteraccionesApiService.listarGuardadosRestaurante(idUsuario: _idUsuario!);
-      if (ids.isEmpty) {
-        setState(() => _estadoRestaurantes = EstadoUi.vacio);
-        return;
-      }
       final page = await RestauranteApiService.restaurantesGuardados(
-        idsGuardados: ids,
+        idUsuario: _idUsuario!,
         page: _paginaRestaurantes,
       );
       setState(() {
@@ -245,13 +235,8 @@ class _GuardadosPageState extends State<GuardadosPage> {
         setState(() => _estadoAlojamientos = EstadoUi.vacio);
         return;
       }
-      final ids = await InteraccionesApiService.listarGuardadosAlojamiento(idUsuario: _idUsuario!);
-      if (ids.isEmpty) {
-        setState(() => _estadoAlojamientos = EstadoUi.vacio);
-        return;
-      }
       final page = await AlojamientoApiService.alojamientosGuardados(
-        idsGuardados: ids,
+        idUsuario: _idUsuario!,
         page: _paginaAlojamientos,
       );
       setState(() {

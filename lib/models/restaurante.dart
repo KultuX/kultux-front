@@ -73,7 +73,7 @@ class Restaurante{
       id: json['id'],
       nombre: json['nombre'],
       horario: _parseHorario(json['horario']),
-      localidad: json['localidad']['nombre'],
+      localidad: json['localidad'],
       categoriaRestaurante: json['categoria'],
       imagenPrincipal: json['portada'],
       abierto: json['abierto']

@@ -142,7 +142,7 @@ class _MapasPageState extends State<MapasPage> {
     return LatLng(lat, lng);
   }
 
-  bool _corrigiendo = false;
+
 
   @override
   Widget build(BuildContext context) {

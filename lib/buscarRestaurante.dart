@@ -121,10 +121,10 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         mensajeError = uiError.mensaje;
       });
 
-    } catch (_) {
+    } catch (e) {
       setState(() {
         estado = EstadoUi.error;
-        mensajeError = 'Error inesperado';
+        mensajeError = 'Error inesperado $e';
       });
 
     } finally {

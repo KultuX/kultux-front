@@ -18,6 +18,8 @@ class Actividad{
   String? urlCompra;
   String? urlWeb;
   String? direccion;
+  String? nombreEmpresa;
+  String? logotipoEmpresa;
 
   Actividad._({
     required this.id,
@@ -36,7 +38,9 @@ class Actividad{
     this.imagenes,
     this.urlCompra,
     this.urlWeb,
-    this.direccion
+    this.direccion,
+    this.nombreEmpresa,
+    this.logotipoEmpresa
   });
 
   factory Actividad.inicio(Map<String, dynamic> json) {
@@ -86,7 +90,9 @@ class Actividad{
       estado: json['estado'] ?? '',
      urlCompra: json['urlCompra'],
      urlWeb: json['urlWeb'],
-      direccion: json['direccion']
+      direccion: json['direccion'],
+      nombreEmpresa: json['nombreEmpresa'],
+      logotipoEmpresa: json['logotipoUrl']
     );
   }
 

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/usuario.dart';
 import 'package:http_parser/http_parser.dart';
-
+import 'package:kultux/core/utils/api_url.dart';
 class UsuarioApiService{
   static final String _BASE_URL_USUARIOS = "micro-usuario-5ihn.onrender.com";
   //static final String _BASE_URL_USUARIOS = "micro-usuario.onrender.com";
@@ -11,7 +11,7 @@ class UsuarioApiService{
   // static final String _BASE_URL_USUARIOS = "10.0.2.2:8080";
 
   static Future<Usuario> loginUsuario(Usuario userLogin) async {
-    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/login');
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/login');
     //final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/login');
 
     final response = await http.post(
@@ -36,7 +36,7 @@ class UsuarioApiService{
 
 
   static Future<String> registroUsuario(Usuario userRegistro) async {
-    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/registrar');
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/registrar');
 
     final response = await http.post(
       url,
@@ -64,8 +64,8 @@ class UsuarioApiService{
     File? imagen,
   }) async {
     final uri = Uri.https(
-      _BASE_URL_USUARIOS,
-      '/api/usuarios/editar-usuario/$id',
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-user/editar-usuario/$id',
     );
 
     final request = http.MultipartRequest('PATCH', uri);
@@ -100,7 +100,7 @@ class UsuarioApiService{
   }
 
   static Future<void> eliminarUsuario(int id) async {
-    final uri = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/eliminar-usuario/$id');
+    final uri = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/eliminar-usuario/$id');
     final response = await http.delete(uri);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -109,7 +109,7 @@ class UsuarioApiService{
   }
 
   static Future<void> recuperarPassword(String email) async {
-    final url = Uri.https(_BASE_URL_USUARIOS, '/api/usuarios/recuperar-password');
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/recuperar-password');
 
     final response = await http.post(
       url,
