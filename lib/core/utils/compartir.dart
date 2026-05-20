@@ -17,30 +17,24 @@ class Compartir {
     Tipo.alojamiento: '🏨',
   };
 
-  static final _frases = {
-    Tipo.actividad: 'Te comparto esta actividad',
-    Tipo.restaurante: 'Te recomiendo este restaurante',
-    Tipo.alojamiento: 'Mira este alojamiento',
-  };
-
   static String _mensaje({
     required String titulo,
     required Tipo tipo,
     String? descripcion,
     String? fecha,
-    int maxDescripcion = 100,
+    int maxDescripcion = 300,
   }) {
     final emoji = _iconos[tipo]!;
-    final verbo = _frases[tipo]!;
 
-    final desc = descripcion == null
+    final descTrim = descripcion?.trim();
+    final desc = (descTrim == null || descTrim.isEmpty)
         ? null
-        : descripcion.length > maxDescripcion
-        ? '${descripcion.substring(0, maxDescripcion)}...'
-        : descripcion;
+        : descTrim.length > maxDescripcion
+        ? '${descTrim.substring(0, maxDescripcion)}...'
+        : descTrim;
 
     return [
-      '$emoji $verbo: *$titulo*',
+      '$emoji: $titulo',
       if (fecha != null) '📅 $fecha',
       if (desc != null) desc,
       _appInfo,

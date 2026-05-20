@@ -6,6 +6,7 @@ class Alerta {
         required String mensaje,
         TipoAviso tipo = TipoAviso.info,
         Duration duracion = const Duration(seconds: 3),
+        bool mostrarCerrar = true,
       }) {
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
@@ -36,6 +37,8 @@ class Alerta {
         mensaje: mensaje,
         color: color,
         icono: icono,
+        mostrarCerrar: mostrarCerrar,
+        onCerrar: () => entry.remove()
       ),
     );
 
@@ -53,11 +56,15 @@ class _AlertaWidget extends StatefulWidget {
   final String mensaje;
   final Color color;
   final IconData icono;
+  final bool mostrarCerrar;
+  final VoidCallback onCerrar;
 
   const _AlertaWidget({
     required this.mensaje,
     required this.color,
     required this.icono,
+    required this.mostrarCerrar,
+    required this.onCerrar
   });
 
   @override
@@ -69,6 +76,7 @@ class _AlertaWidgetState extends State<_AlertaWidget>
   late AnimationController _controller;
   late Animation<Offset> _slide;
   late Animation<double> _fade;
+
 
   @override
   void initState() {
@@ -138,6 +146,26 @@ class _AlertaWidgetState extends State<_AlertaWidget>
                       ),
                     ),
                   ),
+                  if(widget.mostrarCerrar) ...[
+                    const SizedBox(width:6),
+                    GestureDetector(
+                      onTap: widget.onCerrar,
+                      child: Container(
+                        width:26,
+                        height:26,
+                        decoration:BoxDecoration(
+                          color: const Color(0xFFE0DDD6),
+                          borderRadius: BorderRadius.circular(8)
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Color(0xFF6B6B6B)
+                        )
+                      )
+                    )
+                  ]
+
                 ],
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:kultux/api/actividadesAPI.dart';
 import 'package:kultux/api/localidadesApi.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
@@ -39,6 +40,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('es', 'ES')],
       debugShowCheckedModeBanner: false,
       title: 'KultuX',
       theme: ThemeData(
@@ -58,7 +65,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   bool _logeado = false;
   int _indexActual = 0;
   bool _invitado = false;
@@ -95,8 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   late final EstablecimientosPage _establecimientosPage;
 
-
-
   Future<void> _cargarSesion() async {
     final usuarioGuardado = await UsuarioRepository.cargar();
 
@@ -116,7 +121,19 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    /*_animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
     _cargarSesion();
+
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );*/
+
+
+
     _establecimientosPage = EstablecimientosPage(
       onDetalleSeleccionado: _abrirDetalleEstablecimiento,
     );
@@ -192,6 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_paginaActual >= _totalPaginas) return;
     await _cargarActividades();
   }
+
   void _cerrarSesion() async {
     await UsuarioRepository.cerrarSesion();
 
@@ -285,7 +303,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _getPaginaActual() {
-
     if (_mostrandoPerfil) {
       return _bodyPerfil();
     }
@@ -299,10 +316,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case 3:
         return _bodyEstablecimientos();
       case 4:
-
-        if (_mostrandoDetalleGuardado &&
-            _guardadoDetalleSeleccionado != null) {
-
+        if (_mostrandoDetalleGuardado && _guardadoDetalleSeleccionado != null) {
           return Column(
             children: [
               CabeceraPagina(
@@ -354,7 +368,6 @@ class _MyHomePageState extends State<MyHomePage> {
         perfilActivado: _mostrandoPerfil,
         onIrInicio: () {
           setState(() {
-
             _mostrandoPerfil = false;
 
             _indexActual = 0;
@@ -375,7 +388,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
         onIrPerfil: () {
           setState(() {
-
             _mostrandoPerfil = true;
 
             _mostrandoDetalleInicio = false;
@@ -395,33 +407,32 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 _getPaginaActual(),
                 if (!_logeado && !_invitado)
-                  AssetLogin(
-                    cerrar: () {
-                      setState(() {
-                        _logeado = true;
-                        _invitado = true;
-                      });
-                    },
-                    logeado: (Usuario logeado) {
-                      setState(() {
-                        _logeado = true;
-                        _invitado = false;
-                        usuario = logeado;
-                      });
-                    },
-                    invitado: () {
-                      setState(() {
-                        _invitado = true;
-                        _logeado = false;
-                       // _indexActual = 0;
-                      });
-                    },
-                  ),
+                    AssetLogin(
+                      cerrar: () {
+                        setState(() {
+                          _logeado = true;
+                          _invitado = true;
+                        });
+                      },
+                      logeado: (Usuario logeado) {
+                        setState(() {
+                          _logeado = true;
+                          _invitado = false;
+                          usuario = logeado;
+                        });
+                      },
+                      invitado: () {
+                        setState(() {
+                          _invitado = true;
+                          _logeado = false;
+                          // _indexActual = 0;
+                        });
+                      },
+                    ),
               ],
             )
           : _getPaginaActual(),
       bottomNavigationBar: BottomNav(
-
         itemSeleccionado: _indexActual,
         itemSeleccion: (index) {
           _mostrandoPerfil = false;
@@ -494,17 +505,20 @@ class _MyHomePageState extends State<MyHomePage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: TarjetaBusqueda.actividad(
-                      titulo: actividad.titulo,
-                      localidad: actividad.localidad!,
-                      fecha: actividad.fechaInicio,
-                      imagenUrl: actividad.imagenPrincipal,
-                      onTap: () async {
-                        final detalle = await ActividadesApiService.detalleActividad(actividad.id);
-                        _abrirDetalleActividad(detalle);
-                      },
-                      textoEtiqueta: actividad.categoriaActividad!,
-                      iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
-                    ),
+                        titulo: actividad.titulo,
+                        localidad: actividad.localidad!,
+                        fecha: actividad.fechaInicio,
+                        imagenUrl: actividad.imagenPrincipal,
+                        onTap: () async {
+                          final detalle =
+                              await ActividadesApiService.detalleActividad(
+                                actividad.id,
+                              );
+                          _abrirDetalleActividad(detalle);
+                        },
+                        textoEtiqueta: actividad.categoriaActividad!,
+                        iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+                      ),
                     );
                   }
 
@@ -546,10 +560,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-
-
-
 
   Widget _bodyInicio() {
     if (_mostrandoDetalleInicio && _actividadDetalleSeleccionada != null) {
@@ -655,7 +665,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _bodyPerfil() {
-
     return PerfilPage(
       cerrarSesion: _cerrarSesion,
       usuario: usuario,

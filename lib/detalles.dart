@@ -203,6 +203,8 @@ class _DetalleState extends State<Detalle> {
                 idRestaurante:   widget.idRestaurante,
                 idAlojamiento:   widget.idAlojamiento,
                 idUsuario:       Usuario.usuarioActual?.id,
+                descripcion: widget.descripcion,
+                portada: widget.imagenPrincipal,
                 onPrev: () => setState(() {
                   final len = widget.imagenesLista.length;
                   _indiceActual = (_indiceActual - 1 + len) % len;

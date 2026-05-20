@@ -105,7 +105,7 @@ class RestauranteApiService{
 
     if(response.statusCode == 200){
       final dynamic json = jsonDecode(response.body);
-      print(json);
+      print('restaurantes filtrados: $json');
       return Pages<Restaurante>.fromJson(
         json,
             (a) => Restaurante.busqueda(a),

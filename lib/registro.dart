@@ -48,6 +48,8 @@ class _RegistroPageState extends State<RegistroPage> {
   String _password2Actual = '';
   bool _passwordsCoinciden = true;
 
+  String _fechaNacimiento = '';
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +81,7 @@ class _RegistroPageState extends State<RegistroPage> {
       'Correo electrónico': controllers!['email']!.text,
       'Contraseña': controllers!['password']!.text,
       'Repite contraseña': controllers!['password2']!.text,
-      'Fecha de nacimiento': controllers!['fechaNacimiento']!.text,
+      'Fecha de nacimiento': _fechaNacimiento,
     };
 
     for (final entry in campos.entries) {
@@ -134,7 +136,7 @@ class _RegistroPageState extends State<RegistroPage> {
           'email': controllers!['email']!.text,
           'password': controllers!['password']!.text,
           'localidad': _localidadSeleccionada!.ine,
-          'fechaNacimiento': controllers!['fechaNacimiento']!.text,
+          'fechaNacimiento': _fechaNacimiento,
         }),
       );
       return true;
@@ -197,6 +199,7 @@ class _RegistroPageState extends State<RegistroPage> {
                   ),
                   const SizedBox(height: 10),
                   _Campo(child: _calendarioCampo()),
+
 
                   const SizedBox(height: 16),
                   _SeccionLabel('Cuenta'),
@@ -435,56 +438,120 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
+
   Widget _calendarioCampo() {
     final ctrl = controllers!['fechaNacimiento']!;
-    return TextField(
-      controller: ctrl,
-      readOnly: true,
-      style: const TextStyle(fontSize: 13),
-      decoration: InputDecoration(
-        labelText: 'Fecha de nacimiento',
-        labelStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-        filled: true,
-        fillColor: Colors.grey.shade100,
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-        suffixIcon: Padding(
-          padding: const EdgeInsets.all(10),
-          child: SvgPicture.asset(
-            'assets/iconos/calendario_registro.svg',
-            width: 16,
-            height: 16,
-          ),
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: _verde, width: 1.5),
-        ),
-      ),
+
+
+    String _formatearFechaEspanol(DateTime fecha) {
+      return '${fecha.day}-${fecha.month}-${fecha.year}';
+    }
+
+    return GestureDetector(
       onTap: () async {
+        FocusScope.of(context).unfocus();
+
+        final hoy = DateTime.now();
+        final limiteMaximo = DateTime(hoy.year - 18, hoy.month, hoy.day);
+
         final fecha = await showDatePicker(
           context: context,
-          initialDate: DateTime.now(),
+          locale: const Locale('es', 'ES'),
+          initialDate: limiteMaximo,
           firstDate: DateTime(1900),
-          lastDate: DateTime.now(),
+          lastDate: hoy,
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: _verde,
+                  onPrimary: _texto,
+                  onSurface: _texto,
+                  surface: _fondoCard,
+                ),
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(foregroundColor: _verde),
+                ),
+                dialogBackgroundColor: _fondoPagina,
+              ),
+              child: child!,
+            );
+          },
         );
+
         if (fecha != null) {
+          final esMayorDeEdad = fecha.isBefore(limiteMaximo) ||
+              fecha.isAtSameMomentAs(limiteMaximo);
+
+          if (!esMayorDeEdad) {
+            Alerta.show(
+              context,
+              mensaje: 'Debes tener al menos 18 años para registrarte.',
+              tipo: TipoAviso.error,
+            );
+            ctrl.clear();
+            return;
+          }
           final m = fecha.month.toString().padLeft(2, '0');
           final d = fecha.day.toString().padLeft(2, '0');
-          ctrl.text = '${fecha.year}-$m-$d';
+          _fechaNacimiento = '${fecha.year}-$m-$d';
+          ctrl.text = _formatearFechaEspanol(fecha);
+        }
+        if (_fechaNacimiento.isEmpty) {
+          Alerta.show(context,
+            mensaje: 'El campo Fecha de nacimiento es obligatorio.',
+            tipo: TipoAviso.error,
+          );
+          return;
         }
       },
+      child: AbsorbPointer(
+        child: TextField(
+          controller: ctrl,
+          readOnly: true,
+          style: const TextStyle(
+            fontFamily: 'RobotoCondensed',
+            fontSize: 13,
+            color: _texto,
+          ),
+          decoration: InputDecoration(
+            labelText: 'Fecha de nacimiento',
+            labelStyle: TextStyle(
+              fontFamily: 'RobotoCondensed',
+              fontSize: 12,
+              color: _textoSuave,
+            ),
+            filled: true,
+            fillColor: _fondoCard,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.all(10),
+              child: SvgPicture.asset(
+                'assets/iconos/calendario_registro.svg',
+                width: 16,
+                height: 16,
+                colorFilter: const ColorFilter.mode(_textoSuave, BlendMode.srcIn),
+              ),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borde),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borde),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: _verde, width: 1.5),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
