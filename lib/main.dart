@@ -134,8 +134,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
         );*/
 
-
-
     _establecimientosPage = EstablecimientosPage(
       onDetalleSeleccionado: _abrirDetalleEstablecimiento,
     );
@@ -306,51 +304,64 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget _getPaginaActual() {
     if (_mostrandoPerfil) {
-      return ContenedorWeb(child: _bodyPerfil());
+      return ContenedorWeb(key: ValueKey('perfil'), child: _bodyPerfil());
     }
     switch (_indexActual) {
       case 0:
-        return ContenedorWeb(child: _bodyInicio());
+        return ContenedorWeb(
+          key: ValueKey('inicio_${_mostrandoDetalleInicio}'),
+          child: _bodyInicio(),
+        );
       case 1:
-        return const MapasPage();
+        return const MapasPage(key: ValueKey('mapas'));
       case 2:
-        return ContenedorWeb(child: _bodyBuscar());
+        return ContenedorWeb(
+          key: ValueKey('buscar_${_mostrandoDetalleBuscar}'),
+          child: _bodyBuscar(),
+        );
       case 3:
-        return ContenedorWeb(child: _bodyEstablecimientos());
+        return ContenedorWeb(
+          key: ValueKey('establecimientos'),
+          child: _bodyEstablecimientos(),
+        );
       case 4:
         if (_mostrandoDetalleGuardado && _guardadoDetalleSeleccionado != null) {
-          return ContenedorWeb(child:
-          Column(
-            children: [
-              CabeceraPagina(
-                titulo: 'Información',
-                subtitulo: 'Detalle',
-                onVolver: _volverAGuardados,
-              ),
-              Expanded(
-                child: Detalle.desdeObjeto(
-                  objeto: _guardadoDetalleSeleccionado!,
+          return ContenedorWeb(
+            key: const ValueKey('detalle_guardado'),
+            child: Column(
+              children: [
+                CabeceraPagina(
+                  titulo: 'Información',
+                  subtitulo: 'Detalle',
+                  onVolver: _volverAGuardados,
                 ),
-              ),
-            ],)
+                Expanded(
+                  child: Detalle.desdeObjeto(
+                    objeto: _guardadoDetalleSeleccionado!,
+                  ),
+                ),
+              ],
+            ),
           );
         }
 
-        return ContenedorWeb( child: GuardadosPage(
-          tabInicial: _guardadosTabActivo,
+        return ContenedorWeb(
+          key: const ValueKey('guardados_lista'),
+          child: GuardadosPage(
+            tabInicial: _guardadosTabActivo,
 
-          onVolver: () {
-            setState(() {
-              _indexActual = 0;
-            });
-          },
-
-          onDetalleSeleccionado: (objeto, tab) {
-            _abrirDetalleGuardados(objeto, tab);
-          },
-        ));
+            onVolver: () {
+              setState(() {
+                _indexActual = 0;
+              });
+            },
+            onDetalleSeleccionado: (objeto, tab) {
+              _abrirDetalleGuardados(objeto, tab);
+            },
+          ),
+        );
       default:
-        return const SizedBox();
+        return const SizedBox(key: ValueKey('vacio'));
     }
   }
 
@@ -361,156 +372,198 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: esWeb ? null : AppBarPersonalizado(
-        logeado: _logeado,
-        invitado: _invitado,
-        onMostrarLogin: () {
-          setState(() {
-            _logeado = false;
-            _invitado = false;
-          });
-        },
-        perfilActivado: _mostrandoPerfil,
-        onIrInicio: () {
-          setState(() {
-            _mostrandoPerfil = false;
-            _indexActual = 0;
-            _mostrandoDetalleInicio = false;
-            _actividadDetalleSeleccionada = null;
-            _mostrandoDetalleEstablecimiento = false;
-            _establecimientoDetalleSeleccionado = null;
-            _mostrandoDetalleBuscar = false;
-            _buscarDetalleSeleccionado = null;
-            _mostrandoDetalleGuardado = false;
-            _guardadoDetalleSeleccionado = null;
-          });
-        },
-        onIrPerfil: () {
-          setState(() {
-            _mostrandoPerfil = true;
-            _mostrandoDetalleInicio = false;
-            _actividadDetalleSeleccionada = null;
-            _mostrandoDetalleEstablecimiento = false;
-            _establecimientoDetalleSeleccionado = null;
-            _mostrandoDetalleBuscar = false;
-            _buscarDetalleSeleccionado = null;
-          });
-        },
-      ),
+      appBar: esWeb
+          ? null
+          : AppBarPersonalizado(
+              logeado: _logeado,
+              invitado: _invitado,
+              onMostrarLogin: () {
+                setState(() {
+                  _logeado = false;
+                  _invitado = false;
+                });
+              },
+              perfilActivado: _mostrandoPerfil,
+              onIrInicio: () {
+                setState(() {
+                  _mostrandoPerfil = false;
+                  _indexActual = 0;
+                  _mostrandoDetalleInicio = false;
+                  _actividadDetalleSeleccionada = null;
+                  _mostrandoDetalleEstablecimiento = false;
+                  _establecimientoDetalleSeleccionado = null;
+                  _mostrandoDetalleBuscar = false;
+                  _buscarDetalleSeleccionado = null;
+                  _mostrandoDetalleGuardado = false;
+                  _guardadoDetalleSeleccionado = null;
+                });
+              },
+              onIrPerfil: () {
+                setState(() {
+                  _mostrandoPerfil = true;
+                  _mostrandoDetalleInicio = false;
+                  _actividadDetalleSeleccionada = null;
+                  _mostrandoDetalleEstablecimiento = false;
+                  _establecimientoDetalleSeleccionado = null;
+                  _mostrandoDetalleBuscar = false;
+                  _buscarDetalleSeleccionado = null;
+                });
+              },
+            ),
       body: Row(
         children: [
-          if (esWeb)
-            _sidebarWeb(context),
+          if (esWeb) _sidebarWeb(context),
           Expanded(
-            child: !_logeado && !_invitado
-                ? Stack(
-              alignment: Alignment.center,
+            child: Stack(
               children: [
-                _getPaginaActual(),
-                AssetLogin(
-                  cerrar: () {
-                    setState(() {
-                      _logeado = true;
-                      _invitado = true;
-                    });
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeInOutCubic,
+                  switchOutCurve: Curves.easeInOutCubic,
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.05, 0.0), // Efecto lateral sutil
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: FadeTransition(opacity: animation, child: child),
+                    );
                   },
-                  logeado: (Usuario logeado) {
-                    setState(() {
-                      _logeado = true;
-                      _invitado = false;
-                      usuario = logeado;
-                    });
+                  child: _getPaginaActual(),
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  reverseDuration: const Duration(milliseconds: 400),
+                  switchInCurve: Curves.easeInOutCubic,
+                  switchOutCurve: Curves.easeInOutCubic,
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+
+                    if (child.key == const ValueKey('bloqueo_login')) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.0, 1.0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      );
+                    }
+                    return FadeTransition(opacity: animation, child: child);
                   },
-                  invitado: () {
-                    setState(() {
-                      _invitado = true;
-                      _logeado = false;
-                    });
-                  },
+                  child: !_logeado && !_invitado
+                      ? Container(
+                    key: const ValueKey('bloqueo_login'),
+
+                    color: Colors.black.withOpacity(0.4),
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Center(
+                      child: AssetLogin(
+                        key: const ValueKey('pantalla_asset_login'),
+                        cerrar: () {
+                          setState(() {
+                            _logeado = true;
+                            _invitado = true;
+                          });
+                        },
+                        logeado: (Usuario logeado) {
+                          setState(() {
+                            _logeado = true;
+                            _invitado = false;
+                            usuario = logeado;
+                          });
+                        },
+                        invitado: () {
+                          setState(() {
+                            _invitado = true;
+                            _logeado = false;
+                          });
+                        },
+                      ),
+                    ),
+                  )
+                      : const SizedBox.shrink(key: ValueKey('sin_login')),
                 ),
               ],
-            )
-                : _getPaginaActual(),
+            ),
           ),
         ],
       ),
       bottomNavigationBar: esWeb
           ? null
           : BottomNav(
-        itemSeleccionado: _indexActual,
-        itemSeleccion: _cambioNav,
-      ),
+              itemSeleccionado: _indexActual,
+              itemSeleccion: _cambioNav,
+            ),
     );
   }
 
   Widget _contenidoInicio() {
     return Expanded(
       child: Center(
-          child: Stack(
-            children: [
-              ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-                itemCount: _actividades.length + 1,
-                itemBuilder: (context, index) {
-                  if (index < _actividades.length) {
-                    final actividad = _actividades[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TarjetaBusqueda.actividad(
-                        titulo: actividad.titulo,
-                        localidad: actividad.localidad!,
-                        fecha: actividad.fechaInicio,
-                        imagenUrl: actividad.imagenPrincipal,
-                        onTap: () async {
-                          final detalle =
-                              await ActividadesApiService.detalleActividad(
-                                actividad.id,
-                              );
-                          _abrirDetalleActividad(detalle);
-                        },
-                        textoEtiqueta: actividad.categoriaActividad!,
-                        iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
-                      ),
-                    );
-                  }
+        child: Stack(
+          children: [
+            ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+              itemCount: _actividades.length + 1,
+              itemBuilder: (context, index) {
+                if (index < _actividades.length) {
+                  final actividad = _actividades[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TarjetaBusqueda.actividad(
+                      titulo: actividad.titulo,
+                      localidad: actividad.localidad!,
+                      fecha: actividad.fechaInicio,
+                      imagenUrl: actividad.imagenPrincipal,
+                      onTap: () async {
+                        final detalle =
+                            await ActividadesApiService.detalleActividad(
+                              actividad.id,
+                            );
+                        _abrirDetalleActividad(detalle);
+                      },
+                      textoEtiqueta: actividad.categoriaActividad!,
+                      iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+                    ),
+                  );
+                }
 
-                  if (_cargando) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color.fromARGB(255, 166, 226, 70),
-                        ),
+                if (_cargando) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Color.fromARGB(255, 166, 226, 70),
                       ),
-                    );
-                  }
+                    ),
+                  );
+                }
 
-                  if (_paginaActual >= _totalPaginas) {
-                    return const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Center(
-                        child: Text(
-                          "¡Ya no hay más actividades para mostrar!",
-                          style: TextStyle(color: Colors.grey),
-                          textAlign: TextAlign.center,
-                        ),
+                if (_paginaActual >= _totalPaginas) {
+                  return const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Center(
+                      child: Text(
+                        "¡Ya no hay más actividades para mostrar!",
+                        style: TextStyle(color: Colors.grey),
+                        textAlign: TextAlign.center,
                       ),
-                    );
-                  }
+                    ),
+                  );
+                }
 
-                  return const SizedBox.shrink();
-                },
-              ),
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: ScrollBoton(controller: _scrollController),
-              ),
-            ],
-          ),
+                return const SizedBox.shrink();
+              },
+            ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: ScrollBoton(controller: _scrollController),
+            ),
+          ],
         ),
-
+      ),
     );
   }
 
@@ -528,7 +581,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         selectedIndex: _mostrandoPerfil ? null : _indexActual,
         extended: esExtendido,
         backgroundColor: Colors.black,
-        unselectedLabelTextStyle: const TextStyle(color: Colors.white, fontSize: 13),
+        unselectedLabelTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+        ),
         selectedLabelTextStyle: const TextStyle(
           color: Color.fromARGB(255, 166, 226, 70),
           fontWeight: FontWeight.w600,
@@ -536,18 +592,29 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ),
         onDestinationSelected: _cambioNav,
         leading: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: esExtendido ? 16 : 0),
+          padding: EdgeInsets.symmetric(
+            vertical: 20,
+            horizontal: esExtendido ? 16 : 0,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset('assets/images/logo_kultux.png', width: 36, height: 36),
+              Image.asset(
+                'assets/images/logo_kultux.png',
+                width: 36,
+                height: 36,
+              ),
               if (esExtendido) ...[
                 const SizedBox(width: 12),
                 const Text(
                   'KultuX',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
-              ]
+              ],
             ],
           ),
         ),
@@ -573,7 +640,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  NavigationRailDestination _sidebarItem(String path, String titulo, {bool desactivado = false}) {
+  NavigationRailDestination _sidebarItem(
+    String path,
+    String titulo, {
+    bool desactivado = false,
+  }) {
     final opacidad = desactivado ? 0.3 : 1.0;
     return NavigationRailDestination(
       icon: Opacity(
@@ -591,7 +662,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           path,
           width: 30,
           height: 30,
-          colorFilter: const ColorFilter.mode(Color.fromARGB(255, 166, 226, 70), BlendMode.srcIn),
+          colorFilter: const ColorFilter.mode(
+            Color.fromARGB(255, 166, 226, 70),
+            BlendMode.srcIn,
+          ),
         ),
       ),
       label: Text(titulo),
@@ -607,10 +681,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             left: esExtendido ? 16 : 8,
             right: esExtendido ? 16 : 8,
           ),
-          child: Divider(
-            color: Colors.white.withOpacity(0.15),
-            thickness: 1,
-          ),
+          child: Divider(color: Colors.white.withOpacity(0.15), thickness: 1),
         ),
         const SizedBox(height: 16),
       ],
@@ -679,7 +750,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             const SizedBox(height: 2),
                             const Text(
                               'Ver Perfil',
-                              style: TextStyle(color: Colors.grey, fontSize: 11),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -709,13 +783,20 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 children: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFA6E246).withOpacity(0.15),
-                      side: const BorderSide(color: Color(0xFFA6E246), width: 1),
+                      backgroundColor: const Color(
+                        0xFFA6E246,
+                      ).withOpacity(0.15),
+                      side: const BorderSide(
+                        color: Color(0xFFA6E246),
+                        width: 1,
+                      ),
                       padding: EdgeInsets.symmetric(
                         horizontal: esExtendido ? 20 : 0,
                         vertical: esExtendido ? 16 : 12,
                       ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                     onPressed: () {
@@ -729,12 +810,20 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.login, color: Color(0xFFA6E246), size: 18),
+                          const Icon(
+                            Icons.login,
+                            color: Color(0xFFA6E246),
+                            size: 18,
+                          ),
                           if (esExtendido) ...[
                             const SizedBox(width: 8),
                             const Text(
                               'Entrar',
-                              style: TextStyle(color: Color(0xFFA6E246), fontSize: 13, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: Color(0xFFA6E246),
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ],
@@ -763,7 +852,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return const SizedBox.shrink();
   }
 
-
   void _cambioNav(int index) {
     _mostrandoPerfil = false;
     if (!_logeado && !_invitado) {
@@ -789,7 +877,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       });
       Alerta.show(
         context,
-        mensaje: '¡Inicia sesión o registrate para acceder a más funcionalidades!',
+        mensaje:
+            '¡Inicia sesión o registrate para acceder a más funcionalidades!',
       );
       return;
     }
@@ -810,7 +899,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       }
     });
   }
-
 
   Widget _bodyInicio() {
     if (_mostrandoDetalleInicio && _actividadDetalleSeleccionada != null) {

@@ -11,6 +11,7 @@ import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/detalles.dart';
 
 import 'componentes/cabecera.dart';
+import 'core/utils/contenedor_web.dart';
 
 class PuntoMapa {
   final int ine;
@@ -267,7 +268,7 @@ class _MapasPageState extends State<MapasPage> {
           ),
 
         if (_localidadSeleccionada != null && _actividadSeleccionada == null)
-          Column(
+          ContenedorWeb( child: Column(
             children: [
               CabeceraPagina(
                 titulo: '${_localidadSeleccionada!.nombre}',
@@ -281,9 +282,9 @@ class _MapasPageState extends State<MapasPage> {
                 ),
               ),
             ],
-          ),
+          )),
         if (_actividadSeleccionada != null)
-          Column(
+          ContenedorWeb(child: Column(
             children: [
               CabeceraPagina(
                 titulo: '${_localidadSeleccionada!.nombre}',
@@ -296,7 +297,7 @@ class _MapasPageState extends State<MapasPage> {
                 ),
               ),
             ],
-          ),
+          )),
 
       ],
     );

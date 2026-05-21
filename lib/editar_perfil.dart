@@ -46,6 +46,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
 
   String? _emailErrorApi;
 
+  String? _imagenError;
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +77,26 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
       onSelected: (loc) => setState(() => _localidadSeleccionada = loc),
     );
   }
+
+  Future<void> _procesarImagenSeleccionada(XFile? p) async {
+    if (p == null || !mounted) return;
+
+    final archivo = File(p.path);
+    final tamanoBytes = await archivo.length();
+    final tamanoMegaBytes = tamanoBytes / (1024 * 1024);
+
+    setState(() {
+      if (tamanoMegaBytes > 2.0) {
+        _imagenError = 'La imagen debe pesar menos de 2 MB';
+        _imagenSeleccionada = null;
+      } else {
+        _imagenError = null;
+        _imagenSeleccionada = archivo;
+      }
+    });
+  }
+
+
 
   Future<void> _guardarCambios() async {
 
@@ -190,6 +212,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         source: ImageSource.gallery,
                         imageQuality: 85,
                       );
+                      await _procesarImagenSeleccionada(p);
                       if (p != null && mounted) {
                         setState(() => _imagenSeleccionada = File(p.path));
                       }
@@ -205,6 +228,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         source: ImageSource.camera,
                         imageQuality: 85,
                       );
+                      await _procesarImagenSeleccionada(p);
                       if (p != null && mounted) {
                         setState(() => _imagenSeleccionada = File(p.path));
                       }
@@ -303,8 +327,19 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                       color: _textoSuave,
                     ),
                   ),
+                  if (_imagenError != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      _imagenError!,
+                      style: const TextStyle(
+                        fontFamily: 'RobotoCondensed',
+                        fontSize: 12,
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                    ) ,
+                  ),
                 ],
-              ),
+    ])
             ),
 
             Padding(

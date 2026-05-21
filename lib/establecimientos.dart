@@ -250,33 +250,34 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_mostrandoListadoRestaurantes) return _buildListadoRestaurantes();
-    if (_mostrandoListadoAlojamientos) return _buildListadoAlojamientos();
-
-    return Column(
-      children: [
-        CabeceraPagina(titulo: 'Descubre', subtitulo: 'Establecimientos'),
-        Expanded(
-          child: switch (_estadoResumen) {
-            EstadoUi.cargando => const Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 166, 226, 70),
-              ),
-            ),
-            EstadoUi.error => estadoError(
-              icon: Icons.error_outline,
-              mensaje: _mensajeErrorResumen,
-              onRetry: _cargarResumen,
-            ),
-            EstadoUi.sinConexion => estadoError(
-              icon: Icons.wifi_off,
-              mensaje: _mensajeErrorResumen,
-              onRetry: _cargarResumen,
-            ),
-            _ => _buildResumen(),
-          },
-        ),
-      ],
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeInOutCubic,
+      switchOutCurve: Curves.easeInOutCubic,
+      transitionBuilder: (child, animation) => SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.05, 0.0),
+          end: Offset.zero,
+        ).animate(animation),
+        child: FadeTransition(opacity: animation, child: child),
+      ),
+      child: _mostrandoListadoRestaurantes
+          ? KeyedSubtree(key: const ValueKey('lista_restaurantes'), child: _buildListadoRestaurantes())
+          : _mostrandoListadoAlojamientos
+          ? KeyedSubtree(key: const ValueKey('lista_alojamientos'), child: _buildListadoAlojamientos())
+          : KeyedSubtree(key: const ValueKey('resumen'), child: Column(
+        children: [
+          CabeceraPagina(titulo: 'Descubre', subtitulo: 'Establecimientos'),
+          Expanded(
+            child: switch (_estadoResumen) {
+              EstadoUi.cargando => const Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70))),
+              EstadoUi.error => estadoError(icon: Icons.error_outline, mensaje: _mensajeErrorResumen, onRetry: _cargarResumen),
+              EstadoUi.sinConexion => estadoError(icon: Icons.wifi_off, mensaje: _mensajeErrorResumen, onRetry: _cargarResumen),
+              _ => _buildResumen(),
+            },
+          ),
+        ],
+      )),
     );
   }
 
@@ -388,27 +389,27 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: TarjetaBusqueda.restaurante(
-                        titulo: r.nombre,
-                        imagenUrl: r.imagenPrincipal!,
-                        textoEtiqueta: r.categoriaRestaurante[0].toUpperCase() +
-                            r.categoriaRestaurante.substring(1).toLowerCase(),
-                        iconoEtiqueta:
-                        Iconos.getIconoRestaurante(r.categoriaRestaurante),
-                        onTap: () async {
-                          try {
-                            final detalle = await RestauranteApiService
-                                .restauranteDetalle(r.id);
-                            widget.onDetalleSeleccionado(detalle);
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            Alerta.show(context,
-                                mensaje: 'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
-                                tipo: TipoAviso.error);
-                          }
-                        },
-                        horario: r.horario!,
-                        abierto: r.abierto!,
-                        localidad: r.localidad
+                          titulo: r.nombre,
+                          imagenUrl: r.imagenPrincipal!,
+                          textoEtiqueta: r.categoriaRestaurante[0].toUpperCase() +
+                              r.categoriaRestaurante.substring(1).toLowerCase(),
+                          iconoEtiqueta:
+                          Iconos.getIconoRestaurante(r.categoriaRestaurante),
+                          onTap: () async {
+                            try {
+                              final detalle = await RestauranteApiService
+                                  .restauranteDetalle(r.id);
+                              widget.onDetalleSeleccionado(detalle);
+                            } catch (e) {
+                              if (!context.mounted) return;
+                              Alerta.show(context,
+                                  mensaje: 'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
+                                  tipo: TipoAviso.error);
+                            }
+                          },
+                          horario: r.horario!,
+                          abierto: r.abierto!,
+                          localidad: r.localidad
                       ),
                     );
                   },
