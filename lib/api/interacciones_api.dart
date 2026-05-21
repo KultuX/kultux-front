@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/guardados.dart';
 import 'package:kultux/core/utils/api_url.dart';
 class InteraccionesApiService {
-  static const String _BASE_URL = "micro-interaccion.onrender.com";
+
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

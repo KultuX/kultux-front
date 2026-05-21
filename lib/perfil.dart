@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/componentes/botones.dart';
 import 'package:kultux/editar_perfil.dart';
 import 'package:kultux/models/usuario.dart';
-import 'package:kultux/api/usuariosAPI.dart';
+import 'package:kultux/api/usuarios_api.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
 import 'package:kultux/componentes/politica_privacidad_dialog.dart';
@@ -359,139 +359,134 @@ class _PerfilPageState extends State<PerfilPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 40,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
+          // El insetPadding evita que se pegue a los bordes de la pantalla
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          child: SizedBox(
+            width: 360, // Forzamos el ancho exacto de una pantalla móvil estándar
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(255, 166, 226, 70),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  child: Row(
+                    children: [
+                      SvgPicture.asset(
+                        "assets/iconos/contactar_nosotros.svg",
+                        width: 24,
+                        height: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Contacta con nosotros',
+                          style: TextStyle(
+                            fontFamily: 'RobotoCondensed',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close, color: Colors.black),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
                 ),
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(255, 166, 226, 70),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Row(
-                  children: [
-                    SvgPicture.asset(
-                      "assets/iconos/contactar_nosotros.svg",
-                      width: 24,
-                      height: 24,
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'Contacta con nosotros',
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Si tienes cualquier duda o sugerencia, pueden contactarnos en los siguientes correos electrónicos:',
                         style: TextStyle(
                           fontFamily: 'RobotoCondensed',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          fontSize: 13,
+                          color: Colors.black87,
+                          height: 1.5,
                         ),
                       ),
-                    ),
-                    IconButton(
+                      const SizedBox(height: 12),
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'RobotoCondensed',
+                            color: Colors.black,
+                            fontSize: 14,
+                          ),
+                          children: [
+                            TextSpan(text: '1: '),
+                            TextSpan(
+                              text: 'smmoninog01@iesalbarregas.es',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'RobotoCondensed',
+                            color: Colors.black,
+                            fontSize: 14,
+                          ),
+                          children: [
+                            TextSpan(text: '2: '),
+                            TextSpan(
+                              text: 'cmaciasi01@iesalbarregas.es',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 166, 226, 70),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close, color: Colors.black),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Si tienes cualquier duda o sugerencia, pueden contactarnos en los siguientes correos electrónicos:',
-                      style: TextStyle(
-                        fontFamily: 'RobotoCondensed',
-                        fontSize: 13,
-                        color: Colors.black87,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
+                      child: const Text(
+                        'Cerrar',
+                        style: TextStyle(
                           fontFamily: 'RobotoCondensed',
-                          color: Colors.black,
-                          fontSize: 14,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                        children: [
-                          const TextSpan(text: '1: '),
-                          TextSpan(
-                            text: 'smmoninog01@iesalbarregas.es',
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          fontFamily: 'RobotoCondensed',
-                          color: Colors.black,
-                          fontSize: 14,
-                        ),
-                        children: [
-                          const TextSpan(text: '2: '),
-                          TextSpan(
-                            text: 'cmaciasi01@iesalbarregas.es',
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 166, 226, 70),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      'Cerrar',
-                      style: TextStyle(
-                        fontFamily: 'RobotoCondensed',
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -509,104 +504,99 @@ class _PerfilPageState extends State<PerfilPage> {
             borderRadius: BorderRadius.circular(14),
             side: const BorderSide(color: _borde),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.logout, size: 50, color: _verde),
-                const SizedBox(height: 12),
-
-                const Text(
-                  'Cerrar sesión',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'RobotoCondensed',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _texto,
+          child: SizedBox(
+            width: 360, // Encapsulamos el ancho aquí también
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.logout, size: 50, color: _verde),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Cerrar sesión',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 8),
-
-                const Text(
-                  '¿Estás segur@ de que quieres cerrar sesión?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'RobotoCondensed',
-                    fontSize: 13,
-                    color: _textoSuave,
+                  const SizedBox(height: 8),
+                  const Text(
+                    '¿Estás segur@ de que quieres cerrar sesión?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 13,
+                      color: _textoSuave,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 18),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            border: Border.all(color: _borde),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Cancelar',
-                              style: TextStyle(
-                                fontFamily: 'RobotoCondensed',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: _texto,
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              border: Border.all(color: _borde),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _texto,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          widget.cerrarSesion();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: _verde,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Cerrar sesión',
-                              style: TextStyle(
-                                fontFamily: 'RobotoCondensed',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            widget.cerrarSesion();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _verde,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Cerrar sesión',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
     );
   }
-
   Future<void> _mostrarProximamente() async {
     await showDialog(
       context: context,
@@ -658,97 +648,93 @@ class _PerfilPageState extends State<PerfilPage> {
             borderRadius: BorderRadius.circular(14),
             side: const BorderSide(color: Color(0xFFC62828)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.delete_forever, size: 50, color: Color(0xFFC62828)),
-                const SizedBox(height: 12),
-
-                const Text(
-                  'Eliminar cuenta',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'RobotoCondensed',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: _texto,
+          child: SizedBox(
+            width: 360, // Mismo límite de ancho móvil
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.delete_forever, size: 50, color: Color(0xFFC62828)),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Eliminar cuenta',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 8),
-
-                const Text(
-                  'Esta acción no se puede deshacer. Se eliminarán todos tus datos.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'RobotoCondensed',
-                    fontSize: 13,
-                    color: _textoSuave,
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Esta acción no se puede deshacer. Se eliminarán todos tus datos.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 13,
+                      color: _textoSuave,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 18),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            border: Border.all(color: _borde),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Cancelar',
-                              style: TextStyle(
-                                fontFamily: 'RobotoCondensed',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: _texto,
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              border: Border.all(color: _borde),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _texto,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () async {
-                          Navigator.of(context).pop();
-                          await _eliminarCuenta();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFC62828),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Eliminar',
-                              style: TextStyle(
-                                fontFamily: 'RobotoCondensed',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            Navigator.of(context).pop();
+                            await _eliminarCuenta();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC62828),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Eliminar',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

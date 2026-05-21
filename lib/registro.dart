@@ -5,8 +5,8 @@ import 'package:kultux/componentes/selector_localidad.dart';
 import 'package:kultux/componentes/text_fields.dart';
 import 'package:kultux/componentes/botones.dart';
 import 'package:kultux/models/localidad.dart';
-import 'package:kultux/api/localidadesApi.dart';
-import 'package:kultux/api/usuariosAPI.dart';
+import 'package:kultux/api/localidades_api.dart';
+import 'package:kultux/api/usuarios_api.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/componentes/terminos_condiciones_dialog.dart';
 import 'package:kultux/componentes/politica_privacidad_dialog.dart';
@@ -14,6 +14,7 @@ import 'package:kultux/componentes/modal_alerta.dart';
 import 'package:kultux/core/utils/validaciones.dart';
 
 import 'componentes/cabecera.dart';
+import 'core/utils/contenedor_web.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
@@ -177,7 +178,7 @@ class _RegistroPageState extends State<RegistroPage> {
             mostrarImagenDerecha: true,
             minHeight: 120,
             registro: 'assets/images/logo_kultux.png'
-          ),
+          ),ContenedorWeb(child:
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -386,7 +387,7 @@ class _RegistroPageState extends State<RegistroPage> {
                   const SizedBox(height: 32),
                 ],
               ),
-            ),
+            ),)
           ],
         ),
       ),

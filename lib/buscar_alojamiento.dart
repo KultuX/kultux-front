@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:kultux/models/localidad.dart';
 import 'package:kultux/models/alojamiento.dart';
-import 'package:kultux/api/localidadesApi.dart';
-import 'package:kultux/api/alojamientoApi.dart';
+import 'package:kultux/api/localidades_api.dart';
+import 'package:kultux/api/alojamiento_api.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
-import 'package:kultux/componentes/tarjetasBusqueda.dart';
+import 'package:kultux/componentes/tarjeta_busqueda.dart';
 import 'package:kultux/core/utils/iconos.dart';
 
 import 'componentes/selector_localidad.dart';

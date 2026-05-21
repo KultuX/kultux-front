@@ -68,7 +68,6 @@ class Restaurante{
   }
 
   factory Restaurante.busqueda(Map<String, dynamic> json){
-    debugPrint('Abierto API: ${json['abierto']} | Hora local: ${DateTime.now()}');
     return Restaurante._(
       id: json['id'],
       nombre: json['nombre'],

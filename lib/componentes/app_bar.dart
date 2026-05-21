@@ -62,29 +62,13 @@ class _AppBarPersonalizadoState
       actions: [
         if (widget.logeado)
           Padding(
-            padding: const EdgeInsets.only(right: 14),
+            padding: const EdgeInsets.only(right: 20),
             child: GestureDetector(
               onTap: widget.onIrPerfil,
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: activo
-                      ? const Color(0xFFA6E246).withOpacity(0.15)
-                      : Colors.white.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: activo
-                        ? const Color(0xFFA6E246)
-                        : Colors.white24,
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: SvgPicture.asset(
+              child: SvgPicture.asset(
                     'assets/iconos/perfil.svg',
-                    width: 18,
-                    height: 18,
+                    width: activo ? 40: 32,
+                    height: activo ? 40 : 32,
                     colorFilter: ColorFilter.mode(
                       activo
                           ? const Color(0xFFA6E246)
@@ -94,8 +78,7 @@ class _AppBarPersonalizadoState
                   ),
                 ),
               ),
-            ),
-          ),
+
 
         if (widget.invitado)
           Padding(

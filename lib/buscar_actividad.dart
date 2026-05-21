@@ -2,184 +2,140 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:kultux/models/localidad.dart';
-import 'package:kultux/api/localidadesApi.dart';
-import 'package:kultux/api/restauranteApi.dart';
-import 'package:kultux/models/restaurante.dart';
-import 'package:kultux/componentes/tarjetasBusqueda.dart';
+import 'package:kultux/models/actividad.dart';
+import 'package:kultux/api/localidades_api.dart';
+import 'package:kultux/api/actividades_api.dart';
+import 'package:kultux/componentes/tarjeta_busqueda.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
+import 'package:kultux/core/utils/estado_ui.dart';
 
-import 'package:kultux/core/utils/iconos.dart';
 import 'componentes/selector_localidad.dart';
-import 'core/utils/estado_ui.dart';
 import 'core/utils/http_error_mapper.dart';
-import 'package:kultux/core/utils/estados_widgets.dart';
 
+import 'package:kultux/core/utils/estados_widgets.dart';
 import 'dart:async';
 
-class BuscarRestaurantePage extends StatefulWidget {
+class BuscarActividadPage extends StatefulWidget {
   final Function(dynamic)? onDetalleSeleccionado;
-  const BuscarRestaurantePage({super.key, this.onDetalleSeleccionado});
+  const BuscarActividadPage({super.key, this.onDetalleSeleccionado});
 
   @override
-  State<BuscarRestaurantePage> createState() => _BuscarRestaurantePageState();
+  State<BuscarActividadPage> createState() => _BuscarPageState();
 }
 
-class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
+class _BuscarPageState extends State<BuscarActividadPage> {
   late Future<List<Localidad>> futureLocalidad;
   late Future<List<String>> futureCategorias;
 
-  String nombre = "";
+  String titulo = "";
   String? categoria;
   int? localidad;
-  bool? soloAbiertos;
+  DateTime? fecha;
 
-  List<Restaurante> restaurantes = [];
+  List<Actividad> actividades = [];
   int paginaActual = 0;
   int totalPaginas = 0;
 
   bool cargando = false;
   bool cargandoInicial = true;
   Timer? _debounceTimer;
-
   final ScrollController controller = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   TextEditingController? _categoriaController;
   TextEditingController? _localidadController;
 
-  EstadoUi estado = EstadoUi.cargando;
-  String mensajeError = '';
-
   Key _selectorLocalidadKey = UniqueKey();
 
+
+  EstadoUi estado = EstadoUi.cargando;
+  String mensajeError = '';
 
 
   @override
   void initState() {
     super.initState();
-    futureCategorias = RestauranteApiService.categoriasRestaurantes();
+
+    futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
+    futureCategorias = ActividadesApiService.categoriasActividad();
 
     _cargaInicial();
 
     controller.addListener(() {
-      if (controller.position.pixels >=
-          controller.position.maxScrollExtent - 200) {
+      if (controller.position.pixels >= controller.position.maxScrollExtent - 200) {
         _cargarMas();
       }
     });
+
   }
+
 
   Future<void> _resetYcargar() async {
     setState(() {
       paginaActual = 0;
-      restaurantes.clear();
+      actividades.clear();
     });
     await _cargarMas();
   }
 
+
+  Future<void> _cargarActividades() async {
+    await _resetYcargar();
+  }
+
+
+
   Future<void> _cargaInicial() async {
-    setState(() => cargandoInicial = true);
+    setState(() {
+      cargandoInicial = true;
+      estado = EstadoUi.cargando;
+    });
     await _resetYcargar();
     setState(() => cargandoInicial = false);
   }
 
+
   Future<void> _cargarMas() async {
     if (cargando) return;
-    if (paginaActual >= totalPaginas && paginaActual != 0) return;
 
+    if (paginaActual >= totalPaginas && paginaActual != 0) return;
     setState(() {
       cargando = true;
       if (paginaActual == 0) estado = EstadoUi.cargando;
     });
-
     try {
-      final pageResponse =
-      await RestauranteApiService.restaurantesFiltrados(
-        nombre: nombre.isEmpty ? null : nombre,
+      final pageResponse = await ActividadesApiService.actividadesFiltradas(
+        titulo: titulo.isEmpty ? null : titulo,
         categoria: categoria,
         localidad: localidad,
-        soloAbiertos: soloAbiertos,
+        fecha: fecha,
         page: paginaActual,
       );
-
       setState(() {
-        restaurantes.addAll(pageResponse.contenido);
+        actividades.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
         paginaActual++;
-        estado =
-        restaurantes.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        estado = actividades.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
     }on SocketException {
       setState(() {
         estado = EstadoUi.sinConexion;
-        mensajeError = 'No hay conexión a internet';
+        mensajeError = 'No hay conexion a internet';
       });
-
-    } on HttpException catch (e) {
+    }on HttpException catch (e){
       final uiError = mapearStatusCode(int.parse(e.message));
       setState(() {
         estado = uiError.estado;
         mensajeError = uiError.mensaje;
       });
-
-    } catch (e) {
-      setState(() {
-        estado = EstadoUi.error;
-        mensajeError = 'Error inesperado $e';
-      });
-
+    }catch (_) {
+        setState(() {
+          estado = EstadoUi.error;
+          mensajeError = 'Error inesperado';
+        });
     } finally {
-      cargando = false;
-    }
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    if (cargandoInicial) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 166, 226, 70),
-        ),
-      );
+        cargando = false;
     }
 
-    return _contenidoConEstado();
-  }
-  Widget _contenidoConEstado() {
-    return Stack(
-      children: [
-        CustomScrollView(
-          controller: controller,
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-                child: Row(
-                  children: [
-                    Expanded(child: _searchBar()),
-                    const SizedBox(width: 8),
-                    _chipAbiertoAhora(),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _filtros(),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            _sliverSegunEstado(),
-          ],
-        ),
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: ScrollBoton(controller: controller),
-        ),
-      ],
-    );
   }
 
   Widget _sliverSegunEstado() {
@@ -195,23 +151,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
       case EstadoUi.vacio:
         return SliverFillRemaining(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.search_off,
-                    size: 56, color: Colors.grey.shade400),
-                const SizedBox(height: 12),
-                Text(
-                  "No hay restaurantes",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          child: estadoVacio(),
         );
 
       case EstadoUi.sinConexion:
@@ -236,24 +176,23 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         return SliverList(
           delegate: SliverChildBuilderDelegate(
                 (context, index) {
-              if (index < restaurantes.length) {
-                final r = restaurantes[index];
+              if (index < actividades.length) {
+                final a = actividades[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
-                  child: TarjetaBusqueda.restaurante(
-                    titulo: r.nombre,
-                    imagenUrl: r.imagenPrincipal!,
-                    textoEtiqueta: r.categoriaRestaurante,
-                    iconoEtiqueta:
-                    Iconos.getIconoRestaurante(r.categoriaRestaurante),
-                    horario: r.horario!,
-                    abierto: r.abierto!,
-                    localidad: r.localidad,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  child: TarjetaBusqueda.actividad(
+                    titulo: a.titulo,
+                    localidad: a.localidad!,
+                    fecha: a.fechaInicio,
+                    imagenUrl: a.imagenPrincipal,
                     onTap: () async {
-                      final detalle = await RestauranteApiService.restauranteDetalle(r.id);
+                      final detalle = await ActividadesApiService.detalleActividad(a.id);
+                      print(detalle.toString());
                       widget.onDetalleSeleccionado?.call(detalle);
+
                     },
+                    textoEtiqueta: a.categoriaActividad!,
+                    iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
                   ),
                 );
               }
@@ -263,8 +202,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                   padding: EdgeInsets.all(16),
                   child: Center(
                     child: CircularProgressIndicator(
-                      color:
-                      Color.fromARGB(255, 166, 226, 70),
+                      color: Color.fromARGB(255, 166, 226, 70),
                     ),
                   ),
                 );
@@ -275,10 +213,8 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                   padding: EdgeInsets.all(20),
                   child: Center(
                     child: Text(
-                      "No hay más restaurantes",
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey),
+                      "No hay más actividades",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ),
                 );
@@ -286,23 +222,78 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
               return const SizedBox.shrink();
             },
-            childCount: restaurantes.length +
-                (cargando || paginaActual >= totalPaginas ? 1 : 0),
+            childCount:
+            actividades.length + (cargando || paginaActual >= totalPaginas ? 1 : 0),
           ),
         );
     }
   }
 
+  Widget _contenidoConEstado() {
+    return Stack(
+      children: [
+        CustomScrollView(
+          controller: controller,
+          slivers: [
+            // Barra de búsqueda
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+                child: Row(
+                  children: [
+                    Expanded(child: _searchBar()),
+                    const SizedBox(width: 8),
+                    _selectorFecha(),
+                  ],
+                ),
+              ),
+            ),
+
+            // Filtros
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: _filtros(),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+            // 👇 SOLO cambia esta parte según estado
+            _sliverSegunEstado(),
+          ],
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: ScrollBoton(controller: controller),
+        ),
+      ],
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    if (cargandoInicial) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 166, 226, 70),
+        ),
+      );
+    }
+
+    return _contenidoConEstado();
+  }
 
 
   Widget _searchBar() {
     return SearchBar(
       controller: _searchController,
-      hintText: 'Buscar restaurante...',
+      hintText: 'Buscar actividad...',
       leading: Padding(
         padding: const EdgeInsets.only(left: 8),
-        child:
-        Icon(Icons.search, size: 18, color: Colors.grey.shade600),
+        child: Icon(Icons.search, size: 18, color: Colors.grey.shade600),
       ),
       backgroundColor: WidgetStateProperty.all(Colors.grey.shade100),
       elevation: WidgetStateProperty.all(0),
@@ -313,14 +304,16 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         ),
       ),
       textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 13)),
+      padding: WidgetStateProperty.all(
+        const EdgeInsets.symmetric(vertical: 0, horizontal: 4),
+      ),
       constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
-        nombre = value;
+        titulo = value;
         _debounceTimer?.cancel();
         _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-          _resetYcargar();
+          _cargarActividades();
         });
-
       },
     );
   }
@@ -333,9 +326,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
             Expanded(child: _selectorCategorias()),
             const SizedBox(width: 8),
             Expanded(child: _selectorLocalidad()),
-            if (categoria != null ||
-                localidad != null ||
-                soloAbiertos == true || nombre.isNotEmpty) ...[
+            if (categoria != null || localidad != null || fecha != null || titulo.isNotEmpty) ...[
               const SizedBox(width: 8),
               _botonLimpiar(),
             ],
@@ -351,13 +342,14 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         setState(() {
           categoria = null;
           localidad = null;
-          soloAbiertos = null;
-          nombre = "";
+          fecha = null;
+          titulo = "";
           _searchController.clear();
+          _selectorLocalidadKey = UniqueKey();
           _localidadController?.clear();
           _categoriaController?.clear();
         });
-        _resetYcargar();
+        _cargarActividades();
       },
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -366,8 +358,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.red.shade300),
         ),
-        child: Icon(Icons.clear,
-            size: 18, color: Colors.red.shade700),
+        child: Icon(Icons.clear, size: 18, color: Colors.red.shade700),
       ),
     );
   }
@@ -420,7 +411,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
           },
           onSelected: (s) {
             setState(() => categoria = s);
-            _resetYcargar();
+            _cargarActividades();
           },
           fieldViewBuilder: (context, ctrl, focusNode, _) {
             _categoriaController = ctrl;
@@ -435,7 +426,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                 onClear: () {
                   setState(() => categoria = null);
                   ctrl.clear();
-                  _resetYcargar();
+                  _cargarActividades();
                 },
               ),
             );
@@ -480,12 +471,51 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
           localidades: snapshot.data!,
           onSelected: (loc) {
             setState(() => localidad = loc?.ine);
-            _resetYcargar();
+            _cargarActividades();
           },
         );
       },
     );
   }
+
+
+  Widget _selectorFecha() {
+    return GestureDetector(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          firstDate: DateTime.now(),
+          lastDate: DateTime(2030),
+        );
+        if (picked != null) {
+          setState(() => fecha = picked);
+          _cargarActividades();
+        }
+      },
+      child: Container(
+        height: 40,
+        width: 40,
+        decoration: BoxDecoration(
+          color: fecha == null ? Colors.grey.shade100 : const Color.fromARGB(30, 166, 226, 70),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: fecha == null
+                ? Colors.grey.shade300
+                : const Color.fromARGB(255, 166, 226, 70),
+          ),
+        ),
+        child: Icon(
+          Icons.calendar_today,
+          size: 18,
+          color: fecha == null
+              ? Colors.grey.shade600
+              : const Color.fromARGB(255, 166, 226, 70),
+        ),
+      ),
+    );
+  }
+
+
 
   Widget _shimmerLoader() {
     return Container(
@@ -496,49 +526,6 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       ),
     );
   }
-
-
-
-  Widget _chipAbiertoAhora() {
-    final bool seleccionado = soloAbiertos == true;
-
-    return InkWell(
-      splashColor: const Color.fromARGB(40, 166, 226, 70),
-      highlightColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      onTap: () {
-        setState(() {
-          soloAbiertos = seleccionado ? null : true;
-        });
-        _resetYcargar();
-      },
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: seleccionado ? Color.fromARGB(136, 166, 226, 70):  Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: seleccionado
-                ? const Color.fromARGB(255, 166, 226, 70)
-                : Colors.grey.shade300,
-            width: 1,
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          "Abierto",
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey.shade700,
-          ),
-        ),
-      ),
-    );
-  }
-
-
 
   @override
   void dispose() {

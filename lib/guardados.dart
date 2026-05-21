@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:kultux/api/actividadesAPI.dart';
-import 'package:kultux/api/alojamientoAPI.dart';
-import 'package:kultux/api/restauranteAPI.dart';
-import 'package:kultux/api/interaccionesAPI.dart';
+import 'package:kultux/api/actividades_api.dart';
+import 'package:kultux/api/alojamiento_api.dart';
+import 'package:kultux/api/restaurante_api.dart';
+import 'package:kultux/api/interacciones_api.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';

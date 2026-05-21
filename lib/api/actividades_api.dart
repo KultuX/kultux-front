@@ -9,11 +9,6 @@ import '../models/ActividadTotal.dart';
 import 'package:kultux/core/utils/api_url.dart';
 class ActividadesApiService{
 
-  static final String _BASE_URL_ACTIVIDADES = "micro-actividad-41rb.onrender.com";
-  //static final String _BASE_URL_ACTIVIDADES = "micro-actividad-comd.onrender.com";
-  //static final String _BASE_URL_ACTIVIDADES = "micro-actividad.onrender.com"
-  //static final String _BASE_URL_ACTIVIDADES = "10.0.2.2:8081";
-
   static Future<Pages<Actividad>> obtenerActividadesInicio(int page) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,

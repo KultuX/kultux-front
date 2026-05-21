@@ -5,7 +5,7 @@ import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/imagen.dart';
 import 'package:kultux/models/franja.dart';
 import 'package:kultux/models/usuario.dart';
-import 'package:kultux/API/interaccionesAPI.dart';
+import 'package:kultux/API/interacciones_api.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:kultux/componentes/modal_alerta.dart';

@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:kultux/componentes/text_fields.dart';
 import 'package:kultux/registro.dart';
 import 'package:kultux/models/usuario.dart';
-import 'package:kultux/api/usuariosAPI.dart';
+import 'package:kultux/api/usuarios_api.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
 import 'package:kultux/componentes/asset_recuperar_password.dart';

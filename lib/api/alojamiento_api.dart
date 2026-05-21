@@ -1,37 +1,37 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:kultux/models/restaurante.dart';
+import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/models/pages.dart';
 import 'package:kultux/core/utils/api_url.dart';
-class RestauranteApiService{
-  static final String _BASE_URL_RESTAURANTES = "micro-restaurante-hs3x.onrender.com";
-  //static final String _BASE_URL_RESTAURANTES = "micro-restaurante-nhzz.onrender.com";
-  // static final String _BASE_URL_RESTAURANTES = "micro-restaurante-n4bv.onrender.com";
-  //static final String _BASE_URL_RESTAURANTES = "10.0.2.2:8083";
+class AlojamientoApiService{
 
-  static Future<List<Restaurante>> obtenerRestauranteDestacados() async {
-    final url = Uri.https( ApiUrl.BASE_URL,'/api/v1/gateway-restaurantes/destacados');
+  static Future<Pages<Alojamiento>> obtenerAlojamientoDestacados({required int page}) async {
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-alojamientos/listar_destacados',
+      {'page': page.toString(), 'size': '8'},
+    );
 
     final response = await http.get(
       url,
       headers: {
-        'Content-Type':'application/json',
-        'Accept':'application/json',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'User-Agent': 'KultuX APP'
       },
     );
 
-    if (response.statusCode == 200){
-      final List<dynamic> lista = jsonDecode(response.body);
-      return lista.map((json) => Restaurante.destacado(json)).toList();
-    }else{
+    if (response.statusCode == 200) {
+      final dynamic json = jsonDecode(response.body);
+      return Pages<Alojamiento>.fromJson(json, (e) => Alojamiento.busqueda(e));
+    } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
-  static Future<Restaurante> restauranteDetalle(int id) async{
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-restaurantes/detalle_restaurante/$id');
+  static Future<Alojamiento> obtenerAlojamientoDetalle(int id) async{
+    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-alojamientos/$id');
 
     final response = await http.get(
       url,
@@ -44,23 +44,22 @@ class RestauranteApiService{
 
     if (response.statusCode == 200){
       final dynamic json = jsonDecode(response.body);
-      return Restaurante.detalle(json);
+      return Alojamiento.detalle(json);
     }else{
       throw HttpException(response.statusCode.toString());
     }
   }
 
-
-  static Future<List<String>> categoriasRestaurantes() async{
-    final url = Uri.https( ApiUrl.BASE_URL, 'api/v1/gateway-restaurantes/categoria_restaurante');
+  static Future<List<String>> categoriaAlojamientos() async{
+    final url = Uri.https( ApiUrl.BASE_URL, 'api/v1/gateway-alojamientos/categoria_alojamiento');
 
     final response = await http.get(
-        url,
-        headers:{
-          'Content-Type':'application/json',
-          'Accept':'application/json',
-          'User-Agent': 'KultuX APP'
-        }
+      url,
+      headers:{
+        'Content-Type':'application/json',
+        'Accept':'application/json',
+        'User-Agent': 'KultuX APP'
+      }
     );
 
     if(response.statusCode == 200){
@@ -71,11 +70,10 @@ class RestauranteApiService{
     }
   }
 
-  static Future<Pages<Restaurante>> restaurantesFiltrados({
+  static Future<Pages<Alojamiento>> alojamientosFiltrados({
     String? nombre,
     String? categoria,
     int? localidad,
-    bool? soloAbiertos,
     required int page,
   }) async {
     final params = <String, String>{
@@ -86,11 +84,10 @@ class RestauranteApiService{
     if (nombre != null && nombre.isNotEmpty) params['nombre'] = nombre;
     if (categoria != null) params['categoria'] = categoria;
     if (localidad != null) params['localidad'] = localidad.toString();
-    if ( soloAbiertos != null ) params['soloAbiertos'] = soloAbiertos.toString();
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
-      '/api/v1/gateway-restaurantes/busqueda',
+      '/api/v1/gateway-alojamientos/busqueda',
       params,
     );
 
@@ -105,21 +102,17 @@ class RestauranteApiService{
 
     if(response.statusCode == 200){
       final dynamic json = jsonDecode(response.body);
-      print('restaurantes filtrados: $json');
-      return Pages<Restaurante>.fromJson(
+      return Pages<Alojamiento>.fromJson(
         json,
-            (a) => Restaurante.busqueda(a),
+            (a) => Alojamiento.busqueda(a),
       );
-    }else if(response.statusCode == 204){
-      throw HttpException(response.statusCode.toString());
-    }
-    else{
+    }else {
       throw HttpException(response.statusCode.toString());
     }
 
   }
 
-  static Future<Pages<Restaurante>> restaurantesGuardados({
+  static Future<Pages<Alojamiento>> alojamientosGuardados({
     required int idUsuario,
     required int page,
   }) async {
@@ -136,9 +129,12 @@ class RestauranteApiService{
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
-      '/api/v1/gateway-restaurantes/listar_guardados',
+      '/api/v1/gateway-alojamientos/listar_guardados',
       queryParams,
     );
+
+
+    print("URL FINAL: $url");
 
     final response = await http.get(
       url,
@@ -151,9 +147,9 @@ class RestauranteApiService{
 
     if(response.statusCode == 200){
       final dynamic json = jsonDecode(response.body);
-      return Pages<Restaurante>.fromJson(
+      return Pages<Alojamiento>.fromJson(
         json,
-            (e) => Restaurante.guardado(e),
+            (e) => Alojamiento.guardado(e),
       );
     }
     else{
@@ -163,3 +159,4 @@ class RestauranteApiService{
   }
 
 }
+

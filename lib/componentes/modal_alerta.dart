@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/utils/contenedor_web.dart';
+
 class Alerta {
   static void show(
       BuildContext context, {
@@ -99,74 +101,88 @@ class _AlertaWidgetState extends State<_AlertaWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      bottom: 50,
-      left: 16,
-      right: 16,
-      child: SlideTransition(
-        position: _slide,
-        child: FadeTransition(
-          opacity: _fade,
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F7F4),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE0DDD6)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x22000000),
-                    blurRadius: 16,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(widget.icono,
-                        size: 18, color: widget.color),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      widget.mensaje,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                  ),
-                  if(widget.mostrarCerrar) ...[
-                    const SizedBox(width:6),
-                    GestureDetector(
-                      onTap: widget.onCerrar,
-                      child: Container(
-                        width:26,
-                        height:26,
-                        decoration:BoxDecoration(
-                          color: const Color(0xFFE0DDD6),
-                          borderRadius: BorderRadius.circular(8)
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          size: 14,
-                          color: Color(0xFF6B6B6B)
-                        )
-                      )
-                    )
-                  ]
 
-                ],
+    final anchoPantalla = MediaQuery.of(context).size.width;
+    final esWeb = anchoPantalla > 600;
+
+    return ContenedorWeb(
+      child: Align(
+
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: 50,
+            left: 16,
+            right: esWeb ? 40 : 16,
+          ),
+          child: SlideTransition(
+            position: _slide,
+            child: FadeTransition(
+              opacity: _fade,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: esWeb ? 360 : double.infinity,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F7F4),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE0DDD6)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x22000000),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: widget.color.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(widget.icono, size: 18, color: widget.color),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          widget.mensaje,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                      ),
+                      if (widget.mostrarCerrar) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: widget.onCerrar,
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE0DDD6),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Color(0xFF6B6B6B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

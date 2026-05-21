@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:kultux/models/actividad.dart';
-import 'package:kultux/api/localidadesAPI.dart';
-import 'package:kultux/API/actividadesAPI.dart';
+import 'package:kultux/api/localidades_api.dart';
+import 'package:kultux/API/actividades_api.dart';
 import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/detalles.dart';
 

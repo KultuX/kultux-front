@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kultux/buscarActividad.dart';
-import 'package:kultux/buscarRestaurante.dart';
-import 'package:kultux/buscarAlojamiento.dart';
+import 'package:kultux/buscar_actividad.dart';
+import 'package:kultux/buscar_restaurante.dart';
+import 'package:kultux/buscar_alojamiento.dart';
 
 import 'componentes/cabecera.dart';
 

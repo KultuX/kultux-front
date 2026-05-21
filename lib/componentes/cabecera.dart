@@ -83,19 +83,23 @@ class CabeceraPagina extends StatelessWidget {
                 ),
               ),
             ),
-          if (tieneFlecha)
-            Positioned(
-              top: -16,
-              left: -14,
-              child: IconButton(
-                onPressed: onVolver,
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: 28,
+            if (tieneFlecha)
+              Positioned(
+                top: -20,
+                left: -14,
+                child: GestureDetector(
+                  onTap: onVolver,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
                 ),
               ),
-            ),
 
           Padding(
             padding: EdgeInsets.only(

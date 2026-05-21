@@ -21,9 +21,8 @@ class PoliticaPrivacidadDialog extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Cabecera ────────────────────────────────────────────────────
           Container(
-            width: double.infinity,
+            width: 360,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
             decoration: const BoxDecoration(
               color: Color.fromARGB(255, 166, 226, 70),
@@ -54,7 +53,6 @@ class PoliticaPrivacidadDialog extends StatelessWidget {
             ),
           ),
 
-          // ── Contenido scrollable ────────────────────────────────────────
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -140,8 +138,6 @@ class PoliticaPrivacidadDialog extends StatelessWidget {
               ),
             ),
           ),
-
-          // ── Botón Cerrar ────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: SizedBox(
@@ -172,8 +168,6 @@ class PoliticaPrivacidadDialog extends StatelessWidget {
     );
   }
 }
-
-// ── Widgets auxiliares privados ──────────────────────────────────────────────
 
 class _SeccionTitulo extends StatelessWidget {
   final String texto;

@@ -5,16 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:kultux/componentes/botones.dart';
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/alojamiento.dart';
-import 'package:kultux/api/restauranteAPI.dart';
-import 'package:kultux/api/alojamientoAPI.dart';
-import 'package:kultux/componentes/tarjetas.dart';
+import 'package:kultux/api/restaurante_api.dart';
+import 'package:kultux/api/alojamiento_api.dart';
+import 'package:kultux/componentes/tarjeta_busqueda.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
+import 'package:kultux/api/establecimientos.dart';
 
 import 'componentes/cabecera.dart';
 import 'core/utils/iconos.dart';
+
 class EstablecimientosPage extends StatefulWidget {
 
 
@@ -60,26 +62,52 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   bool _restaurantesCargados = false;
   bool _alojamientosCargados = false;
 
+  int _pageRestaurantes = 0;
+  bool _hayMasRestaurantes = true;
+  bool _cargandoMasRestaurantes = false;
+  final ScrollController _scrollRestaurantes = ScrollController();
+
+  int _pageAlojamientos = 0;
+  bool _hayMasAlojamientos = true;
+  bool _cargandoMasAlojamientos = false;
+  final ScrollController _scrollAlojamientos = ScrollController();
+
 
   @override
   void initState() {
     super.initState();
     _cargarResumen();
+    _scrollRestaurantes.addListener(() {
+      if (_scrollRestaurantes.position.pixels >=
+          _scrollRestaurantes.position.maxScrollExtent - 200) {
+        _cargarMasRestaurantes();
+      }
+    });
+    _scrollAlojamientos.addListener(() {
+      if (_scrollAlojamientos.position.pixels >=
+          _scrollAlojamientos.position.maxScrollExtent - 200) {
+        _cargarMasAlojamientos();
+      }
+    });
+
+
+  }
+
+  @override
+  void dispose() {
+    _scrollRestaurantes.dispose();
+    _scrollAlojamientos.dispose();
+    super.dispose();
   }
 
   Future<void> _cargarResumen() async {
     setState(() => _estadoResumen = EstadoUi.cargando);
     try {
-      final results = await Future.wait([
-        RestauranteApiService.obtenerRestauranteDestacados(),
-        AlojamientoApiService.obtenerAlojamientoDestacados(),
-      ]);
+      final result = await EstablecimientosApiService.obtenerEstablecimientosDestacados();
       setState(() {
-        _restaurantes = results[0] as List<Restaurante>;
-        _alojamientos = results[1] as List<Alojamiento>;
-        _estadoResumen = (_restaurantes.isEmpty && _alojamientos.isEmpty)
-            ? EstadoUi.vacio
-            : EstadoUi.contenido;
+        _restaurantes = result['restaurantes'] as List<Restaurante>;
+        _alojamientos = result['alojamientos'] as List<Alojamiento>;
+        _estadoResumen =  EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -106,16 +134,19 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     if (_restaurantesCargados) return;
     setState(() => _estadoRestaurantes = EstadoUi.cargando);
     try {
-      final lista = await RestauranteApiService.obtenerRestauranteDestacados();
+      final pagina = await RestauranteApiService.obtenerRestauranteDestacados(page: 0);
+      print(pagina.toString());
       setState(() {
-        _todosRestaurantes = lista;
+        _todosRestaurantes = pagina.contenido;
+        _hayMasRestaurantes = pagina.numero + 1 < pagina.totalPaginas;
+        _pageRestaurantes = 1;
         _restaurantesCargados = true;
-        _estadoRestaurantes =
-        lista.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        _estadoRestaurantes = pagina.contenido.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
         _estadoRestaurantes = EstadoUi.sinConexion;
+        _mensajeErrorRestaurantes = 'No hay conexión a internet';
         _mensajeErrorRestaurantes = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
@@ -132,16 +163,33 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     }
   }
 
+  Future<void> _cargarMasRestaurantes() async {
+    if (!_hayMasRestaurantes || _cargandoMasRestaurantes) return;
+    setState(() => _cargandoMasRestaurantes = true);
+    try {
+      final pagina = await RestauranteApiService.obtenerRestauranteDestacados(page: _pageRestaurantes);
+      setState(() {
+        _todosRestaurantes.addAll(pagina.contenido);
+        _hayMasRestaurantes = pagina.numero + 1 < pagina.totalPaginas;
+        _pageRestaurantes++;
+      });
+    } catch (_) {} finally {
+      setState(() => _cargandoMasRestaurantes = false);
+    }
+  }
+
   Future<void> _cargarTodosAlojamientos() async {
     if (_alojamientosCargados) return;
     setState(() => _estadoAlojamientos = EstadoUi.cargando);
     try {
-      final lista = await AlojamientoApiService.obtenerAlojamientoDestacados();
+      final pagina = await AlojamientoApiService.obtenerAlojamientoDestacados(page: 0);
+
       setState(() {
-        _todosAlojamientos = lista;
+        _todosAlojamientos = pagina.contenido;
+        _hayMasAlojamientos = pagina.numero + 1 < pagina.totalPaginas;
+        _pageAlojamientos = 1;
         _alojamientosCargados = true;
-        _estadoAlojamientos =
-        lista.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        _estadoAlojamientos = pagina.contenido.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -159,6 +207,21 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
         _estadoAlojamientos = EstadoUi.error;
         _mensajeErrorAlojamientos = 'Error inesperado';
       });
+    }
+  }
+
+  Future<void> _cargarMasAlojamientos() async {
+    if (!_hayMasAlojamientos || _cargandoMasAlojamientos) return;
+    setState(() => _cargandoMasAlojamientos = true);
+    try {
+      final pagina = await AlojamientoApiService.obtenerAlojamientoDestacados(page: _pageAlojamientos);
+      setState(() {
+        _todosAlojamientos.addAll(pagina.contenido);
+        _hayMasAlojamientos = pagina.numero + 1 < pagina.totalPaginas;
+        _pageAlojamientos++;
+      });
+    } catch (_) {} finally {
+      setState(() => _cargandoMasAlojamientos = false);
     }
   }
 
@@ -190,28 +253,31 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     if (_mostrandoListadoRestaurantes) return _buildListadoRestaurantes();
     if (_mostrandoListadoAlojamientos) return _buildListadoAlojamientos();
 
-    return switch (_estadoResumen) {
-      EstadoUi.cargando =>
-      const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 166, 226, 70),
+    return Column(
+      children: [
+        CabeceraPagina(titulo: 'Descubre', subtitulo: 'Establecimientos'),
+        Expanded(
+          child: switch (_estadoResumen) {
+            EstadoUi.cargando => const Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 166, 226, 70),
+              ),
+            ),
+            EstadoUi.error => estadoError(
+              icon: Icons.error_outline,
+              mensaje: _mensajeErrorResumen,
+              onRetry: _cargarResumen,
+            ),
+            EstadoUi.sinConexion => estadoError(
+              icon: Icons.wifi_off,
+              mensaje: _mensajeErrorResumen,
+              onRetry: _cargarResumen,
+            ),
+            _ => _buildResumen(),
+          },
         ),
-      ),
-      EstadoUi.vacio => estadoVacio(),
-      EstadoUi.sinConexion =>
-          estadoError(
-            icon: Icons.wifi_off,
-            mensaje: _mensajeErrorResumen,
-            onRetry: _cargarResumen,
-          ),
-      EstadoUi.error =>
-          estadoError(
-            icon: Icons.error_outline,
-            mensaje: _mensajeErrorResumen,
-            onRetry: _cargarResumen,
-          ),
-      EstadoUi.contenido => _buildResumen(),
-    };
+      ],
+    );
   }
 
   Widget _buildResumen() {
@@ -220,12 +286,6 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            CabeceraPagina(
-              titulo: 'Descubre',
-              subtitulo: 'Establecimientos',
-            ),
-
-
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
               child: Column(
@@ -327,7 +387,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                     final r = _todosRestaurantes[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Tarjeta.restaurante(
+                      child: TarjetaBusqueda.restaurante(
                         titulo: r.nombre,
                         imagenUrl: r.imagenPrincipal!,
                         textoEtiqueta: r.categoriaRestaurante[0].toUpperCase() +
@@ -346,6 +406,9 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                                 tipo: TipoAviso.error);
                           }
                         },
+                        horario: r.horario!,
+                        abierto: r.abierto!,
+                        localidad: r.localidad
                       ),
                     );
                   },
@@ -400,7 +463,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                     final a = _todosAlojamientos[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Tarjeta.alojamiento(
+                      child: TarjetaBusqueda.alojamiento(
                         titulo: a.nombre,
                         imagenUrl: a.imagenPrincipal!,
                         textoEtiqueta: a.categoriaAlojamiento[0].toUpperCase() +
@@ -419,6 +482,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                                 tipo: TipoAviso.error);
                           }
                         },
+                        localidad: a.localidad,
                       ),
                     );
                   },
@@ -495,7 +559,22 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
             ],
           ),
           const SizedBox(height: 12),
-          ...filas,
+          if (items.isEmpty)
+            SizedBox(
+              height: 120, // misma altura aprox que una fila de mini-tarjetas
+              child: Center(
+                child: Text(
+                  'No hay destacados disponibles',
+                  style: const TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontSize: 13,
+                    color: _textoSuave,
+                  ),
+                ),
+              ),
+            )
+          else
+            ...filas,
         ],
       ),
     );
