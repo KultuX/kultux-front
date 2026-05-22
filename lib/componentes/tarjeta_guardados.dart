@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:kultux/core/utils/normalizador.dart';
 
-// Tarjeta reutilizable para Actividad, Restaurante y Alojamiento en Guardados
 class TarjetaGuardado extends StatelessWidget {
   final String titulo;
   final String? localidad;
   final String? categoria;
   final String? imagenUrl;
   final VoidCallback onTap;
-
-  // Solo actividad
   final String? fecha;
-
-  // Solo restaurante
   final bool? abierto;
 
   const TarjetaGuardado._({
@@ -97,7 +93,6 @@ class TarjetaGuardado extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Imagen pequeña
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: SizedBox(
@@ -113,7 +108,6 @@ class TarjetaGuardado extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +138,7 @@ class TarjetaGuardado extends StatelessWidget {
                       if (fecha != null && fecha!.isNotEmpty)
                         _Chip(
                           icono: Icons.calendar_today_outlined,
-                          texto: fecha!,
+                          texto: formatearFecha(fecha),
                           fondo: const Color(0xFFEAF3DE),
                           color: const Color(0xFF3B6D11),
                         ),
@@ -172,7 +166,6 @@ class TarjetaGuardado extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            // Botón flecha
             Container(
               width: 32,
               height: 32,

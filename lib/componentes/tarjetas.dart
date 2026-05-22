@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kultux/core/utils/normalizador.dart';
 import 'package:kultux/models/franja.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -154,7 +155,7 @@ class Tarjeta extends StatelessWidget {
                           spacing: 6, runSpacing: 4,
                           children: [
                             if (localidad != null) _Chip.localidad(localidad!),
-                            if (fecha != null) _Chip.fecha(fecha!),
+                            if (fecha != null) _Chip.fecha(formatearFecha(fecha)),
                             if (textoEtiqueta != null && iconoEtiqueta != null)
                               _Chip.etiqueta(textoEtiqueta!, iconoEtiqueta!),
                           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kultux/componentes/etiqueta_categoria.dart';
 import 'package:kultux/core/utils/normalizador.dart';
 import 'package:kultux/models/franja.dart';
 
@@ -109,7 +110,6 @@ class TarjetaBusqueda extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _ImagenSuperior(imagenUrl: imagenUrl),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
@@ -153,13 +153,13 @@ class TarjetaBusqueda extends StatelessWidget {
                       if (fecha != null)
                         _ChipMeta(
                           icono: Icons.calendar_today_outlined,
-                          texto: fecha!,
+                          texto: formatearFecha(fecha),
                           fondoColor: const Color(0xFFF0F8E6),
                           textoColor: const Color(0xFF4A7A10),
                         ),
 
                       if (textoEtiqueta != null && iconoEtiqueta != null)
-                        _ChipMetaSvg(
+                        EtiquetaCategoria(
                           iconoPath: iconoEtiqueta!,
                           texto: formatearCategoria(textoEtiqueta!),
                           fondoColor: const Color(0xFF1A1A1A),
@@ -289,58 +289,6 @@ class _ChipMeta extends StatelessWidget {
   }
 }
 
-class _ChipMetaSvg extends StatelessWidget {
-  final String iconoPath;
-  final String texto;
-  final Color fondoColor;
-  final Color textoColor;
-  final Color iconoColor;
-
-  const _ChipMetaSvg({
-    required this.iconoPath,
-    required this.texto,
-    required this.fondoColor,
-    required this.textoColor,
-    required this.iconoColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: fondoColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SvgPicture.asset(
-            iconoPath,
-            width: 13,
-            height: 13,
-            colorFilter: ColorFilter.mode(iconoColor, BlendMode.srcIn),
-          ),
-          const SizedBox(width: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 130),
-            child: Text(
-              texto,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: "RobotoCondensed",
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: textoColor,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _HorarioInline extends StatelessWidget {
   final Map<String, List<Franja>> horario;

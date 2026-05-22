@@ -12,20 +12,23 @@ import 'package:kultux/componentes/modal_alerta.dart';
 
 import 'package:kultux/core/utils/compartir.dart';
 
+import 'componentes/etiqueta_categoria.dart';
+import 'core/utils/iconos.dart';
+import 'core/utils/normalizador.dart';
 
 class _KTheme {
-  static const verde       = Color(0xFFA8D63F);
-  static const fondoCard   = Color(0xFFF8F7F4);
+  static const verde = Color(0xFFA8D63F);
+  static const fondoCard = Color(0xFFF8F7F4);
   static const fondoPagina = Color(0xFFF1EFE9);
-  static const texto       = Color(0xFF1A1A1A);
-  static const textoSuave  = Color(0xFF6B6B6B);
-  static const borde       = Color(0xFFE0DDD6);
+  static const texto = Color(0xFF1A1A1A);
+  static const textoSuave = Color(0xFF6B6B6B);
+  static const borde = Color(0xFFE0DDD6);
   static const verdeOscuro = Color(0xFF2E7D32);
-  static const rojo        = Color(0xFFC62828);
+  static const rojo = Color(0xFFC62828);
 
   static const sombra = [
     BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 4)),
-    BoxShadow(color: Color(0x08000000), blurRadius: 4,  offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x08000000), blurRadius: 4, offset: Offset(0, 1)),
   ];
 
   static const sombraLeve = [
@@ -53,6 +56,8 @@ class Detalle extends StatefulWidget {
   final int? idAlojamiento;
   final String? nombreEmpresa;
   final String? logotipoEmpresa;
+  final String? categoria;
+  final String? iconoEtiqueta;
 
   const Detalle._({
     super.key,
@@ -74,13 +79,15 @@ class Detalle extends StatefulWidget {
     this.idRestaurante,
     this.idAlojamiento,
     this.nombreEmpresa,
-    this.logotipoEmpresa
+    this.logotipoEmpresa,
+    this.categoria,
+    this.iconoEtiqueta,
   });
 
   List<String> get imagenesLista {
     if (imagenes == null || imagenes!.isEmpty) {
       return [
-        'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg'
+        'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
       ];
     }
     final ordenadas = [...imagenes!];
@@ -109,6 +116,8 @@ class Detalle extends StatefulWidget {
         idActividad: objeto.id,
         nombreEmpresa: objeto.nombreEmpresa,
         logotipoEmpresa: objeto.logotipoEmpresa,
+        categoria: objeto.categoriaActividad,
+        iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
       );
     }
     if (objeto is Alojamiento) {
@@ -124,6 +133,8 @@ class Detalle extends StatefulWidget {
         urlWeb: objeto.urlWeb,
         descripcion: objeto.descripcion,
         direccion: objeto.direccion,
+        categoria: objeto.categoriaAlojamiento,
+        iconoEtiqueta: Iconos.getIconoAlojamiento(objeto.categoriaAlojamiento),
       );
     }
     if (objeto is Restaurante) {
@@ -141,6 +152,8 @@ class Detalle extends StatefulWidget {
         urlCompraReserva: objeto.urlReserva,
         urlWeb: objeto.urlWeb,
         direccion: objeto.direccion,
+        categoria: objeto.categoriaRestaurante,
+        iconoEtiqueta: Iconos.getIconoRestaurante(objeto.categoriaRestaurante),
       );
     }
     throw Exception('Tipo de objeto no soportado');
@@ -154,7 +167,8 @@ class _DetalleState extends State<Detalle> {
   int _indiceActual = 0;
 
   bool get _tieneUrlReserva =>
-      widget.urlCompraReserva != null && widget.urlCompraReserva!.trim().isNotEmpty;
+      widget.urlCompraReserva != null &&
+      widget.urlCompraReserva!.trim().isNotEmpty;
 
   bool get _tieneUrlWeb =>
       widget.urlWeb != null && widget.urlWeb!.trim().isNotEmpty;
@@ -166,7 +180,9 @@ class _DetalleState extends State<Detalle> {
   }
 
   String _normalizarUrl(String url) =>
-      url.startsWith('http://') || url.startsWith('https://') ? url : 'https://$url';
+      url.startsWith('http://') || url.startsWith('https://')
+      ? url
+      : 'https://$url';
 
   String _getImagenActual() {
     final lista = widget.imagenesLista;
@@ -176,7 +192,7 @@ class _DetalleState extends State<Detalle> {
 
   @override
   Widget build(BuildContext context) {
-    final bool esActividad   = widget.idActividad != null;
+    final bool esActividad = widget.idActividad != null;
     final bool esRestaurante = widget.idRestaurante != null;
     final bool esAlojamiento = widget.idAlojamiento != null;
 
@@ -189,20 +205,20 @@ class _DetalleState extends State<Detalle> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _TarjetaPrincipal(
-                titulo:          widget.titulo,
-                localidad:       widget.localidad,
-                esActividad:     esActividad,
-                esRestaurante:   esRestaurante,
-                esAlojamiento:   esAlojamiento,
-                fechaInicio:     widget.fechaInicio,
-                fechaFin:        widget.fechaFin,
-                imagenesLista:   widget.imagenesLista,
-                indiceActual:    _indiceActual,
+                titulo: widget.titulo,
+                localidad: widget.localidad,
+                esActividad: esActividad,
+                esRestaurante: esRestaurante,
+                esAlojamiento: esAlojamiento,
+                fechaInicio: widget.fechaInicio,
+                fechaFin: widget.fechaFin,
+                imagenesLista: widget.imagenesLista,
+                indiceActual: _indiceActual,
                 getImagenActual: _getImagenActual,
-                idActividad:     widget.idActividad,
-                idRestaurante:   widget.idRestaurante,
-                idAlojamiento:   widget.idAlojamiento,
-                idUsuario:       Usuario.usuarioActual?.id,
+                idActividad: widget.idActividad,
+                idRestaurante: widget.idRestaurante,
+                idAlojamiento: widget.idAlojamiento,
+                idUsuario: Usuario.usuarioActual?.id,
                 descripcion: widget.descripcion,
                 portada: widget.imagenPrincipal,
                 onPrev: () => setState(() {
@@ -210,13 +226,17 @@ class _DetalleState extends State<Detalle> {
                   _indiceActual = (_indiceActual - 1 + len) % len;
                 }),
                 onNext: () => setState(() {
-                  _indiceActual = (_indiceActual + 1) % widget.imagenesLista.length;
+                  _indiceActual =
+                      (_indiceActual + 1) % widget.imagenesLista.length;
                 }),
+                categoria: widget.categoria,
+                iconoEtiqueta: widget.iconoEtiqueta,
               ),
 
               const SizedBox(height: 16),
 
-              if (widget.descripcion != null && widget.descripcion!.trim().isNotEmpty) ...[
+              if (widget.descripcion != null &&
+                  widget.descripcion!.trim().isNotEmpty) ...[
                 _SeccionCard(
                   child: Text(
                     widget.descripcion!,
@@ -260,7 +280,10 @@ class _DetalleState extends State<Detalle> {
                         esEnlace: true,
                         onTap: () async {
                           final uri = Uri.parse(_normalizarUrl(widget.urlWeb!));
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
                         },
                       ),
 
@@ -272,7 +295,9 @@ class _DetalleState extends State<Detalle> {
                         valor: widget.telefonoEmpresa!,
                         esEnlace: true,
                         onTap: () async {
-                          final uri = Uri.parse('tel:${widget.telefonoEmpresa}');
+                          final uri = Uri.parse(
+                            'tel:${widget.telefonoEmpresa}',
+                          );
                           await launchUrl(uri);
                         },
                       ),
@@ -285,7 +310,9 @@ class _DetalleState extends State<Detalle> {
                         valor: widget.correoCorporativo!,
                         esEnlace: true,
                         onTap: () async {
-                          final uri = Uri.parse('mailto:${widget.correoCorporativo}');
+                          final uri = Uri.parse(
+                            'mailto:${widget.correoCorporativo}',
+                          );
                           await launchUrl(uri);
                         },
                       ),
@@ -295,13 +322,19 @@ class _DetalleState extends State<Detalle> {
                     _BotonCTA(
                       activo: _tieneUrlReserva,
                       esActividad: esActividad,
+                      esRestaurante: esRestaurante,
                       onTap: _tieneUrlReserva
                           ? () async {
-                        final uri = Uri.parse(_normalizarUrl(widget.urlCompraReserva!));
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        }
-                      }
+                              final uri = Uri.parse(
+                                _normalizarUrl(widget.urlCompraReserva!),
+                              );
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              }
+                            }
                           : null,
                     ),
                   ],
@@ -336,6 +369,8 @@ class _TarjetaPrincipal extends StatelessWidget {
   final int? idUsuario;
   final String? descripcion;
   final String? portada;
+  final String? categoria;
+  final String? iconoEtiqueta;
 
   const _TarjetaPrincipal({
     required this.titulo,
@@ -355,7 +390,9 @@ class _TarjetaPrincipal extends StatelessWidget {
     this.idAlojamiento,
     this.idUsuario,
     this.descripcion,
-    this.portada
+    this.portada,
+    this.categoria,
+    this.iconoEtiqueta,
   });
 
   @override
@@ -375,7 +412,9 @@ class _TarjetaPrincipal extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.network(
@@ -384,17 +423,24 @@ class _TarjetaPrincipal extends StatelessWidget {
                     errorBuilder: (_, __, ___) => Container(
                       color: const Color(0xFFE8E5DF),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.image_not_supported_outlined,
-                          size: 40, color: _KTheme.textoSuave),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 40,
+                        color: _KTheme.textoSuave,
+                      ),
                     ),
                   ),
                 ),
               ),
 
               Positioned(
-                left: 0, right: 0, bottom: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                   child: Container(
                     height: 60,
                     decoration: const BoxDecoration(
@@ -410,23 +456,39 @@ class _TarjetaPrincipal extends StatelessWidget {
 
               if (tieneVarias) ...[
                 Positioned(
-                  left: 10, top: 0, bottom: 0,
-                  child: Center(child: _BotonFlecha(icono: Icons.chevron_left, onTap: onPrev)),
+                  left: 10,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: _BotonFlecha(
+                      icono: Icons.chevron_left,
+                      onTap: onPrev,
+                    ),
+                  ),
                 ),
                 Positioned(
-                  right: 10, top: 0, bottom: 0,
-                  child: Center(child: _BotonFlecha(icono: Icons.chevron_right, onTap: onNext)),
+                  right: 10,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: _BotonFlecha(
+                      icono: Icons.chevron_right,
+                      onTap: onNext,
+                    ),
+                  ),
                 ),
               ],
 
               if (tieneVarias)
                 Positioned(
-                  bottom: 10, left: 0, right: 0,
+                  bottom: 10,
+                  left: 0,
+                  right: 0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       imagenesLista.length,
-                          (i) => AnimatedContainer(
+                      (i) => AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         margin: const EdgeInsets.symmetric(horizontal: 3),
                         width: i == indiceActual ? 18 : 6,
@@ -443,7 +505,8 @@ class _TarjetaPrincipal extends StatelessWidget {
                 ),
 
               Positioned(
-                top: 10, right: 10,
+                top: 10,
+                right: 10,
                 child: Row(
                   children: [
                     _BotonGuardar(
@@ -488,7 +551,11 @@ class _TarjetaPrincipal extends StatelessWidget {
                           color: Colors.black.withOpacity(0.35),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.share_outlined, color: Colors.white, size: 18),
+                        child: const Icon(
+                          Icons.share_outlined,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ],
@@ -502,21 +569,41 @@ class _TarjetaPrincipal extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  titulo,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: _KTheme.texto,
-                    height: 1.2,
-                    letterSpacing: -0.3,
-                  ),
+                Row(
+                  mainAxisAlignment: .spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        titulo,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: _KTheme.texto,
+                          height: 1.2,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                    if (categoria != null && iconoEtiqueta != null) ...[
+                      const SizedBox(width: 8),
+                      EtiquetaCategoria(
+                        iconoPath: iconoEtiqueta!,
+                        texto: formatearCategoria(categoria!),
+                        fondoColor: const Color(0xFF1A1A1A),
+                        textoColor: Colors.white,
+                        iconoColor: const Color(0xFFA6E246),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.location_on_outlined,
-                        size: 16, color: _KTheme.verde),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: _KTheme.verde,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       localidad ?? '',
@@ -529,10 +616,14 @@ class _TarjetaPrincipal extends StatelessWidget {
                   ],
                 ),
 
-                if (esActividad && (fechaInicio != null || fechaFin != null)) ...[
+                if (esActividad &&
+                    (fechaInicio != null || fechaFin != null)) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: _KTheme.verde.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
@@ -541,11 +632,14 @@ class _TarjetaPrincipal extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 14, color: _KTheme.verde),
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 14,
+                          color: _KTheme.verde,
+                        ),
                         const SizedBox(width: 6),
                         Text(
-                          '${fechaInicio ?? ''}${fechaFin != null ? ' — $fechaFin' : ''}',
+                          '${formatearFecha(fechaInicio)}${fechaFin != null ? ' al ${formatearFecha(fechaFin)}' : ''}',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -564,7 +658,6 @@ class _TarjetaPrincipal extends StatelessWidget {
     );
   }
 }
-
 
 class _BotonGuardar extends StatefulWidget {
   final bool esActividad;
@@ -597,8 +690,8 @@ class _BotonGuardarState extends State<_BotonGuardar> {
 
   bool get _soportado =>
       (widget.esActividad && widget.idActividad != null) ||
-          (widget.esRestaurante && widget.idRestaurante != null) ||
-          (widget.esAlojamiento && widget.idAlojamiento != null);
+      (widget.esRestaurante && widget.idRestaurante != null) ||
+      (widget.esAlojamiento && widget.idAlojamiento != null);
 
   @override
   void initState() {
@@ -611,15 +704,21 @@ class _BotonGuardarState extends State<_BotonGuardar> {
       late bool guardado;
       if (widget.esActividad) {
         final r = await InteraccionesApiService.estadoGuardadoActividad(
-            idActividad: widget.idActividad!, idUsuario: widget.idUsuario!);
+          idActividad: widget.idActividad!,
+          idUsuario: widget.idUsuario!,
+        );
         guardado = r.guardado;
       } else if (widget.esRestaurante) {
         final r = await InteraccionesApiService.estadoGuardadoRestaurante(
-            idRestaurante: widget.idRestaurante!, idUsuario: widget.idUsuario!);
+          idRestaurante: widget.idRestaurante!,
+          idUsuario: widget.idUsuario!,
+        );
         guardado = r.guardado;
       } else {
         final r = await InteraccionesApiService.estadoGuardadoAlojamiento(
-            idAlojamiento: widget.idAlojamiento!, idUsuario: widget.idUsuario!);
+          idAlojamiento: widget.idAlojamiento!,
+          idUsuario: widget.idUsuario!,
+        );
         guardado = r.guardado;
       }
       if (mounted) setState(() => _guardado = guardado);
@@ -631,7 +730,7 @@ class _BotonGuardarState extends State<_BotonGuardar> {
   Future<void> _toggle(BuildContext context) async {
     if (_cargando || !_soportado) return;
     if (!_logueado) {
-      Alerta.show(context,mensaje: 'Inicia sesión o registrate para guardar');
+      Alerta.show(context, mensaje: 'Inicia sesión o registrate para guardar');
       return;
     }
     setState(() => _cargando = true);
@@ -639,31 +738,47 @@ class _BotonGuardarState extends State<_BotonGuardar> {
       if (_guardado == true) {
         if (widget.esActividad) {
           await InteraccionesApiService.quitarActividad(
-              idActividad: widget.idActividad!, idUsuario: widget.idUsuario!);
+            idActividad: widget.idActividad!,
+            idUsuario: widget.idUsuario!,
+          );
         } else if (widget.esRestaurante) {
           await InteraccionesApiService.quitarRestaurante(
-              idRestaurante: widget.idRestaurante!, idUsuario: widget.idUsuario!);
+            idRestaurante: widget.idRestaurante!,
+            idUsuario: widget.idUsuario!,
+          );
         } else {
           await InteraccionesApiService.quitarAlojamiento(
-              idAlojamiento: widget.idAlojamiento!, idUsuario: widget.idUsuario!);
+            idAlojamiento: widget.idAlojamiento!,
+            idUsuario: widget.idUsuario!,
+          );
         }
         if (mounted) setState(() => _guardado = false);
       } else {
         if (widget.esActividad) {
           await InteraccionesApiService.guardarActividad(
-              idActividad: widget.idActividad!, idUsuario: widget.idUsuario!);
+            idActividad: widget.idActividad!,
+            idUsuario: widget.idUsuario!,
+          );
         } else if (widget.esRestaurante) {
           await InteraccionesApiService.guardarRestaurante(
-              idRestaurante: widget.idRestaurante!, idUsuario: widget.idUsuario!);
+            idRestaurante: widget.idRestaurante!,
+            idUsuario: widget.idUsuario!,
+          );
         } else {
           await InteraccionesApiService.guardarAlojamiento(
-              idAlojamiento: widget.idAlojamiento!, idUsuario: widget.idUsuario!);
+            idAlojamiento: widget.idAlojamiento!,
+            idUsuario: widget.idUsuario!,
+          );
         }
         if (mounted) setState(() => _guardado = true);
       }
     } catch (_) {
       if (mounted) {
-        Alerta.show(context,mensaje: 'Error al guardar. Inténtalo de nuevo.', tipo: TipoAviso.error);
+        Alerta.show(
+          context,
+          mensaje: 'Error al guardar. Inténtalo de nuevo.',
+          tipo: TipoAviso.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _cargando = false);
@@ -678,34 +793,41 @@ class _BotonGuardarState extends State<_BotonGuardar> {
     final Color color;
 
     if (!_logueado) {
-      icono = Icons.bookmark_border; color = Colors.white70;
+      icono = Icons.bookmark_border;
+      color = Colors.white70;
     } else if (_guardado == null || _cargando) {
-      icono = Icons.bookmark_border; color = Colors.white54;
+      icono = Icons.bookmark_border;
+      color = Colors.white54;
     } else if (_guardado == true) {
-      icono = Icons.bookmark; color = _KTheme.verde;
+      icono = Icons.bookmark;
+      color = _KTheme.verde;
     } else {
-      icono = Icons.bookmark_border; color = Colors.white;
+      icono = Icons.bookmark_border;
+      color = Colors.white;
     }
 
     return GestureDetector(
       onTap: () => _toggle(context),
       child: Container(
-        width: 34, height: 34,
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.35),
           borderRadius: BorderRadius.circular(10),
         ),
         child: _cargando
             ? const Padding(
-          padding: EdgeInsets.all(9),
-          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-        )
+                padding: EdgeInsets.all(9),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
             : Icon(icono, color: color, size: 18),
       ),
     );
   }
 }
-
 
 class _SeccionCard extends StatelessWidget {
   final Widget child;
@@ -727,15 +849,22 @@ class _SeccionCard extends StatelessWidget {
   }
 }
 
-
 class _BloqueHorario extends StatelessWidget {
   final Map<String, List<Franja>> horario;
   final bool? abierto;
 
   const _BloqueHorario({required this.horario, this.abierto});
 
-  static const _diasOrden  = [1, 2, 3, 4, 5, 6, 7];
-  static const _diasNombre = {1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom'};
+  static const _diasOrden = [1, 2, 3, 4, 5, 6, 7];
+  static const _diasNombre = {
+    1: 'Lun',
+    2: 'Mar',
+    3: 'Mié',
+    4: 'Jue',
+    5: 'Vie',
+    6: 'Sáb',
+    7: 'Dom',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -748,12 +877,19 @@ class _BloqueHorario extends StatelessWidget {
             const SizedBox(width: 6),
             const Text(
               'Horario',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _KTheme.texto),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: _KTheme.texto,
+              ),
             ),
             const Spacer(),
             if (abierto != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: abierto!
                       ? _KTheme.verdeOscuro.withOpacity(0.12)
@@ -781,7 +917,7 @@ class _BloqueHorario extends StatelessWidget {
         const SizedBox(height: 12),
 
         ..._diasOrden.map((dia) {
-          final franjas     = horario['$dia'] ?? [];
+          final franjas = horario['$dia'] ?? [];
           final estaCerrado = franjas.isEmpty;
 
           return Padding(
@@ -805,7 +941,9 @@ class _BloqueHorario extends StatelessWidget {
                   width: 2,
                   height: estaCerrado ? 22 : (franjas.length * 26).toDouble(),
                   decoration: BoxDecoration(
-                    color: estaCerrado ? _KTheme.borde : _KTheme.verde.withOpacity(0.6),
+                    color: estaCerrado
+                        ? _KTheme.borde
+                        : _KTheme.verde.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
@@ -813,43 +951,46 @@ class _BloqueHorario extends StatelessWidget {
                 Expanded(
                   child: estaCerrado
                       ? const Padding(
-                    padding: EdgeInsets.only(top: 2),
-                    child: Text(
-                      'Cerrado',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _KTheme.textoSuave,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  )
-                      : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: franjas.map((f) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: _KTheme.verde.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: _KTheme.verde.withOpacity(0.35),
-                              width: 0.8,
-                            ),
-                          ),
+                          padding: EdgeInsets.only(top: 2),
                           child: Text(
-                            '${f.inicio} – ${f.fin}',
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: _KTheme.texto,
+                            'Cerrado',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _KTheme.textoSuave,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: franjas.map((f) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _KTheme.verde.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: _KTheme.verde.withOpacity(0.35),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Text(
+                                  '${f.inicio} – ${f.fin}',
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: _KTheme.texto,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
-                      );
-                    }).toList(),
-                  ),
                 ),
               ],
             ),
@@ -859,7 +1000,6 @@ class _BloqueHorario extends StatelessWidget {
     );
   }
 }
-
 
 class _FilaInfo extends StatelessWidget {
   final IconData icono;
@@ -922,7 +1062,11 @@ class _FilaInfo extends StatelessWidget {
               ),
             ),
             if (esEnlace)
-              const Icon(Icons.open_in_new, size: 14, color: _KTheme.textoSuave),
+              const Icon(
+                Icons.open_in_new,
+                size: 14,
+                color: _KTheme.textoSuave,
+              ),
           ],
         ),
       ),
@@ -930,16 +1074,17 @@ class _FilaInfo extends StatelessWidget {
   }
 }
 
-
 class _BotonCTA extends StatelessWidget {
   final bool activo;
   final bool esActividad;
+  final bool? esRestaurante;
   final VoidCallback? onTap;
 
   const _BotonCTA({
     required this.activo,
     required this.esActividad,
     this.onTap,
+    this.esRestaurante,
   });
 
   @override
@@ -961,12 +1106,12 @@ class _BotonCTA extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: activo
                       ? const [
-                    BoxShadow(
-                      color: Color(0x40A8D63F),
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
-                    )
-                  ]
+                          BoxShadow(
+                            color: Color(0x40A8D63F),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ]
                       : [],
                 ),
                 child: Padding(
@@ -977,6 +1122,8 @@ class _BotonCTA extends StatelessWidget {
                       Icon(
                         esActividad
                             ? Icons.confirmation_number_outlined
+                            : esRestaurante!
+                            ? Icons.restaurant_outlined
                             : Icons.hotel_outlined,
                         size: 20,
                         color: Colors.black87,
@@ -1003,7 +1150,6 @@ class _BotonCTA extends StatelessWidget {
   }
 }
 
-
 class _BotonFlecha extends StatelessWidget {
   final IconData icono;
   final VoidCallback onTap;
@@ -1025,7 +1171,6 @@ class _BotonFlecha extends StatelessWidget {
     );
   }
 }
-
 
 class _BotonAccion extends StatelessWidget {
   final IconData icono;

@@ -235,7 +235,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         CustomScrollView(
           controller: controller,
           slivers: [
-            // Barra de búsqueda
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
@@ -249,7 +248,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
               ),
             ),
 
-            // Filtros
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -258,8 +256,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-            // 👇 SOLO cambia esta parte según estado
             _sliverSegunEstado(),
           ],
         ),
@@ -285,7 +281,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
     return _contenidoConEstado();
   }
-
 
   Widget _searchBar() {
     return SearchBar(
