@@ -96,7 +96,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "888949f686426d330a640259f93b5d08
 "canvaskit/skwasm_heavy.wasm": "b0be7910760d205ea4e011458df6ee01",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
-"flutter_bootstrap.js": "09fe047aa610c5c5c2ce8bd6461c06be",
+"flutter_bootstrap.js": "ee8ad82dfe70318fb59d24dd92d2bda8",
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
@@ -104,7 +104,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "888949f686426d330a640259f93b5d08
 "index.html": "6e374c005fb0d15717631af4704079d5",
 "/": "6e374c005fb0d15717631af4704079d5",
 "logo_kultux.png": "b326238f6187ebb8d4f1b07807a75d4f",
-"main.dart.js": "c04554fecddd2d276f9722c7546adffe",
+"main.dart.js": "cd66bd447c68e5228be89087015c643f",
 "manifest.json": "8054958b9a08b581ec4e93d85897c7dd",
 "splash/img/dark-1x.png": "9cd3678dff42d0e78e44254203b84a05",
 "splash/img/dark-2x.png": "06988aeb913f204853733c89c2ad5beb",
@@ -114,7 +114,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "888949f686426d330a640259f93b5d08
 "splash/img/light-2x.png": "06988aeb913f204853733c89c2ad5beb",
 "splash/img/light-3x.png": "70ce991a527145101c259665676f7d3a",
 "splash/img/light-4x.png": "eaf72acbd062b58c5f54bb81619edfee",
-"version.json": "6050e7950a4fe06709321e4982ee7f57"};
+"version.json": "a80c42927ef56e95ab9aebe22b750324"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",
