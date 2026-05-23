@@ -1,9 +1,6 @@
 class Validaciones {
-
   static bool password(String value) {
-    final regex = RegExp(
-      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$',
-    );
+    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$');
     return regex.hasMatch(value);
   }
 
@@ -15,11 +12,8 @@ class Validaciones {
     return null;
   }
 
-
   static bool email(String value) {
-    final regex = RegExp(
-      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-    );
+    final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return regex.hasMatch(value);
   }
 
@@ -30,7 +24,6 @@ class Validaciones {
     }
     return null;
   }
-
 
   static bool requerido(String value) => value.trim().isNotEmpty;
 

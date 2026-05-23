@@ -9,7 +9,12 @@ class BuscarPage extends StatefulWidget {
   final Function(dynamic)? onDetalleSeleccionado;
   final int selectedIndex;
   final Function(int) onIndexChanged;
-  const BuscarPage({super.key, this.onDetalleSeleccionado, required this.selectedIndex, required this.onIndexChanged});
+  const BuscarPage({
+    super.key,
+    this.onDetalleSeleccionado,
+    required this.selectedIndex,
+    required this.onIndexChanged,
+  });
 
   @override
   State<BuscarPage> createState() => _BuscarPageState();
@@ -18,10 +23,14 @@ class BuscarPage extends StatefulWidget {
 class _BuscarPageState extends State<BuscarPage> {
   late int _selectedIndex = 0;
 
-  final List<String> _categorias = ["Actividades", "Restaurantes", "Alojamientos"];
+  final List<String> _categorias = [
+    "Actividades",
+    "Restaurantes",
+    "Alojamientos",
+  ];
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _selectedIndex = widget.selectedIndex;
   }
@@ -44,13 +53,16 @@ class _BuscarPageState extends State<BuscarPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
               _categorias.length,
-                  (index) => GestureDetector(
-                onTap: () => setState(()  {
+              (index) => GestureDetector(
+                onTap: () => setState(() {
                   _selectedIndex = index;
                   widget.onIndexChanged(index);
                 }),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _selectedIndex == index
                         ? Color.fromARGB(255, 166, 226, 70)
@@ -73,9 +85,7 @@ class _BuscarPageState extends State<BuscarPage> {
           ),
         ),
 
-        Expanded(
-          child: _buildContent(),
-        ),
+        Expanded(child: _buildContent()),
       ],
     );
   }
@@ -83,11 +93,17 @@ class _BuscarPageState extends State<BuscarPage> {
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return BuscarActividadPage(onDetalleSeleccionado: widget.onDetalleSeleccionado);
+        return BuscarActividadPage(
+          onDetalleSeleccionado: widget.onDetalleSeleccionado,
+        );
       case 1:
-        return BuscarRestaurantePage(onDetalleSeleccionado: widget.onDetalleSeleccionado);
+        return BuscarRestaurantePage(
+          onDetalleSeleccionado: widget.onDetalleSeleccionado,
+        );
       case 2:
-        return BuscarAlojamientoPage(onDetalleSeleccionado: widget.onDetalleSeleccionado);
+        return BuscarAlojamientoPage(
+          onDetalleSeleccionado: widget.onDetalleSeleccionado,
+        );
       default:
         return const SizedBox.shrink();
     }

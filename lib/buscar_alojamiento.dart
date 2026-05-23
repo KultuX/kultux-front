@@ -10,6 +10,7 @@ import 'package:kultux/componentes/tarjeta_busqueda.dart';
 import 'package:kultux/core/utils/iconos.dart';
 
 import 'componentes/selector_localidad.dart';
+import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/estado_ui.dart';
 import 'core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
@@ -37,7 +38,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
   int totalPaginas = 0;
 
   bool cargando = false;
-  bool cargandoInicial = true;
+  //bool cargandoInicial = true;
   Timer? _debounceTimer;
 
   final ScrollController controller = ScrollController();
@@ -68,17 +69,16 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
   }
 
   Future<void> _resetYcargar() async {
-    setState(() {
-      paginaActual = 0;
-      alojamientos.clear();
-    });
+    await Future.microtask(() {});
+    paginaActual = 0;
+    totalPaginas = 0;
     await _cargarMas();
   }
 
   Future<void> _cargaInicial() async {
-    setState(() => cargandoInicial = true);
+    setState(() => estado = EstadoUi.cargando);
+    await Future.microtask(() {});
     await _resetYcargar();
-    setState(() => cargandoInicial = false);
   }
 
   Future<void> _cargarMas() async {
@@ -91,8 +91,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
     });
 
     try {
-      final pageResponse =
-      await AlojamientoApiService.alojamientosFiltrados(
+      final pageResponse = await AlojamientoApiService.alojamientosFiltrados(
         nombre: nombre.isEmpty ? null : nombre,
         categoria: categoria,
         localidad: localidad,
@@ -100,11 +99,11 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
       );
 
       setState(() {
+        if (paginaActual == 0) alojamientos.clear();
         alojamientos.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
         paginaActual++;
-        estado =
-        alojamientos.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        estado = alojamientos.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -127,18 +126,9 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
     }
   }
 
-  // ────────────────── UI ──────────────────
 
   @override
   Widget build(BuildContext context) {
-    if (cargandoInicial) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 166, 226, 70),
-        ),
-      );
-    }
-
     return _contenidoConEstado();
   }
 
@@ -176,11 +166,10 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
   Widget _sliverSegunEstado() {
     switch (estado) {
       case EstadoUi.cargando:
-        return const SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(
-              color: Color.fromARGB(255, 166, 226, 70),
-            ),
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+                (_, _) => const SkeletonTarjetaBusqueda(),
+            childCount: 5,
           ),
         );
 
@@ -208,21 +197,27 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
       case EstadoUi.contenido:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
-                (context, index) {
+            (context, index) {
               if (index < alojamientos.length) {
                 final a = alojamientos[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
                   child: TarjetaBusqueda.alojamiento(
                     titulo: a.nombre,
                     localidad: a.localidad,
                     imagenUrl: a.imagenPrincipal!,
                     textoEtiqueta: a.categoriaAlojamiento,
-                    iconoEtiqueta:
-                    Iconos.getIconoAlojamiento(a.categoriaAlojamiento),
+                    iconoEtiqueta: Iconos.getIconoAlojamiento(
+                      a.categoriaAlojamiento,
+                    ),
                     onTap: () async {
-                      final detalle = await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
+                      final detalle =
+                          await AlojamientoApiService.obtenerAlojamientoDetalle(
+                            a.id,
+                          );
                       print(detalle.toString());
                       widget.onDetalleSeleccionado?.call(detalle);
                     },
@@ -247,8 +242,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                   child: Center(
                     child: Text(
                       "No hay más alojamientos",
-                      style:
-                      TextStyle(fontSize: 14, color: Colors.grey),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ),
                 );
@@ -256,7 +250,8 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
 
               return const SizedBox.shrink();
             },
-            childCount: alojamientos.length +
+            childCount:
+                alojamientos.length +
                 (cargando || paginaActual >= totalPaginas ? 1 : 0),
           ),
         );
@@ -269,11 +264,9 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
       hintText: 'Buscar alojamiento...',
       leading: Padding(
         padding: const EdgeInsets.only(left: 8),
-        child: Icon(Icons.search,
-            size: 18, color: Colors.grey.shade600),
+        child: Icon(Icons.search, size: 18, color: Colors.grey.shade600),
       ),
-      backgroundColor:
-      WidgetStateProperty.all(Colors.grey.shade100),
+      backgroundColor: WidgetStateProperty.all(Colors.grey.shade100),
       elevation: WidgetStateProperty.all(0),
       shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
@@ -281,17 +274,14 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
           side: BorderSide(color: Colors.grey.shade300),
         ),
       ),
-      textStyle:
-      WidgetStateProperty.all(const TextStyle(fontSize: 13)),
-      constraints:
-      const BoxConstraints(minHeight: 40, maxHeight: 40),
+      textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 13)),
+      constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
         nombre = value;
         _debounceTimer?.cancel();
         _debounceTimer = Timer(const Duration(milliseconds: 400), () {
           _resetYcargar();
         });
-
       },
     );
   }
@@ -330,8 +320,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.red.shade300),
         ),
-        child:
-        Icon(Icons.clear, size: 18, color: Colors.red.shade700),
+        child: Icon(Icons.clear, size: 18, color: Colors.red.shade700),
       ),
     );
   }
@@ -359,13 +348,16 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
+        borderSide: BorderSide(
+          color: Color.fromARGB(255, 166, 226, 70),
+          width: 1,
+        ),
       ),
       suffixIcon: hasValue && onClear != null
           ? GestureDetector(
-        onTap: onClear,
-        child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
-      )
+              onTap: onClear,
+              child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
+            )
           : Icon(icon, size: 16, color: Colors.grey.shade600),
     );
   }
@@ -380,7 +372,8 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
           optionsBuilder: (v) {
             if (v.text.isEmpty) return const Iterable<String>.empty();
             return categorias.where(
-                    (c) => c.toLowerCase().contains(v.text.toLowerCase()));
+              (c) => c.toLowerCase().contains(v.text.toLowerCase()),
+            );
           },
           onSelected: (s) {
             setState(() => categoria = s);

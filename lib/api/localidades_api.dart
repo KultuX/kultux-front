@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/localidad.dart';
 import 'package:kultux/core/utils/api_url.dart';
-class LocalidadApiService {
 
+class LocalidadApiService {
   static List<Localidad>? _cache;
   static List<Localidad>? _mapaCache;
 
@@ -41,10 +41,7 @@ class LocalidadApiService {
       return _mapaCache!;
     }
 
-    final url = Uri.https(
-      ApiUrl.BASE_URL,
-      '/api/v1/gateway-localidades/mapas',
-    );
+    final url = Uri.https(ApiUrl.BASE_URL, '/api/v1/gateway-localidades/mapas');
 
     final response = await http.get(
       url,
@@ -64,12 +61,7 @@ class LocalidadApiService {
     }
   }
 
-
-
   static List<Localidad>? get cache => _cache;
 
   static List<Localidad>? get mapaCache => _mapaCache;
-
-
-
 }

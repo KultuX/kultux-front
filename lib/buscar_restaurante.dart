@@ -10,6 +10,7 @@ import 'package:kultux/componentes/scroll_boton.dart';
 
 import 'package:kultux/core/utils/iconos.dart';
 import 'componentes/selector_localidad.dart';
+import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/estado_ui.dart';
 import 'core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
@@ -38,7 +39,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   int totalPaginas = 0;
 
   bool cargando = false;
-  bool cargandoInicial = true;
+  //bool cargandoInicial = true;
   Timer? _debounceTimer;
 
   final ScrollController controller = ScrollController();
@@ -51,13 +52,11 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
   Key _selectorLocalidadKey = UniqueKey();
 
-
-
   @override
   void initState() {
     super.initState();
+    futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     futureCategorias = RestauranteApiService.categoriasRestaurantes();
-
     _cargaInicial();
 
     controller.addListener(() {
@@ -69,17 +68,16 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   }
 
   Future<void> _resetYcargar() async {
-    setState(() {
-      paginaActual = 0;
-      restaurantes.clear();
-    });
+    await Future.microtask(() {});
+    paginaActual = 0;
+    totalPaginas = 0;
     await _cargarMas();
   }
 
   Future<void> _cargaInicial() async {
-    setState(() => cargandoInicial = true);
+    setState(() => estado = EstadoUi.cargando);
+    await Future.microtask(() {});
     await _resetYcargar();
-    setState(() => cargandoInicial = false);
   }
 
   Future<void> _cargarMas() async {
@@ -92,8 +90,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     });
 
     try {
-      final pageResponse =
-      await RestauranteApiService.restaurantesFiltrados(
+      final pageResponse = await RestauranteApiService.restaurantesFiltrados(
         nombre: nombre.isEmpty ? null : nombre,
         categoria: categoria,
         localidad: localidad,
@@ -102,49 +99,38 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       );
 
       setState(() {
+        if (paginaActual == 0) restaurantes.clear();
         restaurantes.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
         paginaActual++;
-        estado =
-        restaurantes.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        estado = restaurantes.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
-    }on SocketException {
+    } on SocketException {
       setState(() {
         estado = EstadoUi.sinConexion;
         mensajeError = 'No hay conexión a internet';
       });
-
     } on HttpException catch (e) {
       final uiError = mapearStatusCode(int.parse(e.message));
       setState(() {
         estado = uiError.estado;
         mensajeError = uiError.mensaje;
       });
-
     } catch (e) {
       setState(() {
         estado = EstadoUi.error;
         mensajeError = 'Error inesperado $e';
       });
-
     } finally {
       cargando = false;
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    if (cargandoInicial) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 166, 226, 70),
-        ),
-      );
-    }
-
     return _contenidoConEstado();
   }
+
   Widget _contenidoConEstado() {
     return Stack(
       children: [
@@ -185,11 +171,10 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   Widget _sliverSegunEstado() {
     switch (estado) {
       case EstadoUi.cargando:
-        return const SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(
-              color: Color.fromARGB(255, 166, 226, 70),
-            ),
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+                (_, _) => const SkeletonTarjetaBusqueda(),
+            childCount: 5,
           ),
         );
 
@@ -199,15 +184,11 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.search_off,
-                    size: 56, color: Colors.grey.shade400),
+                Icon(Icons.search_off, size: 56, color: Colors.grey.shade400),
                 const SizedBox(height: 12),
                 Text(
                   "No hay restaurantes",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -235,23 +216,27 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       case EstadoUi.contenido:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
-                (context, index) {
+            (context, index) {
               if (index < restaurantes.length) {
                 final r = restaurantes[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
                   child: TarjetaBusqueda.restaurante(
                     titulo: r.nombre,
                     imagenUrl: r.imagenPrincipal!,
                     textoEtiqueta: r.categoriaRestaurante,
-                    iconoEtiqueta:
-                    Iconos.getIconoRestaurante(r.categoriaRestaurante),
+                    iconoEtiqueta: Iconos.getIconoRestaurante(
+                      r.categoriaRestaurante,
+                    ),
                     horario: r.horario!,
                     abierto: r.abierto!,
                     localidad: r.localidad,
                     onTap: () async {
-                      final detalle = await RestauranteApiService.restauranteDetalle(r.id);
+                      final detalle =
+                          await RestauranteApiService.restauranteDetalle(r.id);
                       widget.onDetalleSeleccionado?.call(detalle);
                     },
                   ),
@@ -263,8 +248,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                   padding: EdgeInsets.all(16),
                   child: Center(
                     child: CircularProgressIndicator(
-                      color:
-                      Color.fromARGB(255, 166, 226, 70),
+                      color: Color.fromARGB(255, 166, 226, 70),
                     ),
                   ),
                 );
@@ -276,9 +260,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                   child: Center(
                     child: Text(
                       "No hay más restaurantes",
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ),
                 );
@@ -286,14 +268,13 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
               return const SizedBox.shrink();
             },
-            childCount: restaurantes.length +
+            childCount:
+                restaurantes.length +
                 (cargando || paginaActual >= totalPaginas ? 1 : 0),
           ),
         );
     }
   }
-
-
 
   Widget _searchBar() {
     return SearchBar(
@@ -301,8 +282,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       hintText: 'Buscar restaurante...',
       leading: Padding(
         padding: const EdgeInsets.only(left: 8),
-        child:
-        Icon(Icons.search, size: 18, color: Colors.grey.shade600),
+        child: Icon(Icons.search, size: 18, color: Colors.grey.shade600),
       ),
       backgroundColor: WidgetStateProperty.all(Colors.grey.shade100),
       elevation: WidgetStateProperty.all(0),
@@ -320,7 +300,6 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         _debounceTimer = Timer(const Duration(milliseconds: 400), () {
           _resetYcargar();
         });
-
       },
     );
   }
@@ -335,7 +314,8 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
             Expanded(child: _selectorLocalidad()),
             if (categoria != null ||
                 localidad != null ||
-                soloAbiertos == true || nombre.isNotEmpty) ...[
+                soloAbiertos == true ||
+                nombre.isNotEmpty) ...[
               const SizedBox(width: 8),
               _botonLimpiar(),
             ],
@@ -366,8 +346,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.red.shade300),
         ),
-        child: Icon(Icons.clear,
-            size: 18, color: Colors.red.shade700),
+        child: Icon(Icons.clear, size: 18, color: Colors.red.shade700),
       ),
     );
   }
@@ -395,13 +374,16 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
+        borderSide: BorderSide(
+          color: Color.fromARGB(255, 166, 226, 70),
+          width: 1,
+        ),
       ),
       suffixIcon: hasValue && onClear != null
           ? GestureDetector(
-        onTap: onClear,
-        child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
-      )
+              onTap: onClear,
+              child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
+            )
           : Icon(icon, size: 16, color: Colors.grey.shade600),
     );
   }
@@ -416,7 +398,8 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
           optionsBuilder: (v) {
             if (v.text.isEmpty) return const Iterable<String>.empty();
             return categorias.where(
-                    (c) => c.toLowerCase().contains(v.text.toLowerCase()));
+              (c) => c.toLowerCase().contains(v.text.toLowerCase()),
+            );
           },
           onSelected: (s) {
             setState(() => categoria = s);
@@ -497,8 +480,6 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
     );
   }
 
-
-
   Widget _chipAbiertoAhora() {
     final bool seleccionado = soloAbiertos == true;
 
@@ -516,7 +497,9 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: seleccionado ? Color.fromARGB(136, 166, 226, 70):  Colors.grey.shade100,
+          color: seleccionado
+              ? Color.fromARGB(136, 166, 226, 70)
+              : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: seleccionado
@@ -537,8 +520,6 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       ),
     );
   }
-
-
 
   @override
   void dispose() {

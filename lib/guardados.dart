@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:kultux/api/actividades_api.dart';
 import 'package:kultux/api/alojamiento_api.dart';
 import 'package:kultux/api/restaurante_api.dart';
-import 'package:kultux/api/interacciones_api.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 import 'package:kultux/core/utils/estados_widgets.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
@@ -14,16 +13,14 @@ import 'package:kultux/models/usuario.dart';
 import 'package:kultux/componentes/tarjeta_guardados.dart';
 
 import 'componentes/cabecera.dart';
-
+import 'componentes/skeleton_tarjeta.dart';
 
 const _verde = Color(0xFFA6E246);
 const _fondoPagina = Color(0xFFF1EFE9);
 
-
 enum GuardadosTab { actividades, restaurantes, alojamientos }
 
 class GuardadosPage extends StatefulWidget {
-
   final Function(dynamic objeto, GuardadosTab tab) onDetalleSeleccionado;
   final VoidCallback onVolver;
   final GuardadosTab tabInicial;
@@ -49,7 +46,6 @@ class _GuardadosPageState extends State<GuardadosPage> {
   bool _cargandoActividades = false;
   final ScrollController _scrollActividades = ScrollController();
 
-
   List<Restaurante> _restaurantes = [];
   EstadoUi _estadoRestaurantes = EstadoUi.cargando;
   String _errorRestaurantes = '';
@@ -57,7 +53,6 @@ class _GuardadosPageState extends State<GuardadosPage> {
   int _totalPaginasRestaurantes = 1;
   bool _cargandoRestaurantes = false;
   final ScrollController _scrollRestaurantes = ScrollController();
-
 
   List<Alojamiento> _alojamientos = [];
   EstadoUi _estadoAlojamientos = EstadoUi.cargando;
@@ -110,10 +105,12 @@ class _GuardadosPageState extends State<GuardadosPage> {
     super.dispose();
   }
 
-
   Future<void> _cargarActividades({bool reset = false}) async {
     if (_cargandoActividades) return;
-    if (!reset && _paginaActividades >= _totalPaginasActividades && _paginaActividades != 0) return;
+    if (!reset &&
+        _paginaActividades >= _totalPaginasActividades &&
+        _paginaActividades != 0)
+      return;
 
     if (reset) {
       setState(() {
@@ -139,7 +136,9 @@ class _GuardadosPageState extends State<GuardadosPage> {
         _actividades.addAll(page.contenido);
         _totalPaginasActividades = page.totalPaginas;
         _paginaActividades++;
-        _estadoActividades = _actividades.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        _estadoActividades = _actividades.isEmpty
+            ? EstadoUi.vacio
+            : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -162,10 +161,12 @@ class _GuardadosPageState extends State<GuardadosPage> {
     }
   }
 
-
   Future<void> _cargarRestaurantes({bool reset = false}) async {
     if (_cargandoRestaurantes) return;
-    if (!reset && _paginaRestaurantes >= _totalPaginasRestaurantes && _paginaRestaurantes != 0) return;
+    if (!reset &&
+        _paginaRestaurantes >= _totalPaginasRestaurantes &&
+        _paginaRestaurantes != 0)
+      return;
 
     if (reset) {
       setState(() {
@@ -187,11 +188,14 @@ class _GuardadosPageState extends State<GuardadosPage> {
         idUsuario: _idUsuario!,
         page: _paginaRestaurantes,
       );
+      print('✅ restaurantes: ${page.contenido.length} / paginas: ${page.totalPaginas}');
       setState(() {
         _restaurantes.addAll(page.contenido);
         _totalPaginasRestaurantes = page.totalPaginas;
         _paginaRestaurantes++;
-        _estadoRestaurantes = _restaurantes.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        _estadoRestaurantes = _restaurantes.isEmpty
+            ? EstadoUi.vacio
+            : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -204,8 +208,9 @@ class _GuardadosPageState extends State<GuardadosPage> {
         _estadoRestaurantes = uiError.estado;
         _errorRestaurantes = uiError.mensaje;
       });
-    } catch (_) {
+    } catch (e) {
       setState(() {
+        print(e);
         _estadoRestaurantes = EstadoUi.error;
         _errorRestaurantes = 'Error inesperado';
       });
@@ -214,10 +219,12 @@ class _GuardadosPageState extends State<GuardadosPage> {
     }
   }
 
-
   Future<void> _cargarAlojamientos({bool reset = false}) async {
     if (_cargandoAlojamientos) return;
-    if (!reset && _paginaAlojamientos >= _totalPaginasAlojamientos && _paginaAlojamientos != 0) return;
+    if (!reset &&
+        _paginaAlojamientos >= _totalPaginasAlojamientos &&
+        _paginaAlojamientos != 0)
+      return;
 
     if (reset) {
       setState(() {
@@ -243,7 +250,9 @@ class _GuardadosPageState extends State<GuardadosPage> {
         _alojamientos.addAll(page.contenido);
         _totalPaginasAlojamientos = page.totalPaginas;
         _paginaAlojamientos++;
-        _estadoAlojamientos = _alojamientos.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        _estadoAlojamientos = _alojamientos.isEmpty
+            ? EstadoUi.vacio
+            : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -266,17 +275,17 @@ class _GuardadosPageState extends State<GuardadosPage> {
     }
   }
 
-
   void _onTabChanged(GuardadosTab tab) {
     setState(() => _tabActual = tab);
-    if (tab == GuardadosTab.restaurantes && _estadoRestaurantes == EstadoUi.cargando) {
+    if (tab == GuardadosTab.restaurantes &&
+        _estadoRestaurantes == EstadoUi.cargando) {
       _cargarRestaurantes();
     }
-    if (tab == GuardadosTab.alojamientos && _estadoAlojamientos == EstadoUi.cargando) {
+    if (tab == GuardadosTab.alojamientos &&
+        _estadoAlojamientos == EstadoUi.cargando) {
       _cargarAlojamientos();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -285,10 +294,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CabeceraPagina(
-            titulo: 'Guardados',
-            subtitulo: 'Mi colección',
-          ),
+          CabeceraPagina(titulo: 'Guardados', subtitulo: 'Mi colección'),
           _buildTabs(),
           Expanded(child: _buildBody()),
         ],
@@ -328,17 +334,20 @@ class _GuardadosPageState extends State<GuardadosPage> {
 
   Widget _buildBody() {
     return switch (_tabActual) {
-      GuardadosTab.actividades  => _bodyActividades(),
+      GuardadosTab.actividades => _bodyActividades(),
       GuardadosTab.restaurantes => _bodyRestaurantes(),
       GuardadosTab.alojamientos => _bodyAlojamientos(),
     };
   }
 
-
   Widget _bodyActividades() {
     return switch (_estadoActividades) {
-      EstadoUi.cargando    => const Center(child: CircularProgressIndicator(color: _verde)),
-      EstadoUi.vacio       => _sinGuardados('actividades'),
+      EstadoUi.cargando => ListView.builder(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+        itemCount: 5,
+        itemBuilder: (_, __) => const SkeletonTarjetaGuardado(),
+      ),
+      EstadoUi.vacio => _sinGuardados('actividades'),
       EstadoUi.sinConexion => estadoError(
         icon: Icons.wifi_off,
         mensaje: _errorActividades,
@@ -360,22 +369,24 @@ class _GuardadosPageState extends State<GuardadosPage> {
       itemCount: _actividades.length + 2,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return _StatCard(numero: _actividades.length, label: 'Actividades guardadas');
+          return _StatCard(
+            numero: _actividades.length,
+            label: 'Actividades guardadas',
+          );
         }
         final i = index - 1;
         if (i == _actividades.length) {
           if (_cargandoActividades) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator(color: _verde)),
-            );
+            return const SkeletonTarjetaGuardado();
           }
           if (_paginaActividades >= _totalPaginasActividades) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(
-                child: Text('No hay más actividades guardadas',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+                child: Text(
+                  'No hay más actividades guardadas',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
               ),
             );
           }
@@ -389,7 +400,9 @@ class _GuardadosPageState extends State<GuardadosPage> {
           imagenUrl: actividad.imagenPrincipal,
           fecha: actividad.fechaInicio,
           onTap: () async {
-            final detalle = await ActividadesApiService.detalleActividad(actividad.id);
+            final detalle = await ActividadesApiService.detalleActividad(
+              actividad.id,
+            );
             widget.onDetalleSeleccionado(detalle, GuardadosTab.actividades);
           },
         );
@@ -397,11 +410,14 @@ class _GuardadosPageState extends State<GuardadosPage> {
     );
   }
 
-
   Widget _bodyRestaurantes() {
     return switch (_estadoRestaurantes) {
-      EstadoUi.cargando    => const Center(child: CircularProgressIndicator(color: _verde)),
-      EstadoUi.vacio       => _sinGuardados('restaurantes'),
+      EstadoUi.cargando => ListView.builder(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+        itemCount: 5,
+        itemBuilder: (_, __) => const SkeletonTarjetaGuardado(),
+      ),
+      EstadoUi.vacio => _sinGuardados('restaurantes'),
       EstadoUi.sinConexion => estadoError(
         icon: Icons.wifi_off,
         mensaje: _errorRestaurantes,
@@ -423,22 +439,24 @@ class _GuardadosPageState extends State<GuardadosPage> {
       itemCount: _restaurantes.length + 2,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return _StatCard(numero: _restaurantes.length, label: 'Restaurantes guardados');
+          return _StatCard(
+            numero: _restaurantes.length,
+            label: 'Restaurantes guardados',
+          );
         }
         final i = index - 1;
         if (i == _restaurantes.length) {
           if (_cargandoRestaurantes) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator(color: _verde)),
-            );
+            return const SkeletonTarjetaGuardado();
           }
           if (_paginaRestaurantes >= _totalPaginasRestaurantes) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(
-                child: Text('No hay más restaurantes guardados',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+                child: Text(
+                  'No hay más restaurantes guardados',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
               ),
             );
           }
@@ -452,20 +470,24 @@ class _GuardadosPageState extends State<GuardadosPage> {
           imagenUrl: r.imagenPrincipal,
           abierto: r.abierto,
           onTap: () async {
-            final detalle = await RestauranteApiService.restauranteDetalle(r.id);
+            final detalle = await RestauranteApiService.restauranteDetalle(
+              r.id,
+            );
             widget.onDetalleSeleccionado(detalle, GuardadosTab.restaurantes);
           },
-
         );
       },
     );
   }
 
-
   Widget _bodyAlojamientos() {
     return switch (_estadoAlojamientos) {
-      EstadoUi.cargando    => const Center(child: CircularProgressIndicator(color: _verde)),
-      EstadoUi.vacio       => _sinGuardados('alojamientos'),
+      EstadoUi.cargando => ListView.builder(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+        itemCount: 5,
+        itemBuilder: (_, __) => const SkeletonTarjetaGuardado(),
+      ),
+      EstadoUi.vacio => _sinGuardados('alojamientos'),
       EstadoUi.sinConexion => estadoError(
         icon: Icons.wifi_off,
         mensaje: _errorAlojamientos,
@@ -487,22 +509,24 @@ class _GuardadosPageState extends State<GuardadosPage> {
       itemCount: _alojamientos.length + 2,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return _StatCard(numero: _alojamientos.length, label: 'Alojamientos guardados');
+          return _StatCard(
+            numero: _alojamientos.length,
+            label: 'Alojamientos guardados',
+          );
         }
         final i = index - 1;
         if (i == _alojamientos.length) {
           if (_cargandoAlojamientos) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator(color: _verde)),
-            );
+            return const SkeletonTarjetaGuardado();
           }
           if (_paginaAlojamientos >= _totalPaginasAlojamientos) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(
-                child: Text('No hay más alojamientos guardados',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+                child: Text(
+                  'No hay más alojamientos guardados',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
               ),
             );
           }
@@ -515,15 +539,14 @@ class _GuardadosPageState extends State<GuardadosPage> {
           categoria: a.categoriaAlojamiento,
           imagenUrl: a.imagenPrincipal,
           onTap: () async {
-            final detalle = await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
+            final detalle =
+                await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
             widget.onDetalleSeleccionado(detalle, GuardadosTab.alojamientos);
           },
-
         );
       },
     );
   }
-
 
   Widget _sinGuardados(String tipo) {
     return Center(
@@ -541,7 +564,6 @@ class _GuardadosPageState extends State<GuardadosPage> {
     );
   }
 }
-
 
 class _StatCard extends StatelessWidget {
   final int numero;
@@ -615,9 +637,13 @@ class _TabButton extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Icon(icono,
-                  size: 16,
-                  color: activo ? const Color(0xFF1A1A1A) : const Color(0xFF6B6B6B)),
+              Icon(
+                icono,
+                size: 16,
+                color: activo
+                    ? const Color(0xFF1A1A1A)
+                    : const Color(0xFF6B6B6B),
+              ),
               const SizedBox(height: 2),
               Text(
                 label,
@@ -625,12 +651,87 @@ class _TabButton extends StatelessWidget {
                   fontFamily: 'RobotoCondensed',
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: activo ? const Color(0xFF1A1A1A) : const Color(0xFF6B6B6B),
+                  color: activo
+                      ? const Color(0xFF1A1A1A)
+                      : const Color(0xFF6B6B6B),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+class SkeletonTarjetaGuardado extends StatefulWidget {
+  const SkeletonTarjetaGuardado({super.key});
+  @override
+  State<SkeletonTarjetaGuardado> createState() => _SkeletonTarjetaGuardadoState();
+}
+
+class _SkeletonTarjetaGuardadoState extends State<SkeletonTarjetaGuardado>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
+    _anim = Tween<double>(begin: -1, end: 2).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  Widget _s(double w, double h, {BorderRadius? r}) => AnimatedBuilder(
+    animation: _anim,
+    builder: (_, __) => Container(
+      width: w, height: h,
+      decoration: BoxDecoration(
+        borderRadius: r ?? BorderRadius.circular(4),
+        gradient: LinearGradient(
+          stops: const [0.0, 0.5, 1.0],
+          colors: const [Color(0xFFE8E8E8), Color(0xFFF5F5F5), Color(0xFFE8E8E8)],
+          transform: SlideGradient(_anim.value),
+        ),
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F7F4),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE0DDD6)),
+      ),
+      child: Row(
+        children: [
+          _s(64, 64, r: BorderRadius.circular(10)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _s(double.infinity, 13),
+                const SizedBox(height: 6),
+                _s(120, 13),
+                const SizedBox(height: 8),
+                Row(children: [
+                  _s(70, 20, r: BorderRadius.circular(5)),
+                  const SizedBox(width: 5),
+                  _s(80, 20, r: BorderRadius.circular(5)),
+                ]),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _s(32, 32, r: BorderRadius.circular(8)),
+        ],
       ),
     );
   }

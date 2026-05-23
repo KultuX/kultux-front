@@ -11,19 +11,13 @@ UiError mapearStatusCode(int statusCode) {
   switch (statusCode) {
     case 204:
     case 404:
-      return const UiError(
-        EstadoUi.vacio,
-        'No se han encontrado resultados',
-      );
+      return const UiError(EstadoUi.vacio, 'No se han encontrado resultados');
     case 400:
-      return const UiError(
-        EstadoUi.error,
-        'Los datos no son correctos'
-      );
+      return const UiError(EstadoUi.error, 'Los datos no son correctos');
     case 401:
       return const UiError(
         EstadoUi.error,
-        'No tienes permiso para realizar esta acción.'
+        'No tienes permiso para realizar esta acción.',
       );
     case 403:
       return const UiError(
@@ -31,10 +25,7 @@ UiError mapearStatusCode(int statusCode) {
         'Tu sesión ha caducado. Inicia sesión de nuevo.',
       );
     case 409:
-      return const UiError(
-        EstadoUi.error,
-        'Ya existe este usuario.'
-      );
+      return const UiError(EstadoUi.error, 'Ya existe este usuario.');
 
     case >= 500:
       return const UiError(
@@ -43,9 +34,6 @@ UiError mapearStatusCode(int statusCode) {
       );
 
     default:
-      return const UiError(
-        EstadoUi.error,
-        'Ha ocurrido un error inesperado',
-      );
+      return const UiError(EstadoUi.error, 'Ha ocurrido un error inesperado');
   }
 }

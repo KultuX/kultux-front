@@ -10,7 +10,6 @@ class CamposPersonalizados extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
 
-
   const CamposPersonalizados.normal({
     super.key,
     required this.titulo,
@@ -19,7 +18,7 @@ class CamposPersonalizados extends StatefulWidget {
     this.mostrarError = false,
     this.pass = false,
     required this.controller,
-    this.onChanged
+    this.onChanged,
   });
 
   const CamposPersonalizados.password({
@@ -28,10 +27,9 @@ class CamposPersonalizados extends StatefulWidget {
     this.ancho = 364,
     this.mostrarError = false,
     required this.controller,
-    this.onChanged
-  })  : pass = true,
-        tipo = TextInputType.text;
-
+    this.onChanged,
+  }) : pass = true,
+       tipo = TextInputType.text;
 
   @override
   State<CamposPersonalizados> createState() => _CamposPersonalizadosState();
@@ -39,7 +37,6 @@ class CamposPersonalizados extends StatefulWidget {
 
 class _CamposPersonalizadosState extends State<CamposPersonalizados> {
   bool _mostrarPass = false;
-
 
   Widget? _prefix() {
     if (widget.pass) {
@@ -49,8 +46,7 @@ class _CamposPersonalizadosState extends State<CamposPersonalizados> {
           "assets/iconos/candado_contrasenia.svg",
           width: 16,
           height: 16,
-          colorFilter:
-          const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+          colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
         ),
       );
     }
@@ -121,8 +117,10 @@ class _CamposPersonalizadosState extends State<CamposPersonalizados> {
           filled: true,
           fillColor: Colors.grey.shade100,
           isDense: true,
-          contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
 
           prefixIcon: _prefix(),
           suffixIcon: _suffix(),
@@ -130,9 +128,7 @@ class _CamposPersonalizadosState extends State<CamposPersonalizados> {
           border: _border(Colors.grey.shade300),
           enabledBorder: _border(Colors.grey.shade300),
           focusedBorder: _border(
-            hayError
-                ? Colors.red
-                : const Color.fromARGB(255, 166, 226, 70),
+            hayError ? Colors.red : const Color.fromARGB(255, 166, 226, 70),
             width: 1.5,
           ),
           errorBorder: _border(Colors.red),

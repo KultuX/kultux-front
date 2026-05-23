@@ -16,7 +16,6 @@ class BottomNav extends StatefulWidget {
 }
 
 class _BottomNavState extends State<BottomNav> {
-
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
@@ -44,10 +43,7 @@ class _BottomNavState extends State<BottomNav> {
         path,
         width: 24,
         height: 24,
-        colorFilter: const ColorFilter.mode(
-          Colors.white,
-          BlendMode.srcIn,
-        ),
+        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
       ),
       activeIcon: SvgPicture.asset(
         path,

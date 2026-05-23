@@ -4,11 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/alojamiento.dart';
 
-
 import 'package:kultux/core/utils/api_url.dart';
-class EstablecimientosApiService{
 
-  static Future<Map<String, dynamic>> obtenerEstablecimientosDestacados() async {
+class EstablecimientosApiService {
+  static Future<Map<String, dynamic>>
+  obtenerEstablecimientosDestacados() async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-restaurantes/destacados',
@@ -41,7 +41,4 @@ class EstablecimientosApiService{
 
     throw HttpException(response.statusCode.toString());
   }
-
 }
-
-

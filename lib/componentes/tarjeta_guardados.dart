@@ -1,18 +1,16 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:kultux/core/utils/normalizador.dart';
 
-// Tarjeta reutilizable para Actividad, Restaurante y Alojamiento en Guardados
 class TarjetaGuardado extends StatelessWidget {
   final String titulo;
   final String? localidad;
   final String? categoria;
   final String? imagenUrl;
   final VoidCallback onTap;
-
-  // Solo actividad
   final String? fecha;
-
-  // Solo restaurante
   final bool? abierto;
+  final String? fechaFin;
 
   const TarjetaGuardado._({
     super.key,
@@ -23,6 +21,7 @@ class TarjetaGuardado extends StatelessWidget {
     this.imagenUrl,
     this.fecha,
     this.abierto,
+    this.fechaFin,
   });
 
   const TarjetaGuardado.actividad({
@@ -33,15 +32,17 @@ class TarjetaGuardado extends StatelessWidget {
     String? categoria,
     String? imagenUrl,
     String? fecha,
+    String? fechaFin,
   }) : this._(
-    key: key,
-    titulo: titulo,
-    onTap: onTap,
-    localidad: localidad,
-    categoria: categoria,
-    imagenUrl: imagenUrl,
-    fecha: fecha,
-  );
+         key: key,
+         titulo: titulo,
+         onTap: onTap,
+         localidad: localidad,
+         categoria: categoria,
+         imagenUrl: imagenUrl,
+         fecha: fecha,
+         fechaFin: fechaFin,
+       );
 
   const TarjetaGuardado.restaurante({
     Key? key,
@@ -52,14 +53,14 @@ class TarjetaGuardado extends StatelessWidget {
     String? imagenUrl,
     bool? abierto,
   }) : this._(
-    key: key,
-    titulo: titulo,
-    onTap: onTap,
-    localidad: localidad,
-    categoria: categoria,
-    imagenUrl: imagenUrl,
-    abierto: abierto,
-  );
+         key: key,
+         titulo: titulo,
+         onTap: onTap,
+         localidad: localidad,
+         categoria: categoria,
+         imagenUrl: imagenUrl,
+         abierto: abierto,
+       );
 
   const TarjetaGuardado.alojamiento({
     Key? key,
@@ -69,13 +70,13 @@ class TarjetaGuardado extends StatelessWidget {
     String? categoria,
     String? imagenUrl,
   }) : this._(
-    key: key,
-    titulo: titulo,
-    onTap: onTap,
-    localidad: localidad,
-    categoria: categoria,
-    imagenUrl: imagenUrl,
-  );
+         key: key,
+         titulo: titulo,
+         onTap: onTap,
+         localidad: localidad,
+         categoria: categoria,
+         imagenUrl: imagenUrl,
+       );
 
   static const _verde = Color(0xFFA6E246);
   static const _texto = Color(0xFF1A1A1A);
@@ -97,23 +98,32 @@ class TarjetaGuardado extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Imagen pequeña
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: SizedBox(
                 width: 64,
                 height: 64,
                 child: imagenUrl != null && imagenUrl!.isNotEmpty
-                    ? Image.network(
-                  imagenUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _imagenFallback(),
-                )
+                    ? CachedNetworkImage(
+                        imageUrl: imagenUrl!,
+                        fit: BoxFit.cover,
+                        memCacheWidth: 100,
+                        memCacheHeight: 100,
+                        placeholder: (_, __) => Container(
+                          color: const Color(0xFFE8E5DF),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFFA6E246),
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (_, __, ___) => _imagenFallback(),
+                      )
                     : _imagenFallback(),
               ),
             ),
             const SizedBox(width: 12),
-            // Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,10 +151,12 @@ class TarjetaGuardado extends StatelessWidget {
                           fondo: const Color(0xFFF0F0F0),
                           color: _textoSuave,
                         ),
-                      if (fecha != null && fecha!.isNotEmpty)
+                      if (fecha != null )
                         _Chip(
                           icono: Icons.calendar_today_outlined,
-                          texto: fecha!,
+                          texto: formatearFecha(
+                            '${formatearFecha(fecha)}${fechaFin != null && fechaFin!.isNotEmpty ? ' - ${formatearFecha(fechaFin)}' : ''}',
+                          ),
                           fondo: const Color(0xFFEAF3DE),
                           color: const Color(0xFF3B6D11),
                         ),
@@ -161,18 +173,13 @@ class TarjetaGuardado extends StatelessWidget {
                           iconSize: 8,
                         ),
                       if (categoria != null && categoria!.isNotEmpty)
-                        _Chip(
-                          texto: categoria!,
-                          fondo: _texto,
-                          color: _verde,
-                        ),
+                        _Chip(texto: categoria!, fondo: _texto, color: _verde),
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            // Botón flecha
             Container(
               width: 32,
               height: 32,
@@ -191,7 +198,11 @@ class TarjetaGuardado extends StatelessWidget {
   Widget _imagenFallback() {
     return Container(
       color: const Color(0xFFE8E5DF),
-      child: const Icon(Icons.image_outlined, color: Color(0xFFB0B0B0), size: 28),
+      child: const Icon(
+        Icons.image_outlined,
+        color: Color(0xFFB0B0B0),
+        size: 28,
+      ),
     );
   }
 }
@@ -229,7 +240,7 @@ class _Chip extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 110),
             child: Text(
-              texto,
+              formatearCategoria(texto),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:kultux/componentes/botones.dart';
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/api/restaurante_api.dart';
@@ -15,24 +14,19 @@ import 'package:kultux/componentes/modal_alerta.dart';
 import 'package:kultux/api/establecimientos.dart';
 
 import 'componentes/cabecera.dart';
+import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/iconos.dart';
 
 class EstablecimientosPage extends StatefulWidget {
-
-
   final Function(dynamic objetoDetalle) onDetalleSeleccionado;
 
-  const EstablecimientosPage({
-    super.key,
-    required this.onDetalleSeleccionado,
-  });
+  const EstablecimientosPage({super.key, required this.onDetalleSeleccionado});
 
   @override
   State<EstablecimientosPage> createState() => _EstablecimientosPageState();
 }
 
 class _EstablecimientosPageState extends State<EstablecimientosPage> {
-
   static const _verde = Color(0xFFA6E246);
   static const _fondoPagina = Color(0xFFF1EFE9);
   static const _fondoCard = Color(0xFFF8F7F4);
@@ -45,11 +39,9 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   EstadoUi _estadoResumen = EstadoUi.cargando;
   String _mensajeErrorResumen = '';
 
-
   List<Restaurante> _todosRestaurantes = [];
   EstadoUi _estadoRestaurantes = EstadoUi.cargando;
   String _mensajeErrorRestaurantes = '';
-
 
   List<Alojamiento> _todosAlojamientos = [];
   EstadoUi _estadoAlojamientos = EstadoUi.cargando;
@@ -57,7 +49,6 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
 
   bool _mostrandoListadoRestaurantes = false;
   bool _mostrandoListadoAlojamientos = false;
-
 
   bool _restaurantesCargados = false;
   bool _alojamientosCargados = false;
@@ -71,7 +62,6 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   bool _hayMasAlojamientos = true;
   bool _cargandoMasAlojamientos = false;
   final ScrollController _scrollAlojamientos = ScrollController();
-
 
   @override
   void initState() {
@@ -89,8 +79,6 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
         _cargarMasAlojamientos();
       }
     });
-
-
   }
 
   @override
@@ -103,11 +91,12 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   Future<void> _cargarResumen() async {
     setState(() => _estadoResumen = EstadoUi.cargando);
     try {
-      final result = await EstablecimientosApiService.obtenerEstablecimientosDestacados();
+      final result =
+          await EstablecimientosApiService.obtenerEstablecimientosDestacados();
       setState(() {
         _restaurantes = result['restaurantes'] as List<Restaurante>;
         _alojamientos = result['alojamientos'] as List<Alojamiento>;
-        _estadoResumen =  EstadoUi.contenido;
+        _estadoResumen = EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -119,10 +108,8 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
       setState(() {
         _estadoResumen = uiError.estado;
         _mensajeErrorResumen = uiError.mensaje;
-
       });
     } catch (e, stack) {
-      print('ERROR RESUMEN: $e\nSTACK: $stack');
       setState(() {
         _estadoResumen = EstadoUi.error;
         _mensajeErrorResumen = 'Error inesperado';
@@ -134,19 +121,22 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     if (_restaurantesCargados) return;
     setState(() => _estadoRestaurantes = EstadoUi.cargando);
     try {
-      final pagina = await RestauranteApiService.obtenerRestauranteDestacados(page: 0);
+      final pagina = await RestauranteApiService.obtenerRestauranteDestacados(
+        page: 0,
+      );
       print(pagina.toString());
       setState(() {
         _todosRestaurantes = pagina.contenido;
         _hayMasRestaurantes = pagina.numero + 1 < pagina.totalPaginas;
         _pageRestaurantes = 1;
         _restaurantesCargados = true;
-        _estadoRestaurantes = pagina.contenido.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        _estadoRestaurantes = pagina.contenido.isEmpty
+            ? EstadoUi.vacio
+            : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
         _estadoRestaurantes = EstadoUi.sinConexion;
-        _mensajeErrorRestaurantes = 'No hay conexión a internet';
         _mensajeErrorRestaurantes = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
@@ -167,13 +157,16 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     if (!_hayMasRestaurantes || _cargandoMasRestaurantes) return;
     setState(() => _cargandoMasRestaurantes = true);
     try {
-      final pagina = await RestauranteApiService.obtenerRestauranteDestacados(page: _pageRestaurantes);
+      final pagina = await RestauranteApiService.obtenerRestauranteDestacados(
+        page: _pageRestaurantes,
+      );
       setState(() {
         _todosRestaurantes.addAll(pagina.contenido);
         _hayMasRestaurantes = pagina.numero + 1 < pagina.totalPaginas;
         _pageRestaurantes++;
       });
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       setState(() => _cargandoMasRestaurantes = false);
     }
   }
@@ -182,14 +175,18 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     if (_alojamientosCargados) return;
     setState(() => _estadoAlojamientos = EstadoUi.cargando);
     try {
-      final pagina = await AlojamientoApiService.obtenerAlojamientoDestacados(page: 0);
+      final pagina = await AlojamientoApiService.obtenerAlojamientoDestacados(
+        page: 0,
+      );
 
       setState(() {
         _todosAlojamientos = pagina.contenido;
         _hayMasAlojamientos = pagina.numero + 1 < pagina.totalPaginas;
         _pageAlojamientos = 1;
         _alojamientosCargados = true;
-        _estadoAlojamientos = pagina.contenido.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
+        _estadoAlojamientos = pagina.contenido.isEmpty
+            ? EstadoUi.vacio
+            : EstadoUi.contenido;
       });
     } on SocketException {
       setState(() {
@@ -214,13 +211,16 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     if (!_hayMasAlojamientos || _cargandoMasAlojamientos) return;
     setState(() => _cargandoMasAlojamientos = true);
     try {
-      final pagina = await AlojamientoApiService.obtenerAlojamientoDestacados(page: _pageAlojamientos);
+      final pagina = await AlojamientoApiService.obtenerAlojamientoDestacados(
+        page: _pageAlojamientos,
+      );
       setState(() {
         _todosAlojamientos.addAll(pagina.contenido);
         _hayMasAlojamientos = pagina.numero + 1 < pagina.totalPaginas;
         _pageAlojamientos++;
       });
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       setState(() => _cargandoMasAlojamientos = false);
     }
   }
@@ -262,22 +262,42 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
         child: FadeTransition(opacity: animation, child: child),
       ),
       child: _mostrandoListadoRestaurantes
-          ? KeyedSubtree(key: const ValueKey('lista_restaurantes'), child: _buildListadoRestaurantes())
+          ? KeyedSubtree(
+              key: const ValueKey('lista_restaurantes'),
+              child: _buildListadoRestaurantes(),
+            )
           : _mostrandoListadoAlojamientos
-          ? KeyedSubtree(key: const ValueKey('lista_alojamientos'), child: _buildListadoAlojamientos())
-          : KeyedSubtree(key: const ValueKey('resumen'), child: Column(
-        children: [
-          CabeceraPagina(titulo: 'Descubre', subtitulo: 'Establecimientos'),
-          Expanded(
-            child: switch (_estadoResumen) {
-              EstadoUi.cargando => const Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 166, 226, 70))),
-              EstadoUi.error => estadoError(icon: Icons.error_outline, mensaje: _mensajeErrorResumen, onRetry: _cargarResumen),
-              EstadoUi.sinConexion => estadoError(icon: Icons.wifi_off, mensaje: _mensajeErrorResumen, onRetry: _cargarResumen),
-              _ => _buildResumen(),
-            },
-          ),
-        ],
-      )),
+          ? KeyedSubtree(
+              key: const ValueKey('lista_alojamientos'),
+              child: _buildListadoAlojamientos(),
+            )
+          : KeyedSubtree(
+              key: const ValueKey('resumen'),
+              child: Column(
+                children: [
+                  CabeceraPagina(
+                    titulo: 'Descubre',
+                    subtitulo: 'Establecimientos',
+                  ),
+                  Expanded(
+                    child: switch (_estadoResumen) {
+                      EstadoUi.cargando => _buildResumen(),
+                      EstadoUi.error => estadoError(
+                        icon: Icons.error_outline,
+                        mensaje: _mensajeErrorResumen,
+                        onRetry: _cargarResumen,
+                      ),
+                      EstadoUi.sinConexion => estadoError(
+                        icon: Icons.wifi_off,
+                        mensaje: _mensajeErrorResumen,
+                        onRetry: _cargarResumen,
+                      ),
+                      _ => _buildResumen(),
+                    },
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -293,45 +313,61 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                 children: [
                   _tarjetaEstablecimiento(
                     tituloBloque: 'Restaurantes destacados',
-                    items: _restaurantes.map((r) =>
-                        _ItemEstablecimiento(
-                          titulo: r.nombre,
-                          imagenUrl: r.imagenPrincipal!,
-                          onTap: () async {
-                            try {
-                              final detalle = await RestauranteApiService
-                                  .restauranteDetalle(r.id);
-                              widget.onDetalleSeleccionado(detalle);
-                            } catch (e) {
-                              if (!context.mounted) return;
-                              Alerta.show(context,
-                                  mensaje: 'No se ha podido cargar correctamente el restaurante.',
-                                  tipo: TipoAviso.error);
-                            }
-                          },
-                        )).toList(),
+                    items: _restaurantes
+                        .map(
+                          (r) => _ItemEstablecimiento(
+                            titulo: r.nombre,
+                            imagenUrl: r.imagenPrincipal!,
+                            onTap: () async {
+                              try {
+                                final detalle =
+                                    await RestauranteApiService.restauranteDetalle(
+                                      r.id,
+                                    );
+                                widget.onDetalleSeleccionado(detalle);
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                Alerta.show(
+                                  context,
+                                  mensaje:
+                                      'No se ha podido cargar correctamente el restaurante.',
+                                  tipo: TipoAviso.error,
+                                );
+                              }
+                            },
+                          ),
+                        )
+                        .toList(),
                     onVerMas: _abrirListadoRestaurantes,
                   ),
                   const SizedBox(height: 16),
                   _tarjetaEstablecimiento(
                     tituloBloque: 'Alojamientos destacados',
-                    items: _alojamientos.map((a) =>
-                        _ItemEstablecimiento(
-                          titulo: a.nombre,
-                          imagenUrl: a.imagenPrincipal!,
-                          onTap: () async {
-                            try {
-                              final detalle = await AlojamientoApiService
-                                  .obtenerAlojamientoDetalle(a.id);
-                              widget.onDetalleSeleccionado(detalle);
-                            } catch (e) {
-                              if (!context.mounted) return;
-                              Alerta.show(context,
-                                  mensaje: 'No se ha podido cargar correctamente el restaurante.',
-                                  tipo: TipoAviso.error);
-                            }
-                          },
-                        )).toList(),
+                    items: _alojamientos
+                        .map(
+                          (a) => _ItemEstablecimiento(
+                            titulo: a.nombre,
+                            imagenUrl: a.imagenPrincipal!,
+                            onTap: () async {
+                              try {
+                                final detalle =
+                                    await AlojamientoApiService.obtenerAlojamientoDetalle(
+                                      a.id,
+                                    );
+                                widget.onDetalleSeleccionado(detalle);
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                Alerta.show(
+                                  context,
+                                  mensaje:
+                                      'No se ha podido cargar correctamente el restaurante.',
+                                  tipo: TipoAviso.error,
+                                );
+                              }
+                            },
+                          ),
+                        )
+                        .toList(),
                     onVerMas: _abrirListadoAlojamientos,
                   ),
                 ],
@@ -343,77 +379,82 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     );
   }
 
-
   Widget _buildListadoRestaurantes() {
     return Column(
       children: [
         CabeceraPagina(
-          titulo: 'Restaurantes',
+          titulo: 'Restaurantes destacados',
           subtitulo: 'Descubre',
           onVolver: _volverResumen,
         ),
         Expanded(
           child: switch (_estadoRestaurantes) {
-            EstadoUi.cargando =>
-            const Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 166, 226, 70),
+            EstadoUi.cargando => ListView.builder(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
+              itemCount: 4,
+              itemBuilder: (_, __) => const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: SkeletonTarjetaBusqueda(),
               ),
             ),
             EstadoUi.vacio => estadoVacio(),
-            EstadoUi.sinConexion =>
-                estadoError(
-                  icon: Icons.wifi_off,
-                  mensaje: _mensajeErrorRestaurantes,
-                  onRetry: () {
-                    _restaurantesCargados = false;
-                    _cargarTodosRestaurantes();
-                  },
-                ),
-            EstadoUi.error =>
-                estadoError(
-                  icon: Icons.error_outline,
-                  mensaje: _mensajeErrorRestaurantes,
-                  onRetry: () {
-                    _restaurantesCargados = false;
-                    _cargarTodosRestaurantes();
-                  },
-                ),
-            EstadoUi.contenido =>
-                ListView.builder(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  itemCount: _todosRestaurantes.length,
-                  itemBuilder: (context, index) {
-                    final r = _todosRestaurantes[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TarjetaBusqueda.restaurante(
-                          titulo: r.nombre,
-                          imagenUrl: r.imagenPrincipal!,
-                          textoEtiqueta: r.categoriaRestaurante[0].toUpperCase() +
-                              r.categoriaRestaurante.substring(1).toLowerCase(),
-                          iconoEtiqueta:
-                          Iconos.getIconoRestaurante(r.categoriaRestaurante),
-                          onTap: () async {
-                            try {
-                              final detalle = await RestauranteApiService
-                                  .restauranteDetalle(r.id);
-                              widget.onDetalleSeleccionado(detalle);
-                            } catch (e) {
-                              if (!context.mounted) return;
-                              Alerta.show(context,
-                                  mensaje: 'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
-                                  tipo: TipoAviso.error);
-                            }
-                          },
-                          horario: r.horario!,
-                          abierto: r.abierto!,
-                          localidad: r.localidad
-                      ),
-                    );
-                  },
-                ),
+            EstadoUi.sinConexion => estadoError(
+              icon: Icons.wifi_off,
+              mensaje: _mensajeErrorRestaurantes,
+              onRetry: () {
+                _restaurantesCargados = false;
+                _cargarTodosRestaurantes();
+              },
+            ),
+            EstadoUi.error => estadoError(
+              icon: Icons.error_outline,
+              mensaje: _mensajeErrorRestaurantes,
+              onRetry: () {
+                _restaurantesCargados = false;
+                _cargarTodosRestaurantes();
+              },
+            ),
+            EstadoUi.contenido => ListView.builder(
+              controller: _scrollRestaurantes,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              itemCount: _todosRestaurantes.length,
+              itemBuilder: (context, index) {
+                final r = _todosRestaurantes[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TarjetaBusqueda.restaurante(
+                    titulo: r.nombre,
+                    imagenUrl: r.imagenPrincipal!,
+                    textoEtiqueta:
+                        r.categoriaRestaurante[0].toUpperCase() +
+                        r.categoriaRestaurante.substring(1).toLowerCase(),
+                    iconoEtiqueta: Iconos.getIconoRestaurante(
+                      r.categoriaRestaurante,
+                    ),
+                    onTap: () async {
+                      try {
+                        final detalle =
+                            await RestauranteApiService.restauranteDetalle(
+                              r.id,
+                            );
+                        widget.onDetalleSeleccionado(detalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        Alerta.show(
+                          context,
+                          mensaje:
+                              'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
+                          tipo: TipoAviso.error,
+                        );
+                      }
+                    },
+                    horario: r.horario!,
+                    abierto: r.abierto!,
+                    localidad: r.localidad,
+                  ),
+                );
+              },
+            ),
           },
         ),
       ],
@@ -424,70 +465,76 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     return Column(
       children: [
         CabeceraPagina(
-          titulo: 'Alojamientos',
+          titulo: 'Alojamientos destacados',
           subtitulo: 'Descubre',
           onVolver: _volverResumen,
         ),
         Expanded(
           child: switch (_estadoAlojamientos) {
-            EstadoUi.cargando =>
-            const Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 166, 226, 70),
+            EstadoUi.cargando => ListView.builder(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
+              itemCount: 4,
+              itemBuilder: (_, __) => const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: SkeletonTarjetaBusqueda(),
               ),
             ),
             EstadoUi.vacio => estadoVacio(),
-            EstadoUi.sinConexion =>
-                estadoError(
-                  icon: Icons.wifi_off,
-                  mensaje: _mensajeErrorAlojamientos,
-                  onRetry: () {
-                    _alojamientosCargados = false;
-                    _cargarTodosAlojamientos();
-                  },
-                ),
-            EstadoUi.error =>
-                estadoError(
-                  icon: Icons.error_outline,
-                  mensaje: _mensajeErrorAlojamientos,
-                  onRetry: () {
-                    _alojamientosCargados = false;
-                    _cargarTodosAlojamientos();
-                  },
-                ),
-            EstadoUi.contenido =>
-                ListView.builder(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  itemCount: _todosAlojamientos.length,
-                  itemBuilder: (context, index) {
-                    final a = _todosAlojamientos[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TarjetaBusqueda.alojamiento(
-                        titulo: a.nombre,
-                        imagenUrl: a.imagenPrincipal!,
-                        textoEtiqueta: a.categoriaAlojamiento[0].toUpperCase() +
-                            a.categoriaAlojamiento.substring(1).toLowerCase(),
-                        iconoEtiqueta:
-                        Iconos.getIconoAlojamiento(a.categoriaAlojamiento),
-                        onTap: () async {
-                          try {
-                            final detalle = await AlojamientoApiService
-                                .obtenerAlojamientoDetalle(a.id);
-                            widget.onDetalleSeleccionado(detalle);
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            Alerta.show(context,
-                                mensaje: 'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
-                                tipo: TipoAviso.error);
-                          }
-                        },
-                        localidad: a.localidad,
-                      ),
-                    );
-                  },
-                ),
+            EstadoUi.sinConexion => estadoError(
+              icon: Icons.wifi_off,
+              mensaje: _mensajeErrorAlojamientos,
+              onRetry: () {
+                _alojamientosCargados = false;
+                _cargarTodosAlojamientos();
+              },
+            ),
+            EstadoUi.error => estadoError(
+              icon: Icons.error_outline,
+              mensaje: _mensajeErrorAlojamientos,
+              onRetry: () {
+                _alojamientosCargados = false;
+                _cargarTodosAlojamientos();
+              },
+            ),
+            EstadoUi.contenido => ListView.builder(
+              controller: _scrollAlojamientos,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              itemCount: _todosAlojamientos.length,
+              itemBuilder: (context, index) {
+                final a = _todosAlojamientos[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TarjetaBusqueda.alojamiento(
+                    titulo: a.nombre,
+                    imagenUrl: a.imagenPrincipal!,
+                    textoEtiqueta:
+                        a.categoriaAlojamiento[0].toUpperCase() +
+                        a.categoriaAlojamiento.substring(1).toLowerCase(),
+                    iconoEtiqueta: Iconos.getIconoAlojamiento(
+                      a.categoriaAlojamiento,
+                    ),
+                    onTap: () async {
+                      try {
+                        final detalle =
+                            await AlojamientoApiService.obtenerAlojamientoDetalle(
+                              a.id,
+                            );
+                        widget.onDetalleSeleccionado(detalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        Alerta.show(
+                          context,
+                          mensaje:
+                              'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
+                          tipo: TipoAviso.error,
+                        );
+                      }
+                    },
+                    localidad: a.localidad,
+                  ),
+                );
+              },
+            ),
           },
         ),
       ],
@@ -499,19 +546,6 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     required List<_ItemEstablecimiento> items,
     required VoidCallback onVerMas,
   }) {
-    final filas = <Widget>[];
-    for (int i = 0; i < items.length; i += 3) {
-      final filaItems = items.skip(i).take(3).toList();
-      filas.add(Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(filaItems.length * 2 - 1, (index) {
-          if (index.isOdd) return const SizedBox(width: 10);
-          return Expanded(
-              child: _miniTarjetaEstablecimiento(item: filaItems[index ~/ 2]));
-        }),
-      ));
-      if (i + 3 < items.length) filas.add(const SizedBox(height: 12));
-    }
 
     return Container(
       width: double.infinity,
@@ -522,7 +556,10 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
         border: Border.all(color: _borde),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x0C000000), blurRadius: 12, offset: Offset(0, 4)),
+            color: Color(0x0C000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -544,38 +581,61 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                 onTap: onVerMas,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _verde,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text('Ver más',
-                      style: TextStyle(
-                          fontFamily: 'RobotoCondensed',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: _texto)),
+                  child: const Text(
+                    'Ver más',
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          if (items.isEmpty)
+          if (_estadoResumen == EstadoUi.cargando)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 6,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.72,
+              ),
+              itemBuilder: (_, __) => const SkeletonMiniTarjeta(),
+            )
+          else if (items.isEmpty)
             SizedBox(
-              height: 120, // misma altura aprox que una fila de mini-tarjetas
+              height: 120,
               child: Center(
-                child: Text(
-                  'No hay destacados disponibles',
-                  style: const TextStyle(
-                    fontFamily: 'RobotoCondensed',
-                    fontSize: 13,
-                    color: _textoSuave,
-                  ),
-                ),
+                child: Text('No hay destacados disponibles ...'),
               ),
             )
           else
-            ...filas,
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.72,
+              ),
+              itemBuilder: (context, index) =>
+                  _miniTarjetaEstablecimiento(item: items[index]),
+            ),
         ],
       ),
     );
@@ -594,23 +654,16 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                 border: Border.all(color: _verde, width: 2),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: const [
-                  BoxShadow(color: Color(0x14000000),
-                      blurRadius: 6,
-                      offset: Offset(0, 2)),
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
                 ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  item.imagenUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      Container(
-                        color: const Color(0xFFE8E5DF),
-                        child: const Icon(Icons.image_not_supported_outlined,
-                            color: _textoSuave),
-                      ),
-                ),
+                child: imagenEstablecimiento(item.imagenUrl),
               ),
             ),
           ),
@@ -640,11 +693,8 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     );
   }
 
-
   Widget imagenEstablecimiento(String? url) {
-    if (url == null || url
-        .trim()
-        .isEmpty) {
+    if (url == null || url.trim().isEmpty) {
       return Container(
         color: Colors.grey.shade200,
         child: Icon(
@@ -657,27 +707,28 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     return CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.cover,
-      placeholder: (context, _) =>
-          Container(
-            color: Colors.grey.shade200,
-            child: const Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 166, 226, 70),
-              ),
-            ),
+      memCacheWidth: 400,
+      memCacheHeight: 400,
+      placeholder: (context, _) => Container(
+        color: Colors.grey.shade200,
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 166, 226, 70),
           ),
-      errorWidget: (context, _, __) =>
-          Container(
-            color: Colors.grey.shade200,
-            child: Icon(
-              Icons.image_outlined,
-              color: Colors.grey.shade400,
-              size: 36,
-            ),
-          ),
+        ),
+      ),
+      errorWidget: (context, _, __) => Container(
+        color: Colors.grey.shade200,
+        child: Icon(
+          Icons.image_outlined,
+          color: Colors.grey.shade400,
+          size: 36,
+        ),
+      ),
     );
   }
 }
+
 class _ItemEstablecimiento {
   final String titulo;
   final String imagenUrl;
@@ -688,4 +739,68 @@ class _ItemEstablecimiento {
     required this.imagenUrl,
     this.onTap,
   });
+}
+
+class SkeletonMiniTarjeta extends StatefulWidget {
+  const SkeletonMiniTarjeta({super.key});
+
+  @override
+  State<SkeletonMiniTarjeta> createState() => _SkeletonMiniTarjetaState();
+}
+
+class _SkeletonMiniTarjetaState extends State<SkeletonMiniTarjeta>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+    _anim = Tween<double>(begin: -1, end: 2).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Widget _shimmer({double? width, double? height, BorderRadius? radius}) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: radius ?? BorderRadius.circular(4),
+          gradient: LinearGradient(
+            stops: const [0.0, 0.5, 1.0],
+            colors: const [Color(0xFFE8E8E8), Color(0xFFF5F5F5), Color(0xFFE8E8E8)],
+            transform: SlideGradient(_anim.value),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AspectRatio(
+          aspectRatio: 1,
+          child: _shimmer(radius: BorderRadius.circular(12)),
+        ),
+        const SizedBox(height: 5),
+        _shimmer(width: double.infinity, height: 20, radius: BorderRadius.circular(6)),
+      ],
+    );
+  }
 }

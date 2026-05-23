@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kultux/componentes/etiqueta_categoria.dart';
 import 'package:kultux/core/utils/normalizador.dart';
 import 'package:kultux/models/franja.dart';
 
@@ -13,6 +15,7 @@ class TarjetaBusqueda extends StatelessWidget {
   final String? iconoEtiqueta;
   final Map<String, List<Franja>>? horario;
   final bool? abierto;
+  final String? fechaFin;
 
   const TarjetaBusqueda._({
     super.key,
@@ -25,6 +28,7 @@ class TarjetaBusqueda extends StatelessWidget {
     this.iconoEtiqueta,
     this.horario,
     this.abierto,
+    this.fechaFin,
   });
 
   const TarjetaBusqueda.actividad({
@@ -36,16 +40,18 @@ class TarjetaBusqueda extends StatelessWidget {
     required VoidCallback onTap,
     required String textoEtiqueta,
     required String iconoEtiqueta,
+    String? fechaFin,
   }) : this._(
-          key: key,
-          titulo: titulo,
-          localidad: localidad,
-          fecha: fecha,
-          imagenUrl: imagenUrl,
-          onTap: onTap,
-          textoEtiqueta: textoEtiqueta,
-          iconoEtiqueta: iconoEtiqueta
-        );
+         key: key,
+         titulo: titulo,
+         localidad: localidad,
+         fecha: fecha,
+         imagenUrl: imagenUrl,
+         onTap: onTap,
+         textoEtiqueta: textoEtiqueta,
+         iconoEtiqueta: iconoEtiqueta,
+         fechaFin: fechaFin,
+       );
 
   const TarjetaBusqueda.restaurante({
     Key? key,
@@ -58,16 +64,16 @@ class TarjetaBusqueda extends StatelessWidget {
     required bool abierto,
     String? localidad,
   }) : this._(
-          key: key,
-          titulo: titulo,
-          imagenUrl: imagenUrl,
-          textoEtiqueta: textoEtiqueta,
-          iconoEtiqueta: iconoEtiqueta,
-          onTap: onTap,
-          horario: horario,
-          abierto: abierto,
-          localidad: localidad,
-        );
+         key: key,
+         titulo: titulo,
+         imagenUrl: imagenUrl,
+         textoEtiqueta: textoEtiqueta,
+         iconoEtiqueta: iconoEtiqueta,
+         onTap: onTap,
+         horario: horario,
+         abierto: abierto,
+         localidad: localidad,
+       );
 
   const TarjetaBusqueda.alojamiento({
     Key? key,
@@ -78,15 +84,14 @@ class TarjetaBusqueda extends StatelessWidget {
     required VoidCallback onTap,
     String? localidad,
   }) : this._(
-          key: key,
-          titulo: titulo,
-          imagenUrl: imagenUrl,
-          textoEtiqueta: textoEtiqueta,
-          iconoEtiqueta: iconoEtiqueta,
-          onTap: onTap,
-          localidad: localidad,
-        );
-
+         key: key,
+         titulo: titulo,
+         imagenUrl: imagenUrl,
+         textoEtiqueta: textoEtiqueta,
+         iconoEtiqueta: iconoEtiqueta,
+         onTap: onTap,
+         localidad: localidad,
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +114,6 @@ class TarjetaBusqueda extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _ImagenSuperior(imagenUrl: imagenUrl),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
@@ -153,13 +157,15 @@ class TarjetaBusqueda extends StatelessWidget {
                       if (fecha != null)
                         _ChipMeta(
                           icono: Icons.calendar_today_outlined,
-                          texto: fecha!,
+                          texto: formatearFecha(
+                            '${formatearFecha(fecha!)}${fechaFin != null && fechaFin!.isNotEmpty ? ' - ${formatearFecha(fechaFin!)}' : ''}',
+                          ),
                           fondoColor: const Color(0xFFF0F8E6),
                           textoColor: const Color(0xFF4A7A10),
                         ),
 
                       if (textoEtiqueta != null && iconoEtiqueta != null)
-                        _ChipMetaSvg(
+                        EtiquetaCategoria(
                           iconoPath: iconoEtiqueta!,
                           texto: formatearCategoria(textoEtiqueta!),
                           fondoColor: const Color(0xFF1A1A1A),
@@ -175,11 +181,11 @@ class TarjetaBusqueda extends StatelessWidget {
                     const Text(
                       "El horario puede sufrir cambios",
                       style: TextStyle(
-                          color: Colors.grey,
-                          fontStyle: FontStyle.italic,
-                          fontSize: 10
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 10,
                       ),
-                    )
+                    ),
                   ],
                 ],
               ),
@@ -202,12 +208,26 @@ class _ImagenSuperior extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         height: 140,
-        child: Image.network(
-          imagenUrl,
+        child: CachedNetworkImage(
+          imageUrl: imagenUrl,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+          memCacheWidth: 400,
+          placeholder: (_, __) => Container(
+            color: const Color(0xFFE8E5DF),
+            child: const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFA6E246),
+                strokeWidth: 2,
+              ),
+            ),
+          ),
+          errorWidget: (_, __, ___) => Container(
             color: Colors.grey.shade200,
-            child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 36),
+            child: Icon(
+              Icons.image_outlined,
+              color: Colors.grey.shade400,
+              size: 36,
+            ),
           ),
         ),
       ),
@@ -289,66 +309,14 @@ class _ChipMeta extends StatelessWidget {
   }
 }
 
-class _ChipMetaSvg extends StatelessWidget {
-  final String iconoPath;
-  final String texto;
-  final Color fondoColor;
-  final Color textoColor;
-  final Color iconoColor;
-
-  const _ChipMetaSvg({
-    required this.iconoPath,
-    required this.texto,
-    required this.fondoColor,
-    required this.textoColor,
-    required this.iconoColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: fondoColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SvgPicture.asset(
-            iconoPath,
-            width: 13,
-            height: 13,
-            colorFilter: ColorFilter.mode(iconoColor, BlendMode.srcIn),
-          ),
-          const SizedBox(width: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 130),
-            child: Text(
-              texto,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: "RobotoCondensed",
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: textoColor,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _HorarioInline extends StatelessWidget {
   final Map<String, List<Franja>> horario;
   final bool abierto;
 
   const _HorarioInline({required this.horario, required this.abierto});
 
-  String _formatearHora(String hora) => hora.length >= 5 ? hora.substring(0, 5) : hora;
+  String _formatearHora(String hora) =>
+      hora.length >= 5 ? hora.substring(0, 5) : hora;
 
   @override
   Widget build(BuildContext context) {
@@ -358,10 +326,16 @@ class _HorarioInline extends StatelessWidget {
     final colorFondo = abierto ? const Color(0xFFF0F8E6) : Colors.red.shade50;
     final colorTexto = abierto ? const Color(0xFF4A7A10) : Colors.red.shade700;
 
-    const diasNombre = {1:'L',2:'M',3:'X',4:'J',5:'V',6:'S',7:'D'};
-    final diasQueAbre = [1,2,3,4,5,6,7]
-        .where((d) => (horario['$d'] ?? []).isNotEmpty)
-        .toSet();
+    const diasNombre = {1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S', 7: 'D'};
+    final diasQueAbre = [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+    ].where((d) => (horario['$d'] ?? []).isNotEmpty).toSet();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -373,11 +347,11 @@ class _HorarioInline extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Row(
             children: [
               Container(
-                width: 8, height: 8,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 6),
@@ -393,13 +367,17 @@ class _HorarioInline extends StatelessWidget {
               if (franjasHoy.isNotEmpty) ...[
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8),
-                  width: 1, height: 12,
+                  width: 1,
+                  height: 12,
                   color: colorTexto.withOpacity(0.3),
                 ),
                 Expanded(
                   child: Text(
                     franjasHoy
-                        .map((f) => '${_formatearHora(f.inicio)}–${_formatearHora(f.fin)}')
+                        .map(
+                          (f) =>
+                              '${_formatearHora(f.inicio)}–${_formatearHora(f.fin)}',
+                        )
                         .join('  |  '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -418,12 +396,13 @@ class _HorarioInline extends StatelessWidget {
           if (diasQueAbre.isNotEmpty) ...[
             const SizedBox(height: 6),
             Row(
-              children: [1,2,3,4,5,6,7].map((d) {
+              children: [1, 2, 3, 4, 5, 6, 7].map((d) {
                 final activo = diasQueAbre.contains(d);
                 final esHoy = d == hoy;
                 return Container(
                   margin: const EdgeInsets.only(right: 4),
-                  width: 22, height: 22,
+                  width: 22,
+                  height: 22,
                   decoration: BoxDecoration(
                     color: esHoy
                         ? color

@@ -29,14 +29,12 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
   void initState() {
     super.initState();
 
-    print('ineInicial: ${widget.ineInicial}');
-    print('localidades: ${widget.localidades.length}');
-
-
     _focusNode = FocusNode();
     _controller = TextEditingController();
     if (widget.ineInicial != null) {
-      final match = widget.localidades.where((l) => l.ine == widget.ineInicial).firstOrNull;
+      final match = widget.localidades
+          .where((l) => l.ine == widget.ineInicial)
+          .firstOrNull;
       print('match: ${match?.nombre}');
       if (match != null) {
         _seleccionada = match;
@@ -58,7 +56,7 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
       optionsBuilder: (v) {
         if (v.text.isEmpty) return const Iterable<Localidad>.empty();
         return widget.localidades.where(
-                (l) => normalizar(l.nombre).contains(normalizar(v.text))
+          (l) => normalizar(l.nombre).contains(normalizar(v.text)),
         );
       },
       displayStringForOption: (l) => l.nombre,
@@ -68,11 +66,10 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
         widget.onSelected(loc);
       },
       fieldViewBuilder: (context, ctrl, internalFocusNode, _) {
-
         if (_seleccionada != null && ctrl.text.isEmpty) {
           ctrl.text = _seleccionada!.nombre;
         }
-       /* internalFocusNode.addListener(() {
+        /* internalFocusNode.addListener(() {
           if (internalFocusNode.hasFocus && _seleccionada != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               internalFocusNode.unfocus();
@@ -131,17 +128,20 @@ class _SelectorLocalidadState extends State<SelectorLocalidad> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
+        borderSide: const BorderSide(
+          color: Color.fromARGB(255, 166, 226, 70),
+          width: 1,
+        ),
       ),
       suffixIcon: hasValue
           ? GestureDetector(
-        onTap: () {
-          setState(() => _seleccionada = null);
-          ctrl.clear();
-          widget.onSelected(null);
-        },
-        child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
-      )
+              onTap: () {
+                setState(() => _seleccionada = null);
+                ctrl.clear();
+                widget.onSelected(null);
+              },
+              child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
+            )
           : Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
     );
   }

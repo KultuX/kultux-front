@@ -4,55 +4,48 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/usuario.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:kultux/core/utils/api_url.dart';
-class UsuarioApiService{
 
-
+class UsuarioApiService {
   static Future<Usuario> loginUsuario(Usuario userLogin) async {
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/login');
-    //final url = Uri.http(_BASE_URL_USUARIOS, '/api/usuarios/login');
+    final url = Uri.https(ApiUrl.BASE_URL, '/api/v1/gateway-user/login');
 
     final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'User-Agent': 'KultuX APP'
-        },
-        body: jsonEncode(userLogin.toJsonLogin())
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP',
+      },
+      body: jsonEncode(userLogin.toJsonLogin()),
     );
 
     if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
       return Usuario.logeado(json);
     } else {
-      throw Exception(
-          'Error en el login: ${response
-              .statusCode}');
+      throw Exception('Error en el login: ${response.statusCode}');
     }
   }
 
-
   static Future<String> registroUsuario(Usuario userRegistro) async {
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/registrar');
+    final url = Uri.https(ApiUrl.BASE_URL, '/api/v1/gateway-user/registrar');
 
     final response = await http.post(
       url,
-      headers:{
+      headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
-      body: jsonEncode(userRegistro.toJsonRegistro())
+      body: jsonEncode(userRegistro.toJsonRegistro()),
     );
 
     print(jsonEncode(userRegistro.toJsonRegistro()));
-    if(response.statusCode == 200 || response.statusCode == 201){
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return userRegistro.email;
-    }else{
-      throw Exception('Error al registrarse ${response
-          .statusCode}');
+    } else {
+      throw Exception('Error al registrarse ${response.statusCode}');
     }
-
   }
 
   static Future<Usuario> editarUsuario({
@@ -77,10 +70,7 @@ class UsuarioApiService{
 
     if (imagen != null) {
       request.files.add(
-        await http.MultipartFile.fromPath(
-          'imagen',
-          imagen.path,
-        ),
+        await http.MultipartFile.fromPath('imagen', imagen.path),
       );
     }
 
@@ -97,7 +87,10 @@ class UsuarioApiService{
   }
 
   static Future<void> eliminarUsuario(int id) async {
-    final uri = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/eliminar-usuario/$id');
+    final uri = Uri.https(
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-user/eliminar-usuario/$id',
+    );
     final response = await http.delete(uri);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -106,14 +99,17 @@ class UsuarioApiService{
   }
 
   static Future<void> recuperarPassword(String email) async {
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-user/recuperar-password');
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-user/recuperar-password',
+    );
 
     final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
       body: jsonEncode({'email': email}),
     );
@@ -124,5 +120,4 @@ class UsuarioApiService{
       throw Exception('ERROR');
     }
   }
-
 }

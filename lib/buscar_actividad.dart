@@ -10,6 +10,7 @@ import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 
 import 'componentes/selector_localidad.dart';
+import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/http_error_mapper.dart';
 
 import 'package:kultux/core/utils/estados_widgets.dart';
@@ -37,7 +38,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
   int totalPaginas = 0;
 
   bool cargando = false;
-  bool cargandoInicial = true;
+  //bool cargandoInicial = true;
   Timer? _debounceTimer;
   final ScrollController controller = ScrollController();
   final TextEditingController _searchController = TextEditingController();
@@ -46,53 +47,39 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   Key _selectorLocalidadKey = UniqueKey();
 
-
   EstadoUi estado = EstadoUi.cargando;
   String mensajeError = '';
-
 
   @override
   void initState() {
     super.initState();
-
-    futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     futureCategorias = ActividadesApiService.categoriasActividad();
-
+    futureLocalidad = LocalidadApiService.obtenerLocalidadNombres();
     _cargaInicial();
-
     controller.addListener(() {
-      if (controller.position.pixels >= controller.position.maxScrollExtent - 200) {
+      if (controller.position.pixels >=
+          controller.position.maxScrollExtent - 200) {
         _cargarMas();
       }
     });
-
   }
-
 
   Future<void> _resetYcargar() async {
-    setState(() {
-      paginaActual = 0;
-      actividades.clear();
-    });
+    await Future.microtask(() {});
+    paginaActual = 0;
+    totalPaginas = 0;
     await _cargarMas();
   }
-
 
   Future<void> _cargarActividades() async {
     await _resetYcargar();
   }
 
-
-
   Future<void> _cargaInicial() async {
-    setState(() {
-      cargandoInicial = true;
-      estado = EstadoUi.cargando;
-    });
+    setState(() {estado = EstadoUi.cargando;});
+    await Future.microtask(() {});
     await _resetYcargar();
-    setState(() => cargandoInicial = false);
   }
-
 
   Future<void> _cargarMas() async {
     if (cargando) return;
@@ -111,48 +98,45 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         page: paginaActual,
       );
       setState(() {
+        if (paginaActual == 0) actividades.clear();
         actividades.addAll(pageResponse.contenido);
         totalPaginas = pageResponse.totalPaginas;
         paginaActual++;
         estado = actividades.isEmpty ? EstadoUi.vacio : EstadoUi.contenido;
       });
-    }on SocketException {
+    } on SocketException {
       setState(() {
         estado = EstadoUi.sinConexion;
         mensajeError = 'No hay conexion a internet';
       });
-    }on HttpException catch (e){
+    } on HttpException catch (e) {
       final uiError = mapearStatusCode(int.parse(e.message));
       setState(() {
         estado = uiError.estado;
         mensajeError = uiError.mensaje;
       });
-    }catch (_) {
-        setState(() {
-          estado = EstadoUi.error;
-          mensajeError = 'Error inesperado';
-        });
+    } catch (_) {
+      setState(() {
+        estado = EstadoUi.error;
+        mensajeError = 'Error inesperado';
+      });
     } finally {
-        cargando = false;
+      cargando = false;
     }
-
   }
 
   Widget _sliverSegunEstado() {
     switch (estado) {
       case EstadoUi.cargando:
-        return const SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(
-              color: Color.fromARGB(255, 166, 226, 70),
-            ),
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+                (_, _) => const SkeletonTarjetaBusqueda(),
+            childCount: 5,
           ),
         );
 
       case EstadoUi.vacio:
-        return SliverFillRemaining(
-          child: estadoVacio(),
-        );
+        return SliverFillRemaining(child: estadoVacio());
 
       case EstadoUi.sinConexion:
         return SliverFillRemaining(
@@ -175,24 +159,28 @@ class _BuscarPageState extends State<BuscarActividadPage> {
       case EstadoUi.contenido:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
-                (context, index) {
+            (context, index) {
               if (index < actividades.length) {
                 final a = actividades[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
                   child: TarjetaBusqueda.actividad(
                     titulo: a.titulo,
                     localidad: a.localidad!,
                     fecha: a.fechaInicio,
                     imagenUrl: a.imagenPrincipal,
                     onTap: () async {
-                      final detalle = await ActividadesApiService.detalleActividad(a.id);
+                      final detalle =
+                          await ActividadesApiService.detalleActividad(a.id);
                       print(detalle.toString());
                       widget.onDetalleSeleccionado?.call(detalle);
-
                     },
                     textoEtiqueta: a.categoriaActividad!,
                     iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+                    fechaFin: a.fechaFin,
                   ),
                 );
               }
@@ -223,7 +211,8 @@ class _BuscarPageState extends State<BuscarActividadPage> {
               return const SizedBox.shrink();
             },
             childCount:
-            actividades.length + (cargando || paginaActual >= totalPaginas ? 1 : 0),
+                actividades.length +
+                (cargando || paginaActual >= totalPaginas ? 1 : 0),
           ),
         );
     }
@@ -235,7 +224,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         CustomScrollView(
           controller: controller,
           slivers: [
-            // Barra de búsqueda
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
@@ -249,7 +237,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
               ),
             ),
 
-            // Filtros
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -258,8 +245,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-            // 👇 SOLO cambia esta parte según estado
             _sliverSegunEstado(),
           ],
         ),
@@ -272,20 +257,10 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-    if (cargandoInicial) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 166, 226, 70),
-        ),
-      );
-    }
-
     return _contenidoConEstado();
   }
-
 
   Widget _searchBar() {
     return SearchBar(
@@ -326,7 +301,10 @@ class _BuscarPageState extends State<BuscarActividadPage> {
             Expanded(child: _selectorCategorias()),
             const SizedBox(width: 8),
             Expanded(child: _selectorLocalidad()),
-            if (categoria != null || localidad != null || fecha != null || titulo.isNotEmpty) ...[
+            if (categoria != null ||
+                localidad != null ||
+                fecha != null ||
+                titulo.isNotEmpty) ...[
               const SizedBox(width: 8),
               _botonLimpiar(),
             ],
@@ -386,13 +364,16 @@ class _BuscarPageState extends State<BuscarActividadPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Color.fromARGB(255, 166, 226, 70), width: 1),
+        borderSide: BorderSide(
+          color: Color.fromARGB(255, 166, 226, 70),
+          width: 1,
+        ),
       ),
       suffixIcon: hasValue && onClear != null
           ? GestureDetector(
-        onTap: onClear,
-        child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
-      )
+              onTap: onClear,
+              child: Icon(Icons.clear, size: 16, color: Colors.grey.shade600),
+            )
           : Icon(icon, size: 16, color: Colors.grey.shade600),
     );
   }
@@ -407,7 +388,8 @@ class _BuscarPageState extends State<BuscarActividadPage> {
           optionsBuilder: (v) {
             if (v.text.isEmpty) return const Iterable<String>.empty();
             return categorias.where(
-                    (c) => c.toLowerCase().contains(v.text.toLowerCase()));
+              (c) => c.toLowerCase().contains(v.text.toLowerCase()),
+            );
           },
           onSelected: (s) {
             setState(() => categoria = s);
@@ -478,7 +460,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     );
   }
 
-
   Widget _selectorFecha() {
     return GestureDetector(
       onTap: () async {
@@ -496,7 +477,9 @@ class _BuscarPageState extends State<BuscarActividadPage> {
         height: 40,
         width: 40,
         decoration: BoxDecoration(
-          color: fecha == null ? Colors.grey.shade100 : const Color.fromARGB(30, 166, 226, 70),
+          color: fecha == null
+              ? Colors.grey.shade100
+              : const Color.fromARGB(30, 166, 226, 70),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: fecha == null
@@ -514,8 +497,6 @@ class _BuscarPageState extends State<BuscarActividadPage> {
       ),
     );
   }
-
-
 
   Widget _shimmerLoader() {
     return Container(

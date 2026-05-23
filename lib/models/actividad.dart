@@ -1,5 +1,6 @@
 import 'package:kultux/models/imagen.dart';
-class Actividad{
+
+class Actividad {
   final int id;
   final String titulo;
   final String? categoriaActividad;
@@ -40,7 +41,7 @@ class Actividad{
     this.urlWeb,
     this.direccion,
     this.nombreEmpresa,
-    this.logotipoEmpresa
+    this.logotipoEmpresa,
   });
 
   factory Actividad.inicio(Map<String, dynamic> json) {
@@ -48,23 +49,29 @@ class Actividad{
       id: json['id'] ?? 0,
       titulo: json['titulo'] ?? '',
       categoriaActividad: json['categoriaActividad'] ?? '',
-      imagenPrincipal: json['portada'] ?? 'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
+      imagenPrincipal:
+          json['portada'] ??
+          'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
       fechaInicio: json['fechaInicio'] ?? '',
       localidad: json['localidad'] ?? '',
-      estado: json['estado'] ?? ''
+      estado: json['estado'] ?? '',
+      fechaFin: json['fechaFin'] ?? ''
     );
   }
 
-  factory Actividad.busqueda(Map<String, dynamic> json){
+  factory Actividad.busqueda(Map<String, dynamic> json) {
     return Actividad._(
-        id: json['id'] ?? 0,
-        titulo: json['titulo'] ?? '',
-        categoriaActividad: json['categoria'] ?? '',
-        imagenPrincipal: json['portada'] ?? 'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
-        fechaInicio: json['fechaInicio'] ?? '',
-        horaInicio: json['horaInicio'],
-        localidad: json['localidad'] ?? '',
-        estado: json['estado'] ?? ''
+      id: json['id'] ?? 0,
+      titulo: json['titulo'] ?? '',
+      categoriaActividad: json['categoria'] ?? '',
+      imagenPrincipal:
+          json['portada'] ??
+          'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
+      fechaInicio: json['fechaInicio'] ?? '',
+      horaInicio: json['horaInicio'],
+      localidad: json['localidad'] ?? '',
+      estado: json['estado'] ?? '',
+      fechaFin: json['fechaFin'] ?? ''
     );
   }
 
@@ -80,35 +87,30 @@ class Actividad{
       descripcion: json['descripcion'] ?? 'No disponible',
       telefonoEmpresa: json['telefonoEmpresa'] ?? 'No disponible',
       correoCorporativo: json['correoEmpresa'] ?? 'No disponible',
-      fechaFin: json['fechaFin'] ,
+      fechaFin: json['fechaFin'],
       horaFin: json['horaFin'],
       imagenes: json['imagenes'] != null
-          ? (json['imagenes'] as List)
-          .map((e) => Imagen.fromJson(e))
-          .toList()
+          ? (json['imagenes'] as List).map((e) => Imagen.fromJson(e)).toList()
           : [],
       estado: json['estado'] ?? '',
-     urlCompra: json['urlCompra'],
-     urlWeb: json['urlWeb'],
+      urlCompra: json['urlCompra'],
+      urlWeb: json['urlWeb'],
       direccion: json['direccion'],
       nombreEmpresa: json['nombreEmpresa'],
-      logotipoEmpresa: json['logotipoUrl']
+      logotipoEmpresa: json['logotipoUrl'],
     );
   }
 
-  factory Actividad.guardado(Map<String, dynamic> json){
+  factory Actividad.guardado(Map<String, dynamic> json) {
     return Actividad._(
-      id:json['idActividad'],
+      id: json['idActividad'],
       titulo: json['titulo'],
       fechaInicio: json['fechaInicio'],
       horaInicio: json['horaInicio'],
       imagenPrincipal: json['portada'],
       categoriaActividad: json['categoria'],
-      localidad: json['localidad']
+      localidad: json['localidad'],
+      fechaFin: json['fechaFin']
     );
   }
-
-
-
 }
-

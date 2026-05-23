@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 class PoliticaPrivacidadDialog extends StatelessWidget {
   const PoliticaPrivacidadDialog({super.key});
 
-  /// Abre el diálogo de Política de Privacidad.
-  /// Se cierra pulsando el botón "Cerrar" o tocando fuera del diálogo.
   static Future<void> mostrar(BuildContext context) {
     return showDialog(
       context: context,
@@ -30,7 +28,11 @@ class PoliticaPrivacidadDialog extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.privacy_tip_outlined, color: Colors.black, size: 24),
+                const Icon(
+                  Icons.privacy_tip_outlined,
+                  color: Colors.black,
+                  size: 24,
+                ),
                 const SizedBox(width: 10),
                 const Expanded(
                   child: Text(
@@ -62,66 +64,66 @@ class PoliticaPrivacidadDialog extends StatelessWidget {
                   _SeccionTitulo('1. Responsable del tratamiento'),
                   _SeccionTexto(
                     'El responsable del tratamiento de los datos personales recogidos a través de Kultux es el equipo '
-                        'desarrollador de la aplicación, con sede en Badajoz, España. Puedes contactarnos en cualquier momento '
-                        'a través de los correos habilitados en la sección "Contacta con nosotros".',
+                    'desarrollador de la aplicación, con sede en Badajoz, España. Puedes contactarnos en cualquier momento '
+                    'a través de los correos habilitados en la sección "Contacta con nosotros".',
                   ),
 
                   _SeccionTitulo('2. Datos que recopilamos'),
                   _SeccionTexto(
                     'Recopilamos los datos que tú mismo nos proporcionas al registrarte y usar la aplicación, entre ellos: '
-                        'nombre de usuario, dirección de correo electrónico, foto de perfil (opcional) y cualquier contenido '
-                        'que publiques dentro de la plataforma. No recogemos datos de localización ni accedemos a tu agenda '
-                        'de contactos.',
+                    'nombre de usuario, dirección de correo electrónico, foto de perfil (opcional) y cualquier contenido '
+                    'que publiques dentro de la plataforma. No recogemos datos de localización ni accedemos a tu agenda '
+                    'de contactos.',
                   ),
 
                   _SeccionTitulo('3. Finalidad del tratamiento'),
                   _SeccionTexto(
                     'Tus datos se utilizan exclusivamente para: gestionar tu cuenta y permitirte acceder a las '
-                        'funcionalidades de Kultux, personalizar tu experiencia dentro de la aplicación, y enviarte '
-                        'notificaciones relacionadas con la actividad de tu cuenta cuando las tengas activadas.',
+                    'funcionalidades de Kultux, personalizar tu experiencia dentro de la aplicación, y enviarte '
+                    'notificaciones relacionadas con la actividad de tu cuenta cuando las tengas activadas.',
                   ),
 
                   _SeccionTitulo('4. Base legal'),
                   _SeccionTexto(
                     'El tratamiento de tus datos se basa en el consentimiento que otorgas al aceptar estos términos '
-                        'durante el proceso de registro, de conformidad con el Reglamento General de Protección de Datos '
-                        '(RGPD) y la Ley Orgánica 3/2018 de Protección de Datos Personales (LOPDGDD).',
+                    'durante el proceso de registro, de conformidad con el Reglamento General de Protección de Datos '
+                    '(RGPD) y la Ley Orgánica 3/2018 de Protección de Datos Personales (LOPDGDD).',
                   ),
 
                   _SeccionTitulo('5. Conservación de los datos'),
                   _SeccionTexto(
                     'Conservamos tus datos mientras mantengas una cuenta activa en Kultux. Si decides eliminar tu cuenta, '
-                        'tus datos personales serán suprimidos de nuestros sistemas en un plazo máximo de 30 días, salvo '
-                        'obligación legal de conservación.',
+                    'tus datos personales serán suprimidos de nuestros sistemas en un plazo máximo de 30 días, salvo '
+                    'obligación legal de conservación.',
                   ),
 
                   _SeccionTitulo('6. Cesión de datos a terceros'),
                   _SeccionTexto(
                     'Kultux no vende, alquila ni cede tus datos personales a terceros con fines comerciales. '
-                        'Únicamente podrían compartirse con proveedores técnicos estrictamente necesarios para el '
-                        'funcionamiento de la plataforma, quienes están sujetos a las mismas obligaciones de confidencialidad.',
+                    'Únicamente podrían compartirse con proveedores técnicos estrictamente necesarios para el '
+                    'funcionamiento de la plataforma, quienes están sujetos a las mismas obligaciones de confidencialidad.',
                   ),
 
                   _SeccionTitulo('7. Tus derechos'),
                   _SeccionTexto(
                     'En cualquier momento puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, '
-                        'limitación del tratamiento y portabilidad de tus datos escribiéndonos a los correos indicados en '
-                        '"Contacta con nosotros". También tienes derecho a presentar una reclamación ante la Agencia Española '
-                        'de Protección de Datos (www.aepd.es).',
+                    'limitación del tratamiento y portabilidad de tus datos escribiéndonos a los correos indicados en '
+                    '"Contacta con nosotros". También tienes derecho a presentar una reclamación ante la Agencia Española '
+                    'de Protección de Datos (www.aepd.es).',
                   ),
 
                   _SeccionTitulo('8. Seguridad'),
                   _SeccionTexto(
                     'Aplicamos medidas técnicas y organizativas adecuadas para proteger tus datos frente a accesos no '
-                        'autorizados, pérdida o destrucción accidental. Sin embargo, ningún sistema de transmisión por '
-                        'Internet es completamente seguro, por lo que no podemos garantizar una seguridad absoluta.',
+                    'autorizados, pérdida o destrucción accidental. Sin embargo, ningún sistema de transmisión por '
+                    'Internet es completamente seguro, por lo que no podemos garantizar una seguridad absoluta.',
                   ),
 
                   _SeccionTitulo('9. Cambios en esta política'),
                   _SeccionTexto(
                     'Podemos actualizar esta Política de Privacidad ocasionalmente. Te notificaremos cualquier cambio '
-                        'significativo a través de la aplicación. Te recomendamos revisarla periódicamente. El uso continuado '
-                        'de Kultux tras la publicación de cambios implica su aceptación.',
+                    'significativo a través de la aplicación. Te recomendamos revisarla periódicamente. El uso continuado '
+                    'de Kultux tras la publicación de cambios implica su aceptación.',
                   ),
 
                   SizedBox(height: 8),

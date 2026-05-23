@@ -7,13 +7,11 @@ import 'package:kultux/models/usuario.dart';
 import 'package:kultux/api/usuarios_api.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 import 'package:kultux/api/localidades_api.dart';
-import 'componentes/cabecera.dart';
 import 'componentes/selector_localidad.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
 import 'package:kultux/core/utils/validaciones.dart';
 
 const _verde = Color(0xFFA6E246);
-const _fondoPagina = Color(0xFFF1EFE9);
 const _fondoCard = Color(0xFFF8F7F4);
 const _texto = Color(0xFF1A1A1A);
 const _textoSuave = Color(0xFF6B6B6B);
@@ -36,7 +34,6 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
 
   late final Map<String, TextEditingController> _controllers;
   dynamic u;
-
 
   bool _passwordValidaEstado = false;
   String _passwordActual = '';
@@ -96,10 +93,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     });
   }
 
-
-
   Future<void> _guardarCambios() async {
-
     final password = _controllers['password']!.text.trim();
     final email = _controllers['email']!.text.trim();
 
@@ -120,7 +114,6 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
       );
       return;
     }
-
 
     final datos = <String, dynamic>{};
     void addIfNotEmpty(String key) {
@@ -250,241 +243,237 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     final errorEmail = _emailErrorApi ?? Validaciones.emailError(_emailActual);
     final emailEsValido = errorEmail == null;
     return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              decoration: BoxDecoration(
-                color: _fondoCard,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _borde),
-              ),
-              child: Column(
-                children: [
-                  GestureDetector(
-                    onTap: _abrirSelectorImagen,
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: _verde, width: 3),
-                          ),
-                          child: ClipOval(
-                            child: _imagenSeleccionada != null
-                                ? Image.file(
-                                    _imagenSeleccionada!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : (u?.imagenPerfil != null &&
-                                      u!.imagenPerfil!.isNotEmpty)
-                                ? Image.network(
-                                    u.imagenPerfil!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.asset(
-                                    'assets/images/logo_registro.png',
-                                    fit: BoxFit.cover,
-                                  ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: _verde,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.edit,
-                            size: 16,
-                            color: _texto,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    u?.nombre ?? '',
-                    style: const TextStyle(
-                      fontFamily: 'RobotoCondensed',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: _texto,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Toca la foto para cambiarla',
-                    style: TextStyle(
-                      fontFamily: 'RobotoCondensed',
-                      fontSize: 12,
-                      color: _textoSuave,
-                    ),
-                  ),
-                  if (_imagenError != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      _imagenError!,
-                      style: const TextStyle(
-                        fontFamily: 'RobotoCondensed',
-                        fontSize: 12,
-                        color: Colors.red,
-                        fontWeight: FontWeight.w600,
-                    ) ,
-                  ),
-                ],
-    ])
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            decoration: BoxDecoration(
+              color: _fondoCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _borde),
             ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SeccionLabel('Datos personales'),
-                  _Campo(
-                    child: CamposPersonalizados.normal(
-                      titulo: 'Nombre',
-                      controller: _controllers['nombre']!,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _Campo(
-                    child: CamposPersonalizados.normal(
-                      titulo: 'Apellidos',
-                      controller: _controllers['apellidos']!,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                  _SeccionLabel('Cuenta'),
-
-                  _Campo(
-                    child: CamposPersonalizados.normal(
-                      titulo: 'Correo electrónico',
-                      controller: _controllers['email']!,
-                      tipo: TextInputType.emailAddress,
-                      mostrarError: _emailActual.isNotEmpty && !emailEsValido,
-                      onChanged: (value) {
-                        setState(() {
-                          _emailActual = value;
-                          _emailValidoEstado = Validaciones.email(value);
-                          _emailErrorApi = null;
-                        });
-                      },
-                    ),
-                  ),
-                  if (_emailActual.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6, left: 4),
-                      child: Text(
-                        errorEmail ?? 'Email válido',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: emailEsValido ? _verde : Colors.red,
-                        ),
-                      ),
-                    ),
-
-                  const SizedBox(height: 10),
-                  _Campo(
-                    child: CamposPersonalizados.password(
-                      titulo: 'Nueva contraseña (opcional)',
-                      controller: _controllers['password']!,
-                      mostrarError: _passwordActual.isNotEmpty && !_passwordValidaEstado,
-                      onChanged: (value) {
-                        setState(() {
-                          _passwordActual = value;
-                          _passwordValidaEstado = Validaciones.password(value);
-                        });
-                      },
-                    ),
-                  ),
-
-
-                  if (_passwordActual.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6, left: 4),
-                      child: Text(
-                        Validaciones.passwordError(_passwordActual) ?? 'Contraseña válida ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _passwordValidaEstado ? _verde : Colors.red,
-                        ),
-                      ),
-                    ),
-
-
-
-                  const SizedBox(height: 16),
-                  _SeccionLabel('Ubicación'),
-                  _Campo(child: _selectorLocalidad()),
-
-                  const SizedBox(height: 24),
-                  Row(
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: _abrirSelectorImagen,
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
                     children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: widget.onVolver,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: _borde, width: 1.5),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Volver',
-                                style: TextStyle(
-                                  fontFamily: 'RobotoCondensed',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: _textoSuave,
+                      Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: _verde, width: 3),
+                        ),
+                        child: ClipOval(
+                          child: _imagenSeleccionada != null
+                              ? Image.file(
+                                  _imagenSeleccionada!,
+                                  fit: BoxFit.cover,
+                                )
+                              : (u?.imagenPerfil != null &&
+                                    u!.imagenPerfil!.isNotEmpty)
+                              ? Image.network(
+                                  u.imagenPerfil!,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  'assets/images/logo_registro.png',
+                                  fit: BoxFit.cover,
                                 ),
-                              ),
-                            ),
-                          ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: _guardarCambios,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: _verde,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Guardar cambios',
-                                style: TextStyle(
-                                  fontFamily: 'RobotoCondensed',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: _texto,
-                                ),
-                              ),
-                            ),
-                          ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: _verde,
+                          shape: BoxShape.circle,
                         ),
+                        child: const Icon(Icons.edit, size: 16, color: _texto),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  u?.nombre ?? '',
+                  style: const TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _texto,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Toca la foto para cambiarla',
+                  style: TextStyle(
+                    fontFamily: 'RobotoCondensed',
+                    fontSize: 12,
+                    color: _textoSuave,
+                  ),
+                ),
+                if (_imagenError != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    _imagenError!,
+                    style: const TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 12,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _SeccionLabel('Datos personales'),
+                _Campo(
+                  child: CamposPersonalizados.normal(
+                    titulo: 'Nombre',
+                    controller: _controllers['nombre']!,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _Campo(
+                  child: CamposPersonalizados.normal(
+                    titulo: 'Apellidos',
+                    controller: _controllers['apellidos']!,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                _SeccionLabel('Cuenta'),
+
+                _Campo(
+                  child: CamposPersonalizados.normal(
+                    titulo: 'Correo electrónico',
+                    controller: _controllers['email']!,
+                    tipo: TextInputType.emailAddress,
+                    mostrarError: _emailActual.isNotEmpty && !emailEsValido,
+                    onChanged: (value) {
+                      setState(() {
+                        _emailActual = value;
+                        _emailValidoEstado = Validaciones.email(value);
+                        _emailErrorApi = null;
+                      });
+                    },
+                  ),
+                ),
+                if (_emailActual.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, left: 4),
+                    child: Text(
+                      errorEmail ?? 'Email válido',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: emailEsValido ? _verde : Colors.red,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 10),
+                _Campo(
+                  child: CamposPersonalizados.password(
+                    titulo: 'Nueva contraseña (opcional)',
+                    controller: _controllers['password']!,
+                    mostrarError:
+                        _passwordActual.isNotEmpty && !_passwordValidaEstado,
+                    onChanged: (value) {
+                      setState(() {
+                        _passwordActual = value;
+                        _passwordValidaEstado = Validaciones.password(value);
+                      });
+                    },
+                  ),
+                ),
+
+                if (_passwordActual.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, left: 4),
+                    child: Text(
+                      Validaciones.passwordError(_passwordActual) ??
+                          'Contraseña válida ',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _passwordValidaEstado ? _verde : Colors.red,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 16),
+                _SeccionLabel('Ubicación'),
+                _Campo(child: _selectorLocalidad()),
+
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: widget.onVolver,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: _borde, width: 1.5),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Volver',
+                              style: TextStyle(
+                                fontFamily: 'RobotoCondensed',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _textoSuave,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _guardarCambios,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: _verde,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Guardar cambios',
+                              style: TextStyle(
+                                fontFamily: 'RobotoCondensed',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _texto,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
