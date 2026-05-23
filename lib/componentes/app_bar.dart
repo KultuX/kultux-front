@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class AppBarPersonalizado extends StatefulWidget
     implements PreferredSizeWidget {
-
   final bool logeado;
   final bool invitado;
 
@@ -24,19 +23,15 @@ class AppBarPersonalizado extends StatefulWidget
   });
 
   @override
-  State<AppBarPersonalizado> createState() =>
-      _AppBarPersonalizadoState();
+  State<AppBarPersonalizado> createState() => _AppBarPersonalizadoState();
 
   @override
   Size get preferredSize => const Size.fromHeight(70);
 }
 
-class _AppBarPersonalizadoState
-    extends State<AppBarPersonalizado> {
-
+class _AppBarPersonalizadoState extends State<AppBarPersonalizado> {
   @override
   Widget build(BuildContext context) {
-
     final bool activo = widget.perfilActivado;
 
     return AppBar(
@@ -66,19 +61,16 @@ class _AppBarPersonalizadoState
             child: GestureDetector(
               onTap: widget.onIrPerfil,
               child: SvgPicture.asset(
-                    'assets/iconos/perfil.svg',
-                    width: activo ? 40: 32,
-                    height: activo ? 40 : 32,
-                    colorFilter: ColorFilter.mode(
-                      activo
-                          ? const Color(0xFFA6E246)
-                          : Colors.white,
-                      BlendMode.srcIn,
-                    ),
-                  ),
+                'assets/iconos/perfil.svg',
+                width: activo ? 40 : 32,
+                height: activo ? 40 : 32,
+                colorFilter: ColorFilter.mode(
+                  activo ? const Color(0xFFA6E246) : Colors.white,
+                  BlendMode.srcIn,
                 ),
               ),
-
+            ),
+          ),
 
         if (widget.invitado)
           Padding(

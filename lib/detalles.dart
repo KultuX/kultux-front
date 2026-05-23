@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:kultux/models/actividad.dart';
 import 'package:kultux/models/alojamiento.dart';
@@ -166,6 +167,8 @@ class Detalle extends StatefulWidget {
 class _DetalleState extends State<Detalle> {
   int _indiceActual = 0;
 
+ PageController? _pageController;
+
   bool get _tieneUrlReserva =>
       widget.urlCompraReserva != null &&
       widget.urlCompraReserva!.trim().isNotEmpty;
@@ -175,8 +178,23 @@ class _DetalleState extends State<Detalle> {
 
   @override
   void didUpdateWidget(covariant Detalle oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _indiceActual = 0;
+    if (oldWidget.imagenesLista != widget.imagenesLista) {
+      _indiceActual = 0;
+      if (_pageController?.hasClients ?? false) {
+        _pageController!.jumpToPage(0);
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+  @override
+  void dispose() {
+    _pageController?.dispose();
+    super.dispose();
   }
 
   String _normalizarUrl(String url) =>
@@ -231,6 +249,12 @@ class _DetalleState extends State<Detalle> {
                 }),
                 categoria: widget.categoria,
                 iconoEtiqueta: widget.iconoEtiqueta,
+                pageController: _pageController!,
+                onPageChanged: (index) {
+                  setState(() {
+                    _indiceActual = index;
+                  });
+                },
               ),
 
               const SizedBox(height: 16),
@@ -371,6 +395,8 @@ class _TarjetaPrincipal extends StatelessWidget {
   final String? portada;
   final String? categoria;
   final String? iconoEtiqueta;
+  final PageController pageController;
+  final Function(int) onPageChanged;
 
   const _TarjetaPrincipal({
     required this.titulo,
@@ -393,6 +419,8 @@ class _TarjetaPrincipal extends StatelessWidget {
     this.portada,
     this.categoria,
     this.iconoEtiqueta,
+    required this.pageController,
+    required this.onPageChanged
   });
 
   @override
@@ -417,19 +445,32 @@ class _TarjetaPrincipal extends StatelessWidget {
                 ),
                 child: AspectRatio(
                   aspectRatio: 16 / 9,
-                  child: Image.network(
-                    getImagenActual(),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: const Color(0xFFE8E5DF),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 40,
-                        color: _KTheme.textoSuave,
-                      ),
-                    ),
-                  ),
+                  child: PageView.builder(
+                    controller: pageController,
+                    onPageChanged: onPageChanged,
+                    itemCount: imagenesLista.length,
+                    itemBuilder: (context, index) {
+                      return CachedNetworkImage(
+                        imageUrl: imagenesLista[index],
+                        fit: BoxFit.cover,
+                        memCacheWidth: 1200,
+                        placeholder: (_, __) => Container(
+                          color: const Color(0xFFE8E5DF),
+                          alignment: Alignment.center,
+                          child: const CircularProgressIndicator(),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          color: const Color(0xFFE8E5DF),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 40,
+                            color: _KTheme.textoSuave,
+                          ),
+                        ),
+                      );
+                    },
+                  )
                 ),
               ),
 
@@ -462,7 +503,12 @@ class _TarjetaPrincipal extends StatelessWidget {
                   child: Center(
                     child: _BotonFlecha(
                       icono: Icons.chevron_left,
-                      onTap: onPrev,
+                      onTap: () {
+                        pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.ease,
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -473,7 +519,12 @@ class _TarjetaPrincipal extends StatelessWidget {
                   child: Center(
                     child: _BotonFlecha(
                       icono: Icons.chevron_right,
-                      onTap: onNext,
+                        onTap: () {
+                          pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.ease,
+                          );
+                        }
                     ),
                   ),
                 ),
@@ -657,6 +708,7 @@ class _TarjetaPrincipal extends StatelessWidget {
       ),
     );
   }
+
 }
 
 class _BotonGuardar extends StatefulWidget {
@@ -827,6 +879,7 @@ class _BotonGuardarState extends State<_BotonGuardar> {
       ),
     );
   }
+
 }
 
 class _SeccionCard extends StatelessWidget {
@@ -999,6 +1052,7 @@ class _BloqueHorario extends StatelessWidget {
       ],
     );
   }
+
 }
 
 class _FilaInfo extends StatelessWidget {
@@ -1072,6 +1126,7 @@ class _FilaInfo extends StatelessWidget {
       ),
     );
   }
+
 }
 
 class _BotonCTA extends StatelessWidget {
@@ -1168,24 +1223,6 @@ class _BotonFlecha extends StatelessWidget {
         ),
         child: Icon(icono, color: Colors.white, size: 24),
       ),
-    );
-  }
-}
-
-class _BotonAccion extends StatelessWidget {
-  final IconData icono;
-  const _BotonAccion({required this.icono});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.35),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(icono, color: Colors.white, size: 18),
     );
   }
 }

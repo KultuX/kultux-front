@@ -7,18 +7,15 @@ import 'package:kultux/models/pages.dart';
 import '../models/ActividadTotal.dart';
 
 import 'package:kultux/core/utils/api_url.dart';
-class ActividadesApiService{
 
+class ActividadesApiService {
+  static List<String>? categoriasCache;
   static Future<Pages<Actividad>> obtenerActividadesInicio(int page) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-actividades/destacados',
-      {
-        'page': page.toString(),
-        'size': '8',
-      },
+      {'page': page.toString(), 'size': '5'},
     );
-    print(ApiUrl.BASE_URL);
     final response = await http.get(
       url,
       headers: {
@@ -32,50 +29,47 @@ class ActividadesApiService{
       final jsonData = jsonDecode(response.body);
       return Pages<Actividad>.fromJson(
         jsonData,
-            (json) => Actividad.inicio(json),
+        (json) => Actividad.inicio(json),
       );
     }
 
     if (response.statusCode == 204) {
-      return Pages<Actividad>.fromJson(
-        {
-          "content": [],
-          "number": page,
-          "totalPages": page,
-        },
-            (json) => Actividad.inicio(json),
-      );
+      return Pages<Actividad>.fromJson({
+        "content": [],
+        "number": page,
+        "totalPages": page,
+      }, (json) => Actividad.inicio(json));
     }
     throw HttpException(response.statusCode.toString());
   }
 
   static Future<Actividad> detalleActividad(int idActividad) async {
     final url = Uri.https(
-        ApiUrl.BASE_URL,
-        '/api/v1/gateway-actividades/actividad_detalle/$idActividad'
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-actividades/actividad_detalle/$idActividad',
     );
-    print(ApiUrl.BASE_URL);
     final response = await http.get(
       url,
       headers: {
-        'Content-Type':'application/json',
-        'Accept':'application/json',
-        'User-Agent': 'KultuX APP'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
       return Actividad.detalle(json);
-    }else{
+    } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
   static Future<List<String>> categoriasActividad() async {
+    if(categoriasCache != null ) return categoriasCache!;
     final url = Uri.https(
-        ApiUrl.BASE_URL,
-        '/api/v1/gateway-actividades/categoria_actividad'
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-actividades/categoria_actividad',
     );
 
     final response = await http.get(
@@ -83,19 +77,18 @@ class ActividadesApiService{
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
-      return json.map((c) => c.toString()).toList();
-    }else{
+      categoriasCache = json.map((c) => c.toString()).toList();
+      return categoriasCache!;
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
-
 
   static Future<Pages<Actividad>> actividadesFiltradas({
     String? titulo,
@@ -104,22 +97,19 @@ class ActividadesApiService{
     DateTime? fecha,
     required int page,
   }) async {
-    final params = <String, String>{
-      'page': page.toString(),
-      'size': '8',
-    };
+    final params = <String, String>{'page': page.toString(), 'size': '5'};
 
     if (titulo != null && titulo.isNotEmpty) params['titulo'] = titulo;
     if (categoria != null) params['categoria'] = categoria;
     if (localidad != null) params['localidad'] = localidad.toString();
-    if (fecha != null){
-      params['fecha'] = "${fecha.year}-${fecha.month.toString().padLeft(2,'0')}-${fecha.day.toString().padLeft(2,'0')}";
-    }else {
+    if (fecha != null) {
+      params['fecha'] =
+          "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+    } else {
       final now = DateTime.now();
       params['fecha'] =
-      "${now.year}-${now.month.toString().padLeft(2,'0')}-${now.day.toString().padLeft(2,'0')}";
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
     }
-
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -127,44 +117,34 @@ class ActividadesApiService{
       params,
     );
 
-
-
     final response = await http.get(
       url,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      return Pages<Actividad>.fromJson(
-        json,
-            (e) => Actividad.busqueda(e),
-      );
-    }
-    else{
+      return Pages<Actividad>.fromJson(json, (e) => Actividad.busqueda(e));
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
 
   static Future<Pages<Actividad>> actividadesGuardadas({
     required int idUsuario,
     required int page,
   }) async {
-
     final params = <String, String>{
       'idUsuario': idUsuario.toString(),
       'page': page.toString(),
-      'size': '8',
+      'size': '5',
     };
 
-    final queryParams = <String, dynamic>{
-      ...params,
-    };
+    final queryParams = <String, dynamic>{...params};
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -172,105 +152,75 @@ class ActividadesApiService{
       queryParams,
     );
 
-
-
-
     final response = await http.get(
       url,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      return Pages<Actividad>.fromJson(
-        json,
-            (e) => Actividad.guardado(e),
-      );
-    }
-    else{
+      return Pages<Actividad>.fromJson(json, (e) => Actividad.guardado(e));
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
 
   static Future<List<ActividadTotal>> actividadesTotalMapa({
-    required List<int>ines,
+    required List<int> ines,
   }) async {
-
     final url = Uri.https(
-        ApiUrl.BASE_URL,
+      ApiUrl.BASE_URL,
       '/api/v1/gateway-actividades/mapa/total_actividades',
-       { 'ines': ines.map((e) => e.toString()).toList()}
+      {'ines': ines.map((e) => e.toString()).toList()},
     );
-
-
 
     final response = await http.get(
       url,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
       return json.map((e) => ActividadTotal.fromJson(e)).toList();
-    }
-    else{
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
 
   static Future<Pages<Actividad>> listaActividadesGuardadas({
     required int ine,
     required int page,
   }) async {
-
-    final params = <String, String>{
-      'page': page.toString(),
-      'size': '8',
-    };
-
-
-
+    final params = <String, String>{'page': page.toString(), 'size': '8'};
 
     final url = Uri.https(
-        ApiUrl.BASE_URL,
+      ApiUrl.BASE_URL,
       '/api/v1/gateway-actividades/mapa/lista_actividades/$ine',
-      params
+      params,
     );
-
-
 
     final response = await http.get(
       url,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      return Pages<Actividad>.fromJson(
-        json,
-            (e) => Actividad.inicio(e),
-      );
-    }
-    else{
+      return Pages<Actividad>.fromJson(json, (e) => Actividad.inicio(e));
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
-
-
-
 }

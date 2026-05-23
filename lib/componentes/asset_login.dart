@@ -103,16 +103,12 @@ class _AssetLoginState extends State<AssetLogin> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        const ModalBarrier(
-          dismissible: false,
-          color: Colors.black54,
-        ),
+        const ModalBarrier(dismissible: false, color: Colors.black54),
         Center(
           child: Material(
             color: Colors.transparent,
             child: SingleChildScrollView(
-              child:
-                  _mostrandoRecuperar
+              child: _mostrandoRecuperar
                   ? AssetRecuperarPassword(
                       cerrar: widget.cerrar,
                       onVolverLogin: () =>
@@ -369,10 +365,5 @@ class _AssetLoginState extends State<AssetLogin> {
 }
 
 Widget _Campo({required Widget child}) => Container(
-  /* decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: _borde),
-  ),*/
   child: Padding(padding: const EdgeInsets.all(10), child: child),
 );

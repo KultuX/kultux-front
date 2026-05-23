@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 Widget estadoVacio() {
-  return Center(  // ← añadir
+  return Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: const [
@@ -37,7 +37,10 @@ Widget estadoError({
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
-            textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            textStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
             elevation: 3,
           ),
         ),

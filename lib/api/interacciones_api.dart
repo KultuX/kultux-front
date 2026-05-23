@@ -3,15 +3,14 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/guardados.dart';
 import 'package:kultux/core/utils/api_url.dart';
-class InteraccionesApiService {
 
+class InteraccionesApiService {
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'User-Agent': 'KultuX APP',
   };
 
-  // == ACTIVIDAD == //
 
   static Future<Guardado> estadoGuardadoActividad({
     required int idActividad,
@@ -30,9 +29,9 @@ class InteraccionesApiService {
     }
   }
 
-
-  static Future<List<int>> listarGuardadosActividad({required int idUsuario}) async {
-
+  static Future<List<int>> listarGuardadosActividad({
+    required int idUsuario,
+  }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/actividad/listar_guardados',
@@ -52,7 +51,10 @@ class InteraccionesApiService {
     required int idActividad,
     required int idUsuario,
   }) async {
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-interaccion/actividad/guardar');
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/actividad/guardar',
+    );
     final response = await http.post(
       url,
       headers: _headers,
@@ -64,7 +66,6 @@ class InteraccionesApiService {
       throw HttpException(response.statusCode.toString());
     }
   }
-
 
   static Future<bool> quitarActividad({
     required int idActividad,
@@ -84,7 +85,6 @@ class InteraccionesApiService {
     throw HttpException(response.statusCode.toString());
   }
 
-  // == RESTAURANTES == //
 
   static Future<Guardado> estadoGuardadoRestaurante({
     required int idRestaurante,
@@ -103,8 +103,9 @@ class InteraccionesApiService {
     }
   }
 
-
-  static Future<List<int>> listarGuardadosRestaurante({required int idUsuario}) async {
+  static Future<List<int>> listarGuardadosRestaurante({
+    required int idUsuario,
+  }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/restaurante/listar_guardados',
@@ -124,11 +125,17 @@ class InteraccionesApiService {
     required int idRestaurante,
     required int idUsuario,
   }) async {
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-interaccion/restaurante/guardar');
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/restaurante/guardar',
+    );
     final response = await http.post(
       url,
       headers: _headers,
-      body: jsonEncode({'idRestaurante': idRestaurante, 'idUsuario': idUsuario}),
+      body: jsonEncode({
+        'idRestaurante': idRestaurante,
+        'idUsuario': idUsuario,
+      }),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
       return Guardado.fromJson(jsonDecode(response.body));
@@ -136,7 +143,6 @@ class InteraccionesApiService {
       throw HttpException(response.statusCode.toString());
     }
   }
-
 
   static Future<bool> quitarRestaurante({
     required int idRestaurante,
@@ -157,8 +163,6 @@ class InteraccionesApiService {
   }
 
 
-  // == ALOJAMIENTOS == //
-
   static Future<Guardado> estadoGuardadoAlojamiento({
     required int idAlojamiento,
     required int idUsuario,
@@ -176,9 +180,9 @@ class InteraccionesApiService {
     }
   }
 
-
-  static Future<List<int>> listarGuardadosAlojamiento({required int idUsuario}) async {
-
+  static Future<List<int>> listarGuardadosAlojamiento({
+    required int idUsuario,
+  }) async {
     print(idUsuario);
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -199,11 +203,17 @@ class InteraccionesApiService {
     required int idAlojamiento,
     required int idUsuario,
   }) async {
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-interaccion/alojamiento/guardar');
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-interaccion/alojamiento/guardar',
+    );
     final response = await http.post(
       url,
       headers: _headers,
-      body: jsonEncode({'idAlojamiento': idAlojamiento, 'idUsuario': idUsuario}),
+      body: jsonEncode({
+        'idAlojamiento': idAlojamiento,
+        'idUsuario': idUsuario,
+      }),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
       return Guardado.fromJson(jsonDecode(response.body));
@@ -211,7 +221,6 @@ class InteraccionesApiService {
       throw HttpException(response.statusCode.toString());
     }
   }
-
 
   static Future<bool> quitarAlojamiento({
     required int idAlojamiento,
@@ -230,7 +239,4 @@ class InteraccionesApiService {
     if (response.statusCode == 200) return false;
     throw HttpException(response.statusCode.toString());
   }
-
-
-
 }

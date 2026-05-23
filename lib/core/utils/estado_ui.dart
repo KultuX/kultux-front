@@ -1,7 +1,1 @@
-enum EstadoUi {
-  cargando,
-  contenido,
-  vacio,
-  error,
-  sinConexion,
-}
+enum EstadoUi { cargando, contenido, vacio, error, sinConexion }

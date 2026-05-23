@@ -11,6 +11,7 @@ import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/detalles.dart';
 
 import 'componentes/cabecera.dart';
+import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/contenedor_web.dart';
 
 class PuntoMapa {
@@ -39,72 +40,83 @@ class _MapasPageState extends State<MapasPage> {
   bool _cargandoMapa = true;
   String? _errorMapa;
 
-
   PuntoMapa? _localidadSeleccionada;
   Actividad? _actividadSeleccionada;
 
+  static final _limites = LatLngBounds(LatLng(37.9, -8.4), LatLng(40.5, -4.0));
 
-
-
-
-  static final _limites = LatLngBounds(
-    LatLng(37.9, -8.4),
-    LatLng(40.5, -4.0),
-  );
+  static List<List<LatLng>>? _extremaduraCache;
 
   @override
   void initState() {
     super.initState();
     _cargarExtremadura();
-    print("Extremadura polygons: ${_extremadura.length}");
     _cargarDatos();
   }
 
   Future<void> _cargarDatos() async {
     try {
+
       final localidades = await LocalidadApiService.obtenerLocalidadesMapa();
       final ines = localidades.map((l) => l.ine).toList();
-      final totales = await ActividadesApiService.actividadesTotalMapa(ines: ines);
+      final totales = await ActividadesApiService.actividadesTotalMapa(
+        ines: ines,
+      );
 
       final Map<int, int> totalMap = {
-        for (final t in totales) t.ine!: t.total ?? 0
+        for (final t in totales) t.ine!: t.total ?? 0,
       };
 
       final puntos = localidades
-          .where((l) => l.lat != null && l.lon != null)
+          .where((l) => l.lat != null && l.lon != null && totalMap[l.ine] != null && totalMap[l.ine]! > 0)
           .map((l) => PuntoMapa(
         ine: l.ine,
         nombre: l.nombre,
         coordenadas: LatLng(l.lat!, l.lon!),
-        totalActividades: totalMap[l.ine] ?? 0,
-      ))
-          .where((p) => p.totalActividades > 0)
-          .toList();
+        totalActividades: totalMap[l.ine]!,
+      )).toList();
 
-      if (mounted) setState(() { _puntos = puntos; _cargandoMapa = false; });
+      if (mounted)
+        setState(() {
+          _puntos = puntos;
+          _cargandoMapa = false;
+        });
     } catch (e) {
-
-      if (mounted) setState(() { _errorMapa = e.toString(); _cargandoMapa = false; });
+      if (mounted)
+        setState(() {
+          _errorMapa = e.toString();
+          _cargandoMapa = false;
+        });
     }
   }
 
-  void _abrirLocalidad(PuntoMapa punto) =>
-      setState(() { _localidadSeleccionada = punto; _actividadSeleccionada = null; });
+  void _abrirLocalidad(PuntoMapa punto) => setState(() {
+    _localidadSeleccionada = punto;
+    _actividadSeleccionada = null;
+  });
 
-  void _volverAlMapa() =>
-      setState(() { _localidadSeleccionada = null; _actividadSeleccionada = null; });
+  void _volverAlMapa() => setState(() {
+    _localidadSeleccionada = null;
+    _actividadSeleccionada = null;
+  });
 
   void _abrirDetalle(Actividad actividad) =>
       setState(() => _actividadSeleccionada = actividad);
 
-  void _volverALista() =>
-      setState(() => _actividadSeleccionada = null);
+  void _volverALista() => setState(() => _actividadSeleccionada = null);
 
-
- List<List<LatLng>> _extremadura = [];
+  List<List<LatLng>> _extremadura = [];
 
   Future<void> _cargarExtremadura() async {
-    final str = await rootBundle.loadString('assets/assets/extremadura.geojson');
+    if(_extremaduraCache != null){
+      setState(() {
+        _extremadura = _extremaduraCache!;
+      });
+      return;
+    }
+    final str = await rootBundle.loadString(
+      'assets/assets/extremadura.geojson',
+    );
     final json = jsonDecode(str);
 
     final multi = json['coordinates'] as List;
@@ -119,8 +131,8 @@ class _MapasPageState extends State<MapasPage> {
         return LatLng(lat, lon);
       }).toList();
     }).toList();
-    print("Polígonos encontrados: ${multi.length}");
-
+    _extremaduraCache = result;
+  if(mounted)
     setState(() {
       _extremadura = result;
     });
@@ -129,10 +141,7 @@ class _MapasPageState extends State<MapasPage> {
   void _resetMapa() {
     _mapController.camera.center;
     _mapController.camera.zoom;
-    _mapController.move(
-      const LatLng(39.2, -6.15),
-      7.75,
-    );
+    _mapController.move(const LatLng(39.2, -6.15), 7.75);
     _mapController.rotate(0);
   }
 
@@ -142,8 +151,6 @@ class _MapasPageState extends State<MapasPage> {
 
     return LatLng(lat, lng);
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -163,13 +170,9 @@ class _MapasPageState extends State<MapasPage> {
 
               final clamped = _clampLatLng(center);
               if (center != clamped) {
-                _mapController.move(
-                  clamped,
-                  position.zoom,
-                );
+                _mapController.move(clamped, position.zoom);
               }
             },
-
           ),
           children: [
             TileLayer(
@@ -209,33 +212,37 @@ class _MapasPageState extends State<MapasPage> {
 
             if (!_cargandoMapa && _errorMapa == null)
               MarkerLayer(
-                markers: _puntos.map((p) => Marker(
-                  point: p.coordenadas,
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment(0, -1.0),
-                  child: GestureDetector(
-                    onTap: () => _abrirLocalidad(p),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFA8D63F),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 1, // fino
+                markers: _puntos
+                    .map(
+                      (p) => Marker(
+                        point: p.coordenadas,
+                        width: 36,
+                        height: 36,
+                        alignment: Alignment(0, -1.0),
+                        child: GestureDetector(
+                          onTap: () => _abrirLocalidad(p),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFA8D63F),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.black,
+                                width: 1, // fino
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${p.totalActividades}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${p.totalActividades}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                )).toList(),
+                    )
+                    .toList(),
               ),
           ],
         ),
@@ -255,55 +262,60 @@ class _MapasPageState extends State<MapasPage> {
             child: CircularProgressIndicator(color: Color(0xFFA8D63F)),
           ),
 
+        if (_errorMapa != null) Center(child: Text('Error al cargar mapa')),
 
-        if (_errorMapa != null)
-          Center(child: Text('Error al cargar mapa')),
-
-
-       if (_localidadSeleccionada != null)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.4),
-            ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.easeInOutCubic,
+          switchOutCurve: Curves.easeInOutCubic,
+          transitionBuilder: (child, animation) => SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.05, 0.0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: FadeTransition(opacity: animation, child: child),
           ),
-
-        if (_localidadSeleccionada != null && _actividadSeleccionada == null)
-          ContenedorWeb( child: Column(
-            children: [
-              CabeceraPagina(
-                titulo: '${_localidadSeleccionada!.nombre}',
-                subtitulo: 'Actividades en',
-                onVolver: _volverAlMapa,
-              ),
-              Expanded(
-                child: _ListaActividades(
-                  punto: _localidadSeleccionada!,
-                  onDetalle: _abrirDetalle,
+          child: _actividadSeleccionada != null
+              ? ContenedorWeb(
+            key: const ValueKey('detalle_mapa'),
+            child: Column(
+              children: [
+                CabeceraPagina(
+                  titulo: _localidadSeleccionada!.nombre,
+                  subtitulo: 'Detalle',
+                  onVolver: _volverALista,
                 ),
-              ),
-            ],
-          )),
-        if (_actividadSeleccionada != null)
-          ContenedorWeb(child: Column(
-            children: [
-              CabeceraPagina(
-                titulo: '${_localidadSeleccionada!.nombre}',
-                subtitulo: 'Detalle',
-                onVolver: _volverALista,
-              ),
-              Expanded(
-                child: Detalle.desdeObjeto(
-                  objeto: _actividadSeleccionada!,
+                Expanded(
+                  child: Detalle.desdeObjeto(objeto: _actividadSeleccionada!),
                 ),
-              ),
-            ],
-          )),
-
+              ],
+            ),
+          )
+              : _localidadSeleccionada != null
+              ? ContenedorWeb(
+            key: const ValueKey('lista_mapa'),
+            child: Column(
+              children: [
+                CabeceraPagina(
+                  titulo: _localidadSeleccionada!.nombre,
+                  subtitulo: 'Actividades en',
+                  onVolver: _volverAlMapa,
+                ),
+                Expanded(
+                  child: _ListaActividades(
+                    punto: _localidadSeleccionada!,
+                    onDetalle: _abrirDetalle,
+                  ),
+                ),
+              ],
+            ),
+          )
+              : const SizedBox.shrink(key: ValueKey('vacio_mapa')),
+        ),
       ],
     );
   }
 }
-
 
 class _ListaActividades extends StatefulWidget {
   final PuntoMapa punto;
@@ -327,12 +339,16 @@ class _ListaActividadesState extends State<_ListaActividades> {
     super.initState();
     _cargarMas();
     _scroll.addListener(() {
-      if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 200) _cargarMas();
+      if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 200)
+        _cargarMas();
     });
   }
 
   @override
-  void dispose() { _scroll.dispose(); super.dispose(); }
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   Future<void> _cargarMas() async {
     if (_cargando || !_hayMas) return;
@@ -356,7 +372,14 @@ class _ListaActividadesState extends State<_ListaActividades> {
   @override
   Widget build(BuildContext context) {
     if (_actividades.isEmpty && _cargando) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFA8D63F)));
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 4,
+        itemBuilder: (_, __) => const Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: SkeletonTarjetaBusqueda(),
+        ),
+      );
     }
     if (_actividades.isEmpty) {
       return const Center(child: Text('No hay actividades disponibles'));
@@ -366,12 +389,11 @@ class _ListaActividadesState extends State<_ListaActividades> {
       padding: const EdgeInsets.all(16),
       itemCount: _actividades.length + (_hayMas ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, i) {        if (i == _actividades.length) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(color: Color(0xFFA8D63F)),
-            ),
+      itemBuilder: (context, i) {
+        if (i == _actividades.length) {
+          return const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: SkeletonTarjetaBusqueda(),
           );
         }
         final a = _actividades[i];

@@ -4,12 +4,12 @@ import '../core/utils/contenedor_web.dart';
 
 class Alerta {
   static void show(
-      BuildContext context, {
-        required String mensaje,
-        TipoAviso tipo = TipoAviso.info,
-        Duration duracion = const Duration(seconds: 3),
-        bool mostrarCerrar = true,
-      }) {
+    BuildContext context, {
+    required String mensaje,
+    TipoAviso tipo = TipoAviso.info,
+    Duration duracion = const Duration(seconds: 3),
+    bool mostrarCerrar = true,
+  }) {
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
@@ -40,7 +40,7 @@ class Alerta {
         color: color,
         icono: icono,
         mostrarCerrar: mostrarCerrar,
-        onCerrar: () => entry.remove()
+        onCerrar: () => entry.remove(),
       ),
     );
 
@@ -66,7 +66,7 @@ class _AlertaWidget extends StatefulWidget {
     required this.color,
     required this.icono,
     required this.mostrarCerrar,
-    required this.onCerrar
+    required this.onCerrar,
   });
 
   @override
@@ -78,7 +78,6 @@ class _AlertaWidgetState extends State<_AlertaWidget>
   late AnimationController _controller;
   late Animation<Offset> _slide;
   late Animation<double> _fade;
-
 
   @override
   void initState() {
@@ -101,13 +100,11 @@ class _AlertaWidgetState extends State<_AlertaWidget>
 
   @override
   Widget build(BuildContext context) {
-
     final anchoPantalla = MediaQuery.of(context).size.width;
     final esWeb = anchoPantalla > 600;
 
     return ContenedorWeb(
       child: Align(
-
         alignment: Alignment.bottomCenter,
         child: Padding(
           padding: EdgeInsets.only(
@@ -125,7 +122,10 @@ class _AlertaWidgetState extends State<_AlertaWidget>
                   constraints: BoxConstraints(
                     maxWidth: esWeb ? 360 : double.infinity,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8F7F4),
                     borderRadius: BorderRadius.circular(14),
@@ -148,7 +148,11 @@ class _AlertaWidgetState extends State<_AlertaWidget>
                           color: widget.color.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(widget.icono, size: 18, color: widget.color),
+                        child: Icon(
+                          widget.icono,
+                          size: 18,
+                          color: widget.color,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(

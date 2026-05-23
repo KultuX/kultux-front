@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:kultux/api/actividades_api.dart';
+import 'package:kultux/api/alojamiento_api.dart';
 import 'package:kultux/api/localidades_api.dart';
+import 'package:kultux/api/restaurante_api.dart';
 import 'package:kultux/componentes/bottom_nav.dart';
 import 'package:kultux/componentes/app_bar.dart';
 import 'package:kultux/componentes/asset_login.dart';
@@ -13,7 +16,6 @@ import 'package:kultux/perfil.dart';
 import 'package:kultux/buscar.dart';
 import 'package:kultux/repository/usuario_repository.dart';
 
-import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/establecimientos.dart';
 import 'package:kultux/detalles.dart';
 import 'package:kultux/models/actividad.dart';
@@ -28,11 +30,13 @@ import 'package:kultux/componentes/modal_alerta.dart';
 
 import 'package:kultux/guardados.dart' show GuardadosTab, GuardadosPage;
 
+import 'componentes/skeleton_tarjeta.dart';
 import 'componentes/tarjeta_busqueda.dart';
 import 'core/utils/contenedor_web.dart';
 import 'models/pages.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -61,7 +65,9 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   final List<Actividad>? actividadesIniciales;
   final int? totalPaginas;
-  const MyHomePage({super.key, this.actividadesIniciales, this.totalPaginas});
+  final Usuario? usuarioInicial;
+  const MyHomePage({super.key, this.actividadesIniciales, this.totalPaginas, this.usuarioInicial});
+
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -104,35 +110,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   late final EstablecimientosPage _establecimientosPage;
 
-  Future<void> _cargarSesion() async {
-    final usuarioGuardado = await UsuarioRepository.cargar();
-
-    setState(() {
-      if (usuarioGuardado != null) {
-        usuario = usuarioGuardado;
-        _logeado = true;
-        _invitado = false;
-      } else {
-        usuario = null;
-        _logeado = false;
-        _invitado = false;
-      }
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    /*_animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _cargarSesion();
-
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-        );*/
+    if (widget.usuarioInicial != null) {
+      usuario = widget.usuarioInicial;
+      _logeado = true;
+    }
 
     _establecimientosPage = EstablecimientosPage(
       onDetalleSeleccionado: _abrirDetalleEstablecimiento,
@@ -160,11 +144,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     if (inicial) {
       setState(() {
+        _cargando = true;
         estadoInicio = EstadoUi.cargando;
       });
     }
-
-    _cargando = true;
 
     try {
       final page = await ActividadesApiService.obtenerActividadesInicio(
@@ -251,10 +234,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     setState(() {
       _mostrandoDetalleInicio = false;
       _actividadDetalleSeleccionada = null;
-      _actividades.clear();
+    //  _actividades.clear();
       _paginaActual = 0;
     });
-    _cargarActividades();
+   // _cargarActividades();
   }
 
   void _abrirDetalleEstablecimiento(dynamic objeto) {
@@ -420,15 +403,22 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   duration: const Duration(milliseconds: 300),
                   switchInCurve: Curves.easeInOutCubic,
                   switchOutCurve: Curves.easeInOutCubic,
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.05, 0.0), // Efecto lateral sutil
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: FadeTransition(opacity: animation, child: child),
-                    );
-                  },
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                        return SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(
+                              0.05,
+                              0.0,
+                            ), // Efecto lateral sutil
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                        );
+                      },
                   child: _getPaginaActual(),
                 ),
                 AnimatedSwitcher(
@@ -436,51 +426,51 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   reverseDuration: const Duration(milliseconds: 400),
                   switchInCurve: Curves.easeInOutCubic,
                   switchOutCurve: Curves.easeInOutCubic,
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-
-                    if (child.key == const ValueKey('bloqueo_login')) {
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.0, 1.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    }
-                    return FadeTransition(opacity: animation, child: child);
-                  },
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                        if (child.key == const ValueKey('bloqueo_login')) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, 1.0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          );
+                        }
+                        return FadeTransition(opacity: animation, child: child);
+                      },
                   child: !_logeado && !_invitado
                       ? Container(
-                    key: const ValueKey('bloqueo_login'),
+                          key: const ValueKey('bloqueo_login'),
 
-                    color: Colors.black.withOpacity(0.4),
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Center(
-                      child: AssetLogin(
-                        key: const ValueKey('pantalla_asset_login'),
-                        cerrar: () {
-                          setState(() {
-                            _logeado = true;
-                            _invitado = true;
-                          });
-                        },
-                        logeado: (Usuario logeado) {
-                          setState(() {
-                            _logeado = true;
-                            _invitado = false;
-                            usuario = logeado;
-                          });
-                        },
-                        invitado: () {
-                          setState(() {
-                            _invitado = true;
-                            _logeado = false;
-                          });
-                        },
-                      ),
-                    ),
-                  )
+                          color: Colors.black.withOpacity(0.4),
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: Center(
+                            child: AssetLogin(
+                              key: const ValueKey('pantalla_asset_login'),
+                              cerrar: () {
+                                setState(() {
+                                  _logeado = true;
+                                  _invitado = true;
+                                });
+                              },
+                              logeado: (Usuario logeado) {
+                                setState(() {
+                                  _logeado = true;
+                                  _invitado = false;
+                                  usuario = logeado;
+                                });
+                              },
+                              invitado: () {
+                                setState(() {
+                                  _invitado = true;
+                                  _logeado = false;
+                                });
+                              },
+                            ),
+                          ),
+                        )
                       : const SizedBox.shrink(key: ValueKey('sin_login')),
                 ),
               ],
@@ -502,7 +492,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       child: Center(
         child: Stack(
           children: [
-            ListView.builder(
+        RefreshIndicator(
+        color: const Color.fromARGB(255, 166, 226, 70),
+        onRefresh: () async {
+          setState(() {
+            _actividades.clear();
+            _paginaActual = 0;
+            _totalPaginas = 1;
+          });
+
+          await _cargarActividades(inicial: true);
+        },
+        child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
               itemCount: _actividades.length + 1,
@@ -510,7 +511,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 if (index < _actividades.length) {
                   final actividad = _actividades[index];
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                     child: TarjetaBusqueda.actividad(
                       titulo: actividad.titulo,
                       localidad: actividad.localidad!,
@@ -525,6 +529,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       },
                       textoEtiqueta: actividad.categoriaActividad!,
                       iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+                      fechaFin: actividad.fechaFin
                     ),
                   );
                 }
@@ -555,7 +560,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
                 return const SizedBox.shrink();
               },
-            ),
+            )),
             Positioned(
               bottom: 16,
               right: 16,
@@ -915,7 +920,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ],
       );
     }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -927,11 +931,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ),
 
         switch (estadoInicio) {
-          EstadoUi.cargando => const Expanded(
-            child: Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 166, 226, 70),
-              ),
+          EstadoUi.cargando => Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+              itemCount: 4,
+              itemBuilder: (_, _) => const SkeletonTarjetaBusqueda(),
             ),
           ),
           EstadoUi.vacio => Expanded(child: estadoVacio()),
@@ -1035,17 +1039,23 @@ class _SplashPageState extends State<SplashPage> {
       final results = await Future.wait([
         ActividadesApiService.obtenerActividadesInicio(0),
         LocalidadApiService.obtenerLocalidadNombres(),
+        LocalidadApiService.obtenerLocalidadesMapa(),
+        ActividadesApiService.categoriasActividad(),
+        RestauranteApiService.categoriasRestaurantes(),
+        AlojamientoApiService.categoriaAlojamientos(),
+        UsuarioRepository.cargar(),
+        _precargarGeoJson(),
       ]);
 
       final page = results[0] as Pages<Actividad>;
+      final usuarioGuardado = results[6] as Usuario?;
 
-      for (final act in page.contenido.take(5)) {
-        if (act.imagenPrincipal != null) {
-          try {
-            await precacheImage(NetworkImage(act.imagenPrincipal), context);
-          } catch (_) {}
-        }
-      }
+      await Future.wait(
+        page.contenido.take(5)
+            .where((a) => a.imagenPrincipal != null)
+            .map((a) => precacheImage(NetworkImage(a.imagenPrincipal!), context)
+            .catchError((_) {})),
+      );
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -1054,6 +1064,7 @@ class _SplashPageState extends State<SplashPage> {
           builder: (_) => MyHomePage(
             actividadesIniciales: page.contenido,
             totalPaginas: page.totalPaginas,
+            usuarioInicial: usuarioGuardado,
           ),
         ),
       );
@@ -1063,6 +1074,10 @@ class _SplashPageState extends State<SplashPage> {
         MaterialPageRoute(builder: (_) => const MyHomePage()),
       );
     }
+  }
+
+  Future<void> _precargarGeoJson() async {
+    await rootBundle.loadString('assets/assets/extremadura.geojson');
   }
 
   @override

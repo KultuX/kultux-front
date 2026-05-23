@@ -4,9 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/alojamiento.dart';
 import 'package:kultux/models/pages.dart';
 import 'package:kultux/core/utils/api_url.dart';
-class AlojamientoApiService{
 
-  static Future<Pages<Alojamiento>> obtenerAlojamientoDestacados({required int page}) async {
+class AlojamientoApiService {
+  static List<String>? categoriasCache;
+  static Future<Pages<Alojamiento>> obtenerAlojamientoDestacados({
+    required int page,
+  }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-alojamientos/listar_destacados',
@@ -18,7 +21,7 @@ class AlojamientoApiService{
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
@@ -30,42 +33,47 @@ class AlojamientoApiService{
     }
   }
 
-  static Future<Alojamiento> obtenerAlojamientoDetalle(int id) async{
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-alojamientos/$id');
+  static Future<Alojamiento> obtenerAlojamientoDetalle(int id) async {
+    final url = Uri.https(ApiUrl.BASE_URL, '/api/v1/gateway-alojamientos/$id');
 
     final response = await http.get(
       url,
       headers: {
-        'Content-Type':'application/json',
-        'Accept':'application/json',
-        'User-Agent': 'KultuX APP'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if (response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
       return Alojamiento.detalle(json);
-    }else{
+    } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
-  static Future<List<String>> categoriaAlojamientos() async{
-    final url = Uri.https( ApiUrl.BASE_URL, 'api/v1/gateway-alojamientos/categoria_alojamiento');
+  static Future<List<String>> categoriaAlojamientos() async {
+    if(categoriasCache != null ) return categoriasCache!;
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      'api/v1/gateway-alojamientos/categoria_alojamiento',
+    );
 
     final response = await http.get(
       url,
-      headers:{
-        'Content-Type':'application/json',
-        'Accept':'application/json',
-        'User-Agent': 'KultuX APP'
-      }
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP',
+      },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
-      return json.map((c) => c.toString()).toList();
-    }else{
+      categoriasCache = json.map((c) => c.toString()).toList();
+      return categoriasCache!;
+    } else {
       throw HttpException(response.statusCode.toString());
     }
   }
@@ -76,10 +84,7 @@ class AlojamientoApiService{
     int? localidad,
     required int page,
   }) async {
-    final params = <String, String>{
-      'page': page.toString(),
-      'size': '8',
-    };
+    final params = <String, String>{'page': page.toString(), 'size': '8'};
 
     if (nombre != null && nombre.isNotEmpty) params['nombre'] = nombre;
     if (categoria != null) params['categoria'] = categoria;
@@ -96,43 +101,35 @@ class AlojamientoApiService{
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      return Pages<Alojamiento>.fromJson(
-        json,
-            (a) => Alojamiento.busqueda(a),
-      );
-    }else {
+      return Pages<Alojamiento>.fromJson(json, (a) => Alojamiento.busqueda(a));
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
 
   static Future<Pages<Alojamiento>> alojamientosGuardados({
     required int idUsuario,
     required int page,
   }) async {
-
     final params = <String, String>{
       'idUsuario': idUsuario.toString(),
       'page': page.toString(),
       'size': '8',
     };
 
-    final queryParams = <String, dynamic>{
-      ...params,
-    };
+    final queryParams = <String, dynamic>{...params};
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-alojamientos/listar_guardados',
       queryParams,
     );
-
 
     print("URL FINAL: $url");
 
@@ -141,22 +138,15 @@ class AlojamientoApiService{
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      return Pages<Alojamiento>.fromJson(
-        json,
-            (e) => Alojamiento.guardado(e),
-      );
-    }
-    else{
+      return Pages<Alojamiento>.fromJson(json, (e) => Alojamiento.guardado(e));
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
-
 }
-

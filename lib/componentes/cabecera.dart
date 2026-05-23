@@ -27,12 +27,11 @@ class CabeceraPagina extends StatelessWidget {
     this.padding = const EdgeInsets.fromLTRB(16, 10, 16, 12),
     this.mostrarImagenDerecha = false,
     this.minHeight = 0,
-    this.registro = ''
+    this.registro = '',
   });
 
   @override
   Widget build(BuildContext context) {
-
     final bool tieneFlecha = onVolver != null;
 
     final fechaActual = DateTime.now();
@@ -46,10 +45,7 @@ class CabeceraPagina extends StatelessWidget {
       padding: padding,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF1a1a1a),
-            Color(0xFF2d2d2d),
-          ],
+          colors: [Color(0xFF1a1a1a), Color(0xFF2d2d2d)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -62,62 +58,57 @@ class CabeceraPagina extends StatelessWidget {
               right: 0,
               bottom: registro!.isNotEmpty ? 0 : null,
               child: Opacity(
-                opacity:  registro!.isNotEmpty ? 1 : 0.15,
+                opacity: registro!.isNotEmpty ? 1 : 0.15,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular( registro!.isNotEmpty ? 0 : 8),
+                  borderRadius: BorderRadius.circular(
+                    registro!.isNotEmpty ? 0 : 8,
+                  ),
                   child: SizedBox(
                     width: registro!.isNotEmpty ? 45 : 80,
                     height: registro!.isNotEmpty ? 45 : 80,
-                    child: Image.asset( registro!.isNotEmpty ? registro! :
-                      "assets/images/extrem.png",
+                    child: Image.asset(
+                      registro!.isNotEmpty
+                          ? registro!
+                          : "assets/images/extrem.png",
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
                         color: Colors.grey.shade700,
-                        child: const Icon(
-                          Icons.image,
-                          color: Colors.grey,
-                        ),
+                        child: const Icon(Icons.image, color: Colors.grey),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-            if (tieneFlecha)
-              Positioned(
-                top: -20,
-                left: -14,
-                child: GestureDetector(
-                  onTap: onVolver,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 36, 36),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 28,
-                    ),
+          if (tieneFlecha)
+            Positioned(
+              top: -20,
+              left: -14,
+              child: GestureDetector(
+                onTap: onVolver,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 36, 36),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 28,
                   ),
                 ),
               ),
+            ),
 
           Padding(
-            padding: EdgeInsets.only(
-              top: tieneFlecha ? 18 : 0,
-            ),
+            padding: EdgeInsets.only(top: tieneFlecha ? 18 : 0),
             child: Row(
-              mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
                     mainAxisAlignment: .end,
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       if (subtitulo != null) ...[
                         Text(
                           subtitulo!,
@@ -146,8 +137,7 @@ class CabeceraPagina extends StatelessWidget {
                         height: 2,
                         decoration: BoxDecoration(
                           color: const Color(0xFFA6E246),
-                          borderRadius:
-                          BorderRadius.circular(1),
+                          borderRadius: BorderRadius.circular(1),
                         ),
                       ),
                     ],
@@ -156,10 +146,8 @@ class CabeceraPagina extends StatelessWidget {
 
                 if (mostrarFecha)
                   Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-
                       if (mostrarEtiquetaHoy)
                         const Text(
                           'Hoy',
@@ -169,8 +157,7 @@ class CabeceraPagina extends StatelessWidget {
                           ),
                         ),
 
-                      if (mostrarEtiquetaHoy)
-                        const SizedBox(height: 2),
+                      if (mostrarEtiquetaHoy) const SizedBox(height: 2),
 
                       Text(
                         "$dia. ${fechaActual.day}/${fechaActual.month}/${fechaActual.year}",

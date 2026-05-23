@@ -1,7 +1,3 @@
-
-import 'package:kultux/models/actividad.dart';
-import 'package:kultux/models/alojamiento.dart';
-import 'package:kultux/models/restaurante.dart';
 class Pages<T> {
   final List<T> contenido;
   final int numero;
@@ -14,15 +10,13 @@ class Pages<T> {
   });
 
   factory Pages.fromJson(
-      Map<String, dynamic> json,
-      T Function(dynamic json) fromJsonT,
-      ) {
+    Map<String, dynamic> json,
+    T Function(dynamic json) fromJsonT,
+  ) {
     final List contentRaw = json['content'] ?? [];
 
     return Pages._(
-      contenido: contentRaw
-          .map((e) => fromJsonT(e))
-          .toList(),
+      contenido: contentRaw.map((e) => fromJsonT(e)).toList(),
       numero: json['number'],
       totalPaginas: json['totalPages'],
     );

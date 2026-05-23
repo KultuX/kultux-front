@@ -10,9 +10,8 @@ const _textoSuave = Color(0xFF6B6B6B);
 const _borde = Color(0xFFE0DDD6);
 
 class AssetRecuperarPassword extends StatefulWidget {
-
   final VoidCallback? cerrar;
-  final VoidCallback? onVolverLogin; // NUEVO
+  final VoidCallback? onVolverLogin;
 
   const AssetRecuperarPassword({super.key, this.cerrar, this.onVolverLogin});
 
@@ -27,11 +26,17 @@ class _AssetRecuperarPasswordState extends State<AssetRecuperarPassword> {
   bool _enviado = false;
 
   Future<void> _recuperar() async {
-    setState(() { _errorEmail = false; });
+    setState(() {
+      _errorEmail = false;
+    });
 
     if (_email.text.trim().isEmpty) {
       setState(() => _errorEmail = true);
-      Alerta.show(context, mensaje: 'Introduce tu correo electrónico.', tipo: TipoAviso.warning);
+      Alerta.show(
+        context,
+        mensaje: 'Introduce tu correo electrónico.',
+        tipo: TipoAviso.warning,
+      );
       return;
     }
 
@@ -39,14 +44,25 @@ class _AssetRecuperarPasswordState extends State<AssetRecuperarPassword> {
 
     try {
       await UsuarioApiService.recuperarPassword(_email.text.trim());
-      setState(() { _enviado = true; _cargando = false; });
+      setState(() {
+        _enviado = true;
+        _cargando = false;
+      });
     } catch (e) {
       setState(() => _cargando = false);
       if (e.toString().contains('404')) {
         setState(() => _errorEmail = true);
-        Alerta.show(context, mensaje: 'No existe ninguna cuenta con ese correo.', tipo: TipoAviso.error);
+        Alerta.show(
+          context,
+          mensaje: 'No existe ninguna cuenta con ese correo.',
+          tipo: TipoAviso.error,
+        );
       } else {
-        Alerta.show(context, mensaje: 'Ha ocurrido un error. Inténtalo más tarde.', tipo: TipoAviso.error);
+        Alerta.show(
+          context,
+          mensaje: 'Ha ocurrido un error. Inténtalo más tarde.',
+          tipo: TipoAviso.error,
+        );
       }
     }
   }
@@ -90,7 +106,9 @@ class _AssetRecuperarPasswordState extends State<AssetRecuperarPassword> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
                       ),
                       child: Stack(
                         children: [
@@ -98,30 +116,42 @@ class _AssetRecuperarPasswordState extends State<AssetRecuperarPassword> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                width: 44, height: 44,
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: _verde.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.lock_reset_rounded,
-                                    color: _verde, size: 24),
+                                child: const Icon(
+                                  Icons.lock_reset_rounded,
+                                  color: _verde,
+                                  size: 24,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('KultuX',
-                                      style: TextStyle(
-                                          fontSize: 11, color: Color(0xFFb0b0b0))),
+                                  const Text(
+                                    'KultuX',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFFb0b0b0),
+                                    ),
+                                  ),
                                   const SizedBox(height: 2),
-                                  const Text('Recuperar contraseña',
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white)),
+                                  const Text(
+                                    'Recuperar contraseña',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                   const SizedBox(height: 5),
                                   Container(
-                                    width: 30, height: 2,
+                                    width: 30,
+                                    height: 2,
                                     decoration: BoxDecoration(
                                       color: _verde,
                                       borderRadius: BorderRadius.circular(1),
@@ -137,72 +167,89 @@ class _AssetRecuperarPasswordState extends State<AssetRecuperarPassword> {
 
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                      child: _enviado ? _PantallaExito(email: _email.text.trim(), onCerrar: widget.onVolverLogin ?? widget.cerrar) : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'Introduce tu correo electrónico y te enviaremos una nueva contraseña.',
-                            style: TextStyle(
-                              fontFamily: 'RobotoCondensed',
-                              fontSize: 13,
-                              color: _textoSuave,
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: CamposPersonalizados.normal(
-                              titulo: 'Correo electrónico',
-                              controller: _email,
-                              mostrarError: _errorEmail,
-                              tipo: TextInputType.emailAddress,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          GestureDetector(
-                            onTap: _cargando ? null : _recuperar,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: _cargando ? _verde.withOpacity(0.6) : _verde,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(
-                                child: _cargando
-                                    ? const SizedBox(
-                                  width: 18, height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Color(0xFF1A1A1A),
-                                  ),
-                                )
-                                    : const Text('Enviar',
-                                    style: TextStyle(
-                                      fontFamily: 'RobotoCondensed',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: _texto,
-                                    )),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          GestureDetector(
-                            onTap: widget.onVolverLogin ?? widget.cerrar, // NUEVO: vuelve al login si está disponible
-                            child: const Center(
-                              child: Text('Volver al inicio de sesión',
+                      child: _enviado
+                          ? _PantallaExito(
+                              email: _email.text.trim(),
+                              onCerrar: widget.onVolverLogin ?? widget.cerrar,
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Text(
+                                  'Introduce tu correo electrónico y te enviaremos una nueva contraseña.',
                                   style: TextStyle(
                                     fontFamily: 'RobotoCondensed',
                                     fontSize: 13,
                                     color: _textoSuave,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: _textoSuave,
-                                  )),
+                                    height: 1.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: CamposPersonalizados.normal(
+                                    titulo: 'Correo electrónico',
+                                    controller: _email,
+                                    mostrarError: _errorEmail,
+                                    tipo: TextInputType.emailAddress,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                GestureDetector(
+                                  onTap: _cargando ? null : _recuperar,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _cargando
+                                          ? _verde.withOpacity(0.6)
+                                          : _verde,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Center(
+                                      child: _cargando
+                                          ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Color(0xFF1A1A1A),
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Enviar',
+                                              style: TextStyle(
+                                                fontFamily: 'RobotoCondensed',
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w700,
+                                                color: _texto,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                GestureDetector(
+                                  onTap:
+                                      widget.onVolverLogin ??
+                                      widget
+                                          .cerrar, // NUEVO: vuelve al login si está disponible
+                                  child: const Center(
+                                    child: Text(
+                                      'Volver al inicio de sesión',
+                                      style: TextStyle(
+                                        fontFamily: 'RobotoCondensed',
+                                        fontSize: 13,
+                                        color: _textoSuave,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: _textoSuave,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),
@@ -221,29 +268,34 @@ class _PantallaExito extends StatelessWidget {
 
   const _PantallaExito({required this.email, this.onCerrar});
 
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         const SizedBox(height: 8),
         Container(
-          width: 56, height: 56,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
             color: _verde.withOpacity(0.15),
             borderRadius: BorderRadius.circular(28),
           ),
-          child: const Icon(Icons.mark_email_read_rounded,
-              color: _verde, size: 28),
+          child: const Icon(
+            Icons.mark_email_read_rounded,
+            color: _verde,
+            size: 28,
+          ),
         ),
         const SizedBox(height: 16),
-        const Text('¡Correo enviado!',
-            style: TextStyle(
-              fontFamily: 'RobotoCondensed',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: _texto,
-            )),
+        const Text(
+          '¡Correo enviado!',
+          style: TextStyle(
+            fontFamily: 'RobotoCondensed',
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: _texto,
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           'Hemos enviado una nueva contraseña a $email',
@@ -266,13 +318,15 @@ class _PantallaExito extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Center(
-              child: Text('Volver al inicio de sesión',
-                  style: TextStyle(
-                    fontFamily: 'RobotoCondensed',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: _texto,
-                  )),
+              child: Text(
+                'Volver al inicio de sesión',
+                style: TextStyle(
+                  fontFamily: 'RobotoCondensed',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _texto,
+                ),
+              ),
             ),
           ),
         ),

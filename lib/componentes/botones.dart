@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-class BotonesGenerico extends StatelessWidget{
+
+class BotonesGenerico extends StatelessWidget {
   final String? imagen;
   final String titulo;
   final double? ancho;
   final VoidCallback? pulsar;
-  const BotonesGenerico({super.key,required this.titulo, this.imagen, this.ancho, this.pulsar});
+  const BotonesGenerico({
+    super.key,
+    required this.titulo,
+    this.imagen,
+    this.ancho,
+    this.pulsar,
+  });
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -15,7 +22,9 @@ class BotonesGenerico extends StatelessWidget{
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.symmetric(horizontal: imagen != null ? 8 : 12),
           backgroundColor: Color.fromARGB(255, 166, 226, 70),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
           elevation: 0,
         ),
         onPressed: pulsar,
@@ -39,11 +48,7 @@ class BotonesGenerico extends StatelessWidget{
             ),
             if (imagen != null) ...[
               SizedBox(width: 4),
-              SvgPicture.asset(
-                imagen!,
-                width: 16,
-                height: 16,
-              ),
+              SvgPicture.asset(imagen!, width: 16, height: 16),
             ],
           ],
         ),

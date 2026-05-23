@@ -1,4 +1,4 @@
-class Localidad{
+class Localidad {
   final String nombre;
   final int ine;
 
@@ -7,13 +7,12 @@ class Localidad{
 
   Localidad({required this.nombre, required this.ine, this.lat, this.lon});
 
-  factory Localidad.fromJson(Map<String, dynamic> json){
+  factory Localidad.fromJson(Map<String, dynamic> json) {
     return Localidad(
       nombre: json['nombre'],
       ine: json['ine'],
       lat: json['lat'],
-      lon: json['lon']
+      lon: json['lon'],
     );
   }
-
 }

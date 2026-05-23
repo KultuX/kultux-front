@@ -4,10 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/pages.dart';
 import 'package:kultux/core/utils/api_url.dart';
-class RestauranteApiService{
 
-
-  static Future<Pages<Restaurante>> obtenerRestauranteDestacados({required int page}) async {
+class RestauranteApiService {
+  static List<String>? categoriasCache;
+  static Future<Pages<Restaurante>> obtenerRestauranteDestacados({
+    required int page,
+  }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-restaurantes/listar_destacados',
@@ -19,58 +21,62 @@ class RestauranteApiService{
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
     if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      print(json);
       return Pages<Restaurante>.fromJson(json, (e) => Restaurante.busqueda(e));
     } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
-
-
-  static Future<Restaurante> restauranteDetalle(int id) async{
-    final url = Uri.https( ApiUrl.BASE_URL, '/api/v1/gateway-restaurantes/detalle_restaurante/$id');
+  static Future<Restaurante> restauranteDetalle(int id) async {
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      '/api/v1/gateway-restaurantes/detalle_restaurante/$id',
+    );
 
     final response = await http.get(
       url,
       headers: {
-        'Content-Type':'application/json',
-        'Accept':'application/json',
-        'User-Agent': 'KultuX APP'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if (response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
       return Restaurante.detalle(json);
-    }else{
+    } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
-
-  static Future<List<String>> categoriasRestaurantes() async{
-    final url = Uri.https( ApiUrl.BASE_URL, 'api/v1/gateway-restaurantes/categoria_restaurante');
-
-    final response = await http.get(
-        url,
-        headers:{
-          'Content-Type':'application/json',
-          'Accept':'application/json',
-          'User-Agent': 'KultuX APP'
-        }
+  static Future<List<String>> categoriasRestaurantes() async {
+    if ( categoriasCache != null ) return categoriasCache!;
+    final url = Uri.https(
+      ApiUrl.BASE_URL,
+      'api/v1/gateway-restaurantes/categoria_restaurante',
     );
 
-    if(response.statusCode == 200){
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'KultuX APP',
+      },
+    );
+
+    if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
-      return json.map((c) => c.toString()).toList();
-    }else{
+      categoriasCache  = json.map((c) => c.toString()).toList();
+      return  categoriasCache!;
+    } else {
       throw HttpException(response.statusCode.toString());
     }
   }
@@ -82,15 +88,12 @@ class RestauranteApiService{
     bool? soloAbiertos,
     required int page,
   }) async {
-    final params = <String, String>{
-      'page': page.toString(),
-      'size': '8',
-    };
+    final params = <String, String>{'page': page.toString(), 'size': '8'};
 
     if (nombre != null && nombre.isNotEmpty) params['nombre'] = nombre;
     if (categoria != null) params['categoria'] = categoria;
     if (localidad != null) params['localidad'] = localidad.toString();
-    if ( soloAbiertos != null ) params['soloAbiertos'] = soloAbiertos.toString();
+    if (soloAbiertos != null) params['soloAbiertos'] = soloAbiertos.toString();
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -103,40 +106,31 @@ class RestauranteApiService{
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      print('restaurantes filtrados: $json');
-      return Pages<Restaurante>.fromJson(
-        json,
-            (a) => Restaurante.busqueda(a),
-      );
-    }else if(response.statusCode == 204){
+      return Pages<Restaurante>.fromJson(json, (a) => Restaurante.busqueda(a));
+    } else if (response.statusCode == 204) {
+      throw HttpException(response.statusCode.toString());
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-    else{
-      throw HttpException(response.statusCode.toString());
-    }
-
   }
 
   static Future<Pages<Restaurante>> restaurantesGuardados({
     required int idUsuario,
     required int page,
   }) async {
-
     final params = <String, String>{
       'idUsuario': idUsuario.toString(),
       'page': page.toString(),
       'size': '8',
     };
 
-    final queryParams = <String, dynamic>{
-      ...params,
-    };
+    final queryParams = <String, dynamic>{...params};
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -149,21 +143,15 @@ class RestauranteApiService{
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'KultuX APP'
+        'User-Agent': 'KultuX APP',
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final dynamic json = jsonDecode(response.body);
-      return Pages<Restaurante>.fromJson(
-        json,
-            (e) => Restaurante.guardado(e),
-      );
-    }
-    else{
+      return Pages<Restaurante>.fromJson(json, (e) => Restaurante.guardado(e));
+    } else {
       throw HttpException(response.statusCode.toString());
     }
-
   }
-
 }

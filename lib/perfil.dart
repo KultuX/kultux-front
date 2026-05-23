@@ -24,12 +24,11 @@ class PerfilPage extends StatefulWidget {
   final Usuario? usuario;
   final VoidCallback onVolver;
 
-
   const PerfilPage({
     super.key,
     required this.cerrarSesion,
     this.usuario,
-    required this.onVolver
+    required this.onVolver,
   });
 
   @override
@@ -62,29 +61,24 @@ class _PerfilPageState extends State<PerfilPage> {
       child: Column(
         children: [
           CabeceraPagina(
-            titulo: _editandoPerfil
-                ? 'Editar perfil'
-                : 'Perfil',
+            titulo: _editandoPerfil ? 'Editar perfil' : 'Perfil',
             subtitulo: 'Mi cuenta',
             onVolver: _editandoPerfil
                 ? () {
-              setState(() {
-                _editandoPerfil = false;
-              });
-            }
+                    setState(() {
+                      _editandoPerfil = false;
+                    });
+                  }
                 : widget.onVolver,
           ),
 
-          Expanded(
-            child: _buildContenido(),
-          ),
+          Expanded(child: _buildContenido()),
         ],
       ),
     );
   }
 
   Widget _buildContenido() {
-
     if (_editandoPerfil) {
       return EditarPerfilPage(
         onVolver: () {
@@ -95,7 +89,6 @@ class _PerfilPageState extends State<PerfilPage> {
         usuario: widget.usuario ?? Usuario.usuarioActual,
       );
     }
-
 
     return SingleChildScrollView(
       child: Column(
@@ -108,11 +101,11 @@ class _PerfilPageState extends State<PerfilPage> {
               .where((e) => e.value.$2 == 'ajustes')
               .map(
                 (e) => _OpcionTile(
-              texto: e.key,
-              icono: e.value.$1,
-              onTap: () => _manejarOpcion(e.key),
-            ),
-          ),
+                  texto: e.key,
+                  icono: e.value.$1,
+                  onTap: () => _manejarOpcion(e.key),
+                ),
+              ),
 
           _SeccionLabel('Soporte'),
 
@@ -120,11 +113,11 @@ class _PerfilPageState extends State<PerfilPage> {
               .where((e) => e.value.$2 == 'soporte')
               .map(
                 (e) => _OpcionTile(
-              texto: e.key,
-              icono: e.value.$1,
-              onTap: () => _manejarOpcion(e.key),
-            ),
-          ),
+                  texto: e.key,
+                  icono: e.value.$1,
+                  onTap: () => _manejarOpcion(e.key),
+                ),
+              ),
 
           const SizedBox(height: 20),
 
@@ -360,18 +353,27 @@ class _PerfilPageState extends State<PerfilPage> {
             borderRadius: BorderRadius.circular(16),
           ),
           // El insetPadding evita que se pegue a los bordes de la pantalla
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 40,
+          ),
           child: SizedBox(
-            width: 360, // Forzamos el ancho exacto de una pantalla móvil estándar
+            width:
+                360, // Forzamos el ancho exacto de una pantalla móvil estándar
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 20,
+                  ),
                   decoration: const BoxDecoration(
                     color: Color.fromARGB(255, 166, 226, 70),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -402,7 +404,10 @@ class _PerfilPageState extends State<PerfilPage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -466,7 +471,12 @@ class _PerfilPageState extends State<PerfilPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 166, 226, 70),
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          166,
+                          226,
+                          70,
+                        ),
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -597,6 +607,7 @@ class _PerfilPageState extends State<PerfilPage> {
       },
     );
   }
+
   Future<void> _mostrarProximamente() async {
     await showDialog(
       context: context,
@@ -655,7 +666,11 @@ class _PerfilPageState extends State<PerfilPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.delete_forever, size: 50, color: Color(0xFFC62828)),
+                  const Icon(
+                    Icons.delete_forever,
+                    size: 50,
+                    color: Color(0xFFC62828),
+                  ),
                   const SizedBox(height: 12),
                   const Text(
                     'Eliminar cuenta',
