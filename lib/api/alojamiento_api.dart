@@ -131,8 +131,6 @@ class AlojamientoApiService {
       queryParams,
     );
 
-    print("URL FINAL: $url");
-
     final response = await http.get(
       url,
       headers: {

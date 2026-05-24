@@ -9,6 +9,8 @@ import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/componentes/tarjeta_busqueda.dart';
 import 'package:kultux/core/utils/iconos.dart';
 
+import 'componentes/barra_carga.dart';
+import 'componentes/modal_alerta.dart';
 import 'componentes/selector_localidad.dart';
 import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/estado_ui.dart';
@@ -50,6 +52,8 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
   String mensajeError = '';
 
   Key _selectorLocalidadKey = UniqueKey();
+
+  bool _cargandoDetalle = false;
 
   @override
   void initState() {
@@ -129,7 +133,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _contenidoConEstado();
+    return BarraCarga(cargando: _cargandoDetalle, child: _contenidoConEstado());
   }
 
   Widget _contenidoConEstado() {
@@ -214,26 +218,23 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
                       a.categoriaAlojamiento,
                     ),
                     onTap: () async {
-                      final detalle =
-                          await AlojamientoApiService.obtenerAlojamientoDetalle(
-                            a.id,
-                          );
-                      print(detalle.toString());
-                      widget.onDetalleSeleccionado?.call(detalle);
+                      setState(() => _cargandoDetalle = true);
+                      try {
+                        final detalle = await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
+                        widget.onDetalleSeleccionado?.call(detalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        Alerta.show(context, mensaje: 'No se han podido cargar los datos.', tipo: TipoAviso.error);
+                      } finally {
+                        setState(() => _cargandoDetalle = false);
+                      }
                     },
                   ),
                 );
               }
 
               if (cargando) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: Color.fromARGB(255, 166, 226, 70),
-                    ),
-                  ),
-                );
+                return const SkeletonTarjetaBusqueda();
               }
 
               if (paginaActual >= totalPaginas) {

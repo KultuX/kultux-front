@@ -12,7 +12,9 @@ import 'package:kultux/models/restaurante.dart';
 import 'package:kultux/models/usuario.dart';
 import 'package:kultux/componentes/tarjeta_guardados.dart';
 
+import 'componentes/barra_carga.dart';
 import 'componentes/cabecera.dart';
+import 'componentes/modal_alerta.dart';
 import 'componentes/skeleton_tarjeta.dart';
 
 const _verde = Color(0xFFA6E246);
@@ -44,6 +46,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
   int _paginaActividades = 0;
   int _totalPaginasActividades = 1;
   bool _cargandoActividades = false;
+  int _totalActividades = 0;
   final ScrollController _scrollActividades = ScrollController();
 
   List<Restaurante> _restaurantes = [];
@@ -52,6 +55,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
   int _paginaRestaurantes = 0;
   int _totalPaginasRestaurantes = 1;
   bool _cargandoRestaurantes = false;
+  int _totalRestaurantes = 0;
   final ScrollController _scrollRestaurantes = ScrollController();
 
   List<Alojamiento> _alojamientos = [];
@@ -60,9 +64,12 @@ class _GuardadosPageState extends State<GuardadosPage> {
   int _paginaAlojamientos = 0;
   int _totalPaginasAlojamientos = 1;
   bool _cargandoAlojamientos = false;
+  int _totalAlojamientos = 0;
   final ScrollController _scrollAlojamientos = ScrollController();
 
   int? get _idUsuario => Usuario.usuarioActual?.id;
+
+  bool _cargandoDetalle = false;
 
   @override
   void initState() {
@@ -70,7 +77,6 @@ class _GuardadosPageState extends State<GuardadosPage> {
 
     _tabActual = widget.tabInicial;
 
-    // Scroll listeners
     _scrollActividades.addListener(() {
       if (_scrollActividades.position.pixels >=
           _scrollActividades.position.maxScrollExtent - 200) {
@@ -135,6 +141,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
       setState(() {
         _actividades.addAll(page.contenido);
         _totalPaginasActividades = page.totalPaginas;
+        _totalActividades = page.totalElementos;
         _paginaActividades++;
         _estadoActividades = _actividades.isEmpty
             ? EstadoUi.vacio
@@ -173,6 +180,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
         _restaurantes.clear();
         _paginaRestaurantes = 0;
         _totalPaginasRestaurantes = 1;
+
         _estadoRestaurantes = EstadoUi.cargando;
       });
     }
@@ -188,10 +196,10 @@ class _GuardadosPageState extends State<GuardadosPage> {
         idUsuario: _idUsuario!,
         page: _paginaRestaurantes,
       );
-      print('✅ restaurantes: ${page.contenido.length} / paginas: ${page.totalPaginas}');
       setState(() {
         _restaurantes.addAll(page.contenido);
         _totalPaginasRestaurantes = page.totalPaginas;
+        _totalRestaurantes = page.totalElementos;
         _paginaRestaurantes++;
         _estadoRestaurantes = _restaurantes.isEmpty
             ? EstadoUi.vacio
@@ -249,6 +257,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
       setState(() {
         _alojamientos.addAll(page.contenido);
         _totalPaginasAlojamientos = page.totalPaginas;
+        _totalAlojamientos = page.totalElementos;
         _paginaAlojamientos++;
         _estadoAlojamientos = _alojamientos.isEmpty
             ? EstadoUi.vacio
@@ -289,15 +298,18 @@ class _GuardadosPageState extends State<GuardadosPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: _fondoPagina,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CabeceraPagina(titulo: 'Guardados', subtitulo: 'Mi colección'),
-          _buildTabs(),
-          Expanded(child: _buildBody()),
-        ],
+    return BarraCarga(
+      cargando: _cargandoDetalle,
+      child: Container(
+        color: _fondoPagina,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CabeceraPagina(titulo: 'Guardados', subtitulo: 'Mi colección'),
+            _buildTabs(),
+            Expanded(child: _buildBody()),
+          ],
+        ),
       ),
     );
   }
@@ -370,7 +382,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
       itemBuilder: (context, index) {
         if (index == 0) {
           return _StatCard(
-            numero: _actividades.length,
+            numero: _totalActividades,
             label: 'Actividades guardadas',
           );
         }
@@ -400,10 +412,22 @@ class _GuardadosPageState extends State<GuardadosPage> {
           imagenUrl: actividad.imagenPrincipal,
           fecha: actividad.fechaInicio,
           onTap: () async {
-            final detalle = await ActividadesApiService.detalleActividad(
-              actividad.id,
-            );
-            widget.onDetalleSeleccionado(detalle, GuardadosTab.actividades);
+            setState(() => _cargandoDetalle = true);
+            try {
+              final detalle = await ActividadesApiService.detalleActividad(
+                actividad.id,
+              );
+              widget.onDetalleSeleccionado(detalle, GuardadosTab.actividades);
+            } catch (e) {
+              if (!context.mounted) return;
+              Alerta.show(
+                context,
+                mensaje: 'No se han podido cargar los datos.',
+                tipo: TipoAviso.error,
+              );
+            } finally {
+              setState(() => _cargandoDetalle = false);
+            }
           },
         );
       },
@@ -440,7 +464,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
       itemBuilder: (context, index) {
         if (index == 0) {
           return _StatCard(
-            numero: _restaurantes.length,
+            numero: _totalRestaurantes,
             label: 'Restaurantes guardados',
           );
         }
@@ -470,10 +494,22 @@ class _GuardadosPageState extends State<GuardadosPage> {
           imagenUrl: r.imagenPrincipal,
           abierto: r.abierto,
           onTap: () async {
-            final detalle = await RestauranteApiService.restauranteDetalle(
-              r.id,
-            );
-            widget.onDetalleSeleccionado(detalle, GuardadosTab.restaurantes);
+            setState(() => _cargandoDetalle = true);
+            try {
+              final detalle = await RestauranteApiService.restauranteDetalle(
+                r.id,
+              );
+              widget.onDetalleSeleccionado(detalle, GuardadosTab.restaurantes);
+            } catch (e) {
+              if (!context.mounted) return;
+              Alerta.show(
+                context,
+                mensaje: 'No se han podido cargar los datos.',
+                tipo: TipoAviso.error,
+              );
+            } finally {
+              setState(() => _cargandoDetalle = false);
+            }
           },
         );
       },
@@ -510,7 +546,7 @@ class _GuardadosPageState extends State<GuardadosPage> {
       itemBuilder: (context, index) {
         if (index == 0) {
           return _StatCard(
-            numero: _alojamientos.length,
+            numero: _totalAlojamientos,
             label: 'Alojamientos guardados',
           );
         }
@@ -539,9 +575,22 @@ class _GuardadosPageState extends State<GuardadosPage> {
           categoria: a.categoriaAlojamiento,
           imagenUrl: a.imagenPrincipal,
           onTap: () async {
-            final detalle =
-                await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
-            widget.onDetalleSeleccionado(detalle, GuardadosTab.alojamientos);
+            setState(() => _cargandoDetalle = true);
+            try {
+              final detalle =
+                  await AlojamientoApiService.obtenerAlojamientoDetalle(a.id);
+              widget.onDetalleSeleccionado(detalle, GuardadosTab.actividades);
+            } catch (e) {
+              if (!context.mounted) return;
+              Alerta.show(
+                context,
+                mensaje:
+                    'No se han podido cargar los datos. Inténtalo más tarde.',
+                tipo: TipoAviso.error,
+              );
+            } finally {
+              setState(() => _cargandoDetalle = false);
+            }
           },
         );
       },
@@ -663,10 +712,12 @@ class _TabButton extends StatelessWidget {
     );
   }
 }
+
 class SkeletonTarjetaGuardado extends StatefulWidget {
   const SkeletonTarjetaGuardado({super.key});
   @override
-  State<SkeletonTarjetaGuardado> createState() => _SkeletonTarjetaGuardadoState();
+  State<SkeletonTarjetaGuardado> createState() =>
+      _SkeletonTarjetaGuardadoState();
 }
 
 class _SkeletonTarjetaGuardadoState extends State<SkeletonTarjetaGuardado>
@@ -677,22 +728,36 @@ class _SkeletonTarjetaGuardadoState extends State<SkeletonTarjetaGuardado>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
-    _anim = Tween<double>(begin: -1, end: 2).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+    _anim = Tween<double>(
+      begin: -1,
+      end: 2,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   Widget _s(double w, double h, {BorderRadius? r}) => AnimatedBuilder(
     animation: _anim,
     builder: (_, __) => Container(
-      width: w, height: h,
+      width: w,
+      height: h,
       decoration: BoxDecoration(
         borderRadius: r ?? BorderRadius.circular(4),
         gradient: LinearGradient(
           stops: const [0.0, 0.5, 1.0],
-          colors: const [Color(0xFFE8E8E8), Color(0xFFF5F5F5), Color(0xFFE8E8E8)],
+          colors: const [
+            Color(0xFFE8E8E8),
+            Color(0xFFF5F5F5),
+            Color(0xFFE8E8E8),
+          ],
           transform: SlideGradient(_anim.value),
         ),
       ),
@@ -721,11 +786,13 @@ class _SkeletonTarjetaGuardadoState extends State<SkeletonTarjetaGuardado>
                 const SizedBox(height: 6),
                 _s(120, 13),
                 const SizedBox(height: 8),
-                Row(children: [
-                  _s(70, 20, r: BorderRadius.circular(5)),
-                  const SizedBox(width: 5),
-                  _s(80, 20, r: BorderRadius.circular(5)),
-                ]),
+                Row(
+                  children: [
+                    _s(70, 20, r: BorderRadius.circular(5)),
+                    const SizedBox(width: 5),
+                    _s(80, 20, r: BorderRadius.circular(5)),
+                  ],
+                ),
               ],
             ),
           ),

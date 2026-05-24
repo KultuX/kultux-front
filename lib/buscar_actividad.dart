@@ -9,6 +9,8 @@ import 'package:kultux/componentes/tarjeta_busqueda.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
 import 'package:kultux/core/utils/estado_ui.dart';
 
+import 'componentes/barra_carga.dart';
+import 'componentes/modal_alerta.dart';
 import 'componentes/selector_localidad.dart';
 import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/http_error_mapper.dart';
@@ -50,6 +52,8 @@ class _BuscarPageState extends State<BuscarActividadPage> {
   EstadoUi estado = EstadoUi.cargando;
   String mensajeError = '';
 
+  bool _cargandoDetalle = false;
+
   @override
   void initState() {
     super.initState();
@@ -76,7 +80,9 @@ class _BuscarPageState extends State<BuscarActividadPage> {
   }
 
   Future<void> _cargaInicial() async {
-    setState(() {estado = EstadoUi.cargando;});
+    setState(() {
+      estado = EstadoUi.cargando;
+    });
     await Future.microtask(() {});
     await _resetYcargar();
   }
@@ -130,7 +136,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
       case EstadoUi.cargando:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
-                (_, _) => const SkeletonTarjetaBusqueda(),
+            (_, _) => const SkeletonTarjetaBusqueda(),
             childCount: 5,
           ),
         );
@@ -173,10 +179,21 @@ class _BuscarPageState extends State<BuscarActividadPage> {
                     fecha: a.fechaInicio,
                     imagenUrl: a.imagenPrincipal,
                     onTap: () async {
-                      final detalle =
-                          await ActividadesApiService.detalleActividad(a.id);
-                      print(detalle.toString());
-                      widget.onDetalleSeleccionado?.call(detalle);
+                      setState(() => _cargandoDetalle = true);
+                      try {
+                        final detalle =
+                            await ActividadesApiService.detalleActividad(a.id);
+                        widget.onDetalleSeleccionado?.call(detalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        Alerta.show(
+                          context,
+                          mensaje: 'No se han podido cargar los datos.',
+                          tipo: TipoAviso.error,
+                        );
+                      } finally {
+                        setState(() => _cargandoDetalle = false);
+                      }
                     },
                     textoEtiqueta: a.categoriaActividad!,
                     iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
@@ -186,14 +203,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
               }
 
               if (cargando) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: Color.fromARGB(255, 166, 226, 70),
-                    ),
-                  ),
-                );
+                return const SkeletonTarjetaBusqueda();
               }
 
               if (paginaActual >= totalPaginas) {
@@ -259,7 +269,7 @@ class _BuscarPageState extends State<BuscarActividadPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _contenidoConEstado();
+    return BarraCarga(cargando: _cargandoDetalle, child: _contenidoConEstado());
   }
 
   Widget _searchBar() {
@@ -464,6 +474,18 @@ class _BuscarPageState extends State<BuscarActividadPage> {
     return GestureDetector(
       onTap: () async {
         final picked = await showDatePicker(
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: Color.fromARGB(255, 166, 226, 70),
+                  onPrimary: Colors.black,
+                  onSurface: Colors.black,
+                ),
+              ),
+              child: child!,
+            );
+          },
           context: context,
           firstDate: DateTime.now(),
           lastDate: DateTime(2030),
