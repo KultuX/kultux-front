@@ -457,7 +457,7 @@ class _TarjetaPrincipal extends StatelessWidget {
                         placeholder: (_, __) => Container(
                           color: const Color(0xFFE8E5DF),
                           alignment: Alignment.center,
-                          child: const CircularProgressIndicator(),
+                          child: const CircularProgressIndicator(color:Color.fromARGB(255, 166, 226, 70) ),
                         ),
                         errorWidget: (_, __, ___) => Container(
                           color: const Color(0xFFE8E5DF),
@@ -872,7 +872,7 @@ class _BotonGuardarState extends State<_BotonGuardar> {
                 padding: EdgeInsets.all(9),
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: Color.fromARGB(255, 166, 226, 70)
                 ),
               )
             : Icon(icono, color: color, size: 18),

@@ -151,12 +151,11 @@ class TarjetaGuardado extends StatelessWidget {
                           fondo: const Color(0xFFF0F0F0),
                           color: _textoSuave,
                         ),
-                      if (fecha != null )
+                      if (fecha != null)
                         _Chip(
                           icono: Icons.calendar_today_outlined,
-                          texto: formatearFecha(
-                            '${formatearFecha(fecha)}${fechaFin != null && fechaFin!.isNotEmpty ? ' - ${formatearFecha(fechaFin)}' : ''}',
-                          ),
+                          texto:
+                              '${formatearFecha(fecha!)}${fechaFin != null && fechaFin!.isNotEmpty ? ' - ${formatearFecha(fechaFin!)}' : ''}',
                           fondo: const Color(0xFFEAF3DE),
                           color: const Color(0xFF3B6D11),
                         ),

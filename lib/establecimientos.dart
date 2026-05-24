@@ -13,6 +13,7 @@ import 'package:kultux/core/utils/estados_widgets.dart';
 import 'package:kultux/componentes/modal_alerta.dart';
 import 'package:kultux/api/establecimientos.dart';
 
+import 'componentes/barra_carga.dart';
 import 'componentes/cabecera.dart';
 import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/iconos.dart';
@@ -62,6 +63,8 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
   bool _hayMasAlojamientos = true;
   bool _cargandoMasAlojamientos = false;
   final ScrollController _scrollAlojamientos = ScrollController();
+
+  bool _cargandoDetalle = false;
 
   @override
   void initState() {
@@ -250,54 +253,57 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      switchInCurve: Curves.easeInOutCubic,
-      switchOutCurve: Curves.easeInOutCubic,
-      transitionBuilder: (child, animation) => SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.05, 0.0),
-          end: Offset.zero,
-        ).animate(animation),
-        child: FadeTransition(opacity: animation, child: child),
-      ),
-      child: _mostrandoListadoRestaurantes
-          ? KeyedSubtree(
-              key: const ValueKey('lista_restaurantes'),
-              child: _buildListadoRestaurantes(),
-            )
-          : _mostrandoListadoAlojamientos
-          ? KeyedSubtree(
-              key: const ValueKey('lista_alojamientos'),
-              child: _buildListadoAlojamientos(),
-            )
-          : KeyedSubtree(
-              key: const ValueKey('resumen'),
-              child: Column(
-                children: [
-                  CabeceraPagina(
-                    titulo: 'Descubre',
-                    subtitulo: 'Establecimientos',
-                  ),
-                  Expanded(
-                    child: switch (_estadoResumen) {
-                      EstadoUi.cargando => _buildResumen(),
-                      EstadoUi.error => estadoError(
-                        icon: Icons.error_outline,
-                        mensaje: _mensajeErrorResumen,
-                        onRetry: _cargarResumen,
-                      ),
-                      EstadoUi.sinConexion => estadoError(
-                        icon: Icons.wifi_off,
-                        mensaje: _mensajeErrorResumen,
-                        onRetry: _cargarResumen,
-                      ),
-                      _ => _buildResumen(),
-                    },
-                  ),
-                ],
+    return BarraCarga(
+      cargando: _cargandoDetalle,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOutCubic,
+        switchOutCurve: Curves.easeInOutCubic,
+        transitionBuilder: (child, animation) => SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.05, 0.0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: FadeTransition(opacity: animation, child: child),
+        ),
+        child: _mostrandoListadoRestaurantes
+            ? KeyedSubtree(
+                key: const ValueKey('lista_restaurantes'),
+                child: _buildListadoRestaurantes(),
+              )
+            : _mostrandoListadoAlojamientos
+            ? KeyedSubtree(
+                key: const ValueKey('lista_alojamientos'),
+                child: _buildListadoAlojamientos(),
+              )
+            : KeyedSubtree(
+                key: const ValueKey('resumen'),
+                child: Column(
+                  children: [
+                    CabeceraPagina(
+                      titulo: 'Descubre',
+                      subtitulo: 'Establecimientos',
+                    ),
+                    Expanded(
+                      child: switch (_estadoResumen) {
+                        EstadoUi.cargando => _buildResumen(),
+                        EstadoUi.error => estadoError(
+                          icon: Icons.error_outline,
+                          mensaje: _mensajeErrorResumen,
+                          onRetry: _cargarResumen,
+                        ),
+                        EstadoUi.sinConexion => estadoError(
+                          icon: Icons.wifi_off,
+                          mensaje: _mensajeErrorResumen,
+                          onRetry: _cargarResumen,
+                        ),
+                        _ => _buildResumen(),
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 
@@ -320,10 +326,12 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                             imagenUrl: r.imagenPrincipal!,
                             onTap: () async {
                               try {
+                                setState(() => _cargandoDetalle = true);
                                 final detalle =
                                     await RestauranteApiService.restauranteDetalle(
                                       r.id,
                                     );
+                                setState(() => _cargandoDetalle = false);
                                 widget.onDetalleSeleccionado(detalle);
                               } catch (e) {
                                 if (!context.mounted) return;
@@ -333,6 +341,10 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                                       'No se ha podido cargar correctamente el restaurante.',
                                   tipo: TipoAviso.error,
                                 );
+                              } finally {
+                                setState(() {
+                                  _cargandoDetalle = false;
+                                });
                               }
                             },
                           ),
@@ -350,10 +362,12 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                             imagenUrl: a.imagenPrincipal!,
                             onTap: () async {
                               try {
+                                setState(() => _cargandoDetalle = true);
                                 final detalle =
                                     await AlojamientoApiService.obtenerAlojamientoDetalle(
                                       a.id,
                                     );
+                                setState(() => _cargandoDetalle = false);
                                 widget.onDetalleSeleccionado(detalle);
                               } catch (e) {
                                 if (!context.mounted) return;
@@ -363,6 +377,10 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                                       'No se ha podido cargar correctamente el restaurante.',
                                   tipo: TipoAviso.error,
                                 );
+                              } finally {
+                                setState(() {
+                                  _cargandoDetalle = false;
+                                });
                               }
                             },
                           ),
@@ -433,10 +451,12 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                     ),
                     onTap: () async {
                       try {
+                        setState(() => _cargandoDetalle = true);
                         final detalle =
                             await RestauranteApiService.restauranteDetalle(
                               r.id,
                             );
+                        setState(() => _cargandoDetalle = false);
                         widget.onDetalleSeleccionado(detalle);
                       } catch (e) {
                         if (!context.mounted) return;
@@ -446,6 +466,10 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                               'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
                           tipo: TipoAviso.error,
                         );
+                      } finally {
+                        setState(() {
+                          _cargandoDetalle = false;
+                        });
                       }
                     },
                     horario: r.horario!,
@@ -515,10 +539,12 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                     ),
                     onTap: () async {
                       try {
+                        setState(() => _cargandoDetalle = true);
                         final detalle =
                             await AlojamientoApiService.obtenerAlojamientoDetalle(
                               a.id,
                             );
+                        setState(() => _cargandoDetalle = false);
                         widget.onDetalleSeleccionado(detalle);
                       } catch (e) {
                         if (!context.mounted) return;
@@ -528,6 +554,10 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
                               'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
                           tipo: TipoAviso.error,
                         );
+                      } finally {
+                        setState(() {
+                          _cargandoDetalle = false;
+                        });
                       }
                     },
                     localidad: a.localidad,
@@ -546,7 +576,6 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
     required List<_ItemEstablecimiento> items,
     required VoidCallback onVerMas,
   }) {
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -618,9 +647,7 @@ class _EstablecimientosPageState extends State<EstablecimientosPage> {
           else if (items.isEmpty)
             SizedBox(
               height: 120,
-              child: Center(
-                child: Text('No hay destacados disponibles ...'),
-              ),
+              child: Center(child: Text('No hay destacados disponibles ...')),
             )
           else
             GridView.builder(
@@ -760,9 +787,10 @@ class _SkeletonMiniTarjetaState extends State<SkeletonMiniTarjeta>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat();
-    _anim = Tween<double>(begin: -1, end: 2).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: -1,
+      end: 2,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -781,7 +809,11 @@ class _SkeletonMiniTarjetaState extends State<SkeletonMiniTarjeta>
           borderRadius: radius ?? BorderRadius.circular(4),
           gradient: LinearGradient(
             stops: const [0.0, 0.5, 1.0],
-            colors: const [Color(0xFFE8E8E8), Color(0xFFF5F5F5), Color(0xFFE8E8E8)],
+            colors: const [
+              Color(0xFFE8E8E8),
+              Color(0xFFF5F5F5),
+              Color(0xFFE8E8E8),
+            ],
             transform: SlideGradient(_anim.value),
           ),
         ),
@@ -799,7 +831,11 @@ class _SkeletonMiniTarjetaState extends State<SkeletonMiniTarjeta>
           child: _shimmer(radius: BorderRadius.circular(12)),
         ),
         const SizedBox(height: 5),
-        _shimmer(width: double.infinity, height: 20, radius: BorderRadius.circular(6)),
+        _shimmer(
+          width: double.infinity,
+          height: 20,
+          radius: BorderRadius.circular(6),
+        ),
       ],
     );
   }

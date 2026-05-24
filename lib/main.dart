@@ -30,6 +30,7 @@ import 'package:kultux/componentes/modal_alerta.dart';
 
 import 'package:kultux/guardados.dart' show GuardadosTab, GuardadosPage;
 
+import 'componentes/barra_carga.dart';
 import 'componentes/skeleton_tarjeta.dart';
 import 'componentes/tarjeta_busqueda.dart';
 import 'core/utils/contenedor_web.dart';
@@ -66,8 +67,12 @@ class MyHomePage extends StatefulWidget {
   final List<Actividad>? actividadesIniciales;
   final int? totalPaginas;
   final Usuario? usuarioInicial;
-  const MyHomePage({super.key, this.actividadesIniciales, this.totalPaginas, this.usuarioInicial});
-
+  const MyHomePage({
+    super.key,
+    this.actividadesIniciales,
+    this.totalPaginas,
+    this.usuarioInicial,
+  });
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -110,6 +115,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   late final EstablecimientosPage _establecimientosPage;
 
+  bool _cargandoDetalleInicio = false;
+
   @override
   void initState() {
     super.initState();
@@ -141,13 +148,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Future<void> _cargarActividades({bool inicial = false}) async {
     if (_cargando) return;
-
-    if (inicial) {
-      setState(() {
-        _cargando = true;
+    // _cargando = true;
+    setState(() {
+      _cargando = true;
+      if (inicial) {
         estadoInicio = EstadoUi.cargando;
-      });
-    }
+      }
+    });
 
     try {
       final page = await ActividadesApiService.obtenerActividadesInicio(
@@ -158,7 +165,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         _actividades.addAll(page.contenido);
         _totalPaginas = page.totalPaginas;
         _paginaActual++;
-
         if (_actividades.isEmpty) {
           estadoInicio = EstadoUi.vacio;
         } else {
@@ -180,6 +186,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     } catch (_) {
       setState(() {
         estadoInicio = EstadoUi.error;
+        mensajeErrorInicio = 'Error inesperado';
         mensajeErrorInicio = 'Error inesperado';
       });
     } finally {
@@ -234,10 +241,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     setState(() {
       _mostrandoDetalleInicio = false;
       _actividadDetalleSeleccionada = null;
-    //  _actividades.clear();
+      _actividades.clear();
       _paginaActual = 0;
     });
-   // _cargarActividades();
+    _cargarActividades();
   }
 
   void _abrirDetalleEstablecimiento(dynamic objeto) {
@@ -492,75 +499,71 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       child: Center(
         child: Stack(
           children: [
-        RefreshIndicator(
-        color: const Color.fromARGB(255, 166, 226, 70),
-        onRefresh: () async {
-          setState(() {
-            _actividades.clear();
-            _paginaActual = 0;
-            _totalPaginas = 1;
-          });
+            RefreshIndicator(
+              color: const Color.fromARGB(255, 166, 226, 70),
+              onRefresh: () async {
+                setState(() {
+                  _actividades.clear();
+                  _paginaActual = 0;
+                  _totalPaginas = 1;
+                });
 
-          await _cargarActividades(inicial: true);
-        },
-        child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-              itemCount: _actividades.length + 1,
-              itemBuilder: (context, index) {
-                if (index < _actividades.length) {
-                  final actividad = _actividades[index];
-                  return Padding(
-                      padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                    child: TarjetaBusqueda.actividad(
-                      titulo: actividad.titulo,
-                      localidad: actividad.localidad!,
-                      fecha: actividad.fechaInicio,
-                      imagenUrl: actividad.imagenPrincipal,
-                      onTap: () async {
-                        final detalle =
-                            await ActividadesApiService.detalleActividad(
-                              actividad.id,
-                            );
-                        _abrirDetalleActividad(detalle);
-                      },
-                      textoEtiqueta: actividad.categoriaActividad!,
-                      iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
-                      fechaFin: actividad.fechaFin
-                    ),
-                  );
-                }
-
-                if (_cargando) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Color.fromARGB(255, 166, 226, 70),
-                      ),
-                    ),
-                  );
-                }
-
-                if (_paginaActual >= _totalPaginas) {
-                  return const Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Center(
-                      child: Text(
-                        "¡Ya no hay más actividades para mostrar!",
-                        style: TextStyle(color: Colors.grey),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  );
-                }
-
-                return const SizedBox.shrink();
+                await _cargarActividades(inicial: true);
               },
-            )),
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+                itemCount: _actividades.length + 1,
+                itemBuilder: (context, index) {
+                  if (index < _actividades.length) {
+                    final actividad = _actividades[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: TarjetaBusqueda.actividad(
+                        titulo: actividad.titulo,
+                        localidad: actividad.localidad!,
+                        fecha: actividad.fechaInicio,
+                        imagenUrl: actividad.imagenPrincipal,
+                        onTap: () async {
+                          setState(() => _cargandoDetalleInicio = true);
+                          final detalle =
+                              await ActividadesApiService.detalleActividad(
+                                actividad.id,
+                              );
+                          setState(() => _cargandoDetalleInicio = false);
+                          _abrirDetalleActividad(detalle);
+                        },
+                        textoEtiqueta: actividad.categoriaActividad!,
+                        iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+                        fechaFin: actividad.fechaFin,
+                      ),
+                    );
+                  }
+
+                  if (_cargando) {
+                    return const SkeletonTarjetaBusqueda();
+                  }
+
+                  if (_paginaActual >= _totalPaginas) {
+                    return const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Center(
+                        child: Text(
+                          "¡Ya no hay más actividades para mostrar!",
+                          style: TextStyle(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
             Positioned(
               bottom: 16,
               right: 16,
@@ -920,42 +923,45 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ],
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CabeceraPagina(
-          titulo: 'Actividades recientes',
-          subtitulo: 'Inicio',
-          mostrarFecha: true,
-          mostrarEtiquetaHoy: true,
-        ),
+    return BarraCarga(
+      cargando: _cargandoDetalleInicio,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CabeceraPagina(
+            titulo: 'Actividades recientes',
+            subtitulo: 'Inicio',
+            mostrarFecha: true,
+            mostrarEtiquetaHoy: true,
+          ),
 
-        switch (estadoInicio) {
-          EstadoUi.cargando => Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-              itemCount: 4,
-              itemBuilder: (_, _) => const SkeletonTarjetaBusqueda(),
+          switch (estadoInicio) {
+            EstadoUi.cargando => Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+                itemCount: 4,
+                itemBuilder: (_, _) => const SkeletonTarjetaBusqueda(),
+              ),
             ),
-          ),
-          EstadoUi.vacio => Expanded(child: estadoVacio()),
-          EstadoUi.sinConexion => Expanded(
-            child: estadoError(
-              icon: Icons.wifi_off,
-              mensaje: mensajeErrorInicio,
-              onRetry: _cargarActividades,
+            EstadoUi.vacio => Expanded(child: estadoVacio()),
+            EstadoUi.sinConexion => Expanded(
+              child: estadoError(
+                icon: Icons.wifi_off,
+                mensaje: mensajeErrorInicio,
+                onRetry: _cargarActividades,
+              ),
             ),
-          ),
-          EstadoUi.error => Expanded(
-            child: estadoError(
-              icon: Icons.error_outline,
-              mensaje: mensajeErrorInicio,
-              onRetry: _cargarActividades,
+            EstadoUi.error => Expanded(
+              child: estadoError(
+                icon: Icons.error_outline,
+                mensaje: mensajeErrorInicio,
+                onRetry: _cargarActividades,
+              ),
             ),
-          ),
-          EstadoUi.contenido => _contenidoInicio(),
-        },
-      ],
+            EstadoUi.contenido => _contenidoInicio(),
+          },
+        ],
+      ),
     );
   }
 
@@ -1036,25 +1042,33 @@ class _SplashPageState extends State<SplashPage> {
 
   Future<void> _cargarDatosInicio() async {
     try {
-      final results = await Future.wait([
-        ActividadesApiService.obtenerActividadesInicio(0),
-        LocalidadApiService.obtenerLocalidadNombres(),
-        LocalidadApiService.obtenerLocalidadesMapa(),
-        ActividadesApiService.categoriasActividad(),
-        RestauranteApiService.categoriasRestaurantes(),
-        AlojamientoApiService.categoriaAlojamientos(),
-        UsuarioRepository.cargar(),
-        _precargarGeoJson(),
-      ]);
+      final results = await Future.wait(
+        [
+          ActividadesApiService.obtenerActividadesInicio(0),
+          LocalidadApiService.obtenerLocalidadNombres(),
+          LocalidadApiService.obtenerLocalidadesMapa(),
+          ActividadesApiService.categoriasActividad(),
+          RestauranteApiService.categoriasRestaurantes(),
+          AlojamientoApiService.categoriaAlojamientos(),
+          UsuarioRepository.cargar(),
+          _precargarGeoJson(),
+        ],
+        eagerError: false,
+      ); // Evitamos que se paralicen el resto de cargas en caso de que falle al guna de estas peticiones
 
       final page = results[0] as Pages<Actividad>;
       final usuarioGuardado = results[6] as Usuario?;
 
       await Future.wait(
-        page.contenido.take(5)
+        page.contenido
+            .take(5)
             .where((a) => a.imagenPrincipal != null)
-            .map((a) => precacheImage(NetworkImage(a.imagenPrincipal!), context)
-            .catchError((_) {})),
+            .map(
+              (a) => precacheImage(
+                NetworkImage(a.imagenPrincipal!),
+                context,
+              ).catchError((_) {}),
+            ),
       );
 
       if (!mounted) return;
@@ -1086,7 +1100,18 @@ class _SplashPageState extends State<SplashPage> {
       color: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [Image.asset("assets/images/imagen_splash.png")],
+        children: [
+          Image.asset("assets/images/imagen_splash.png"),
+          const SizedBox(height: 32),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 50),
+            child: LinearProgressIndicator(
+              minHeight: 3,
+              backgroundColor: Color(0xFFE0DDD6),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFA6E246)),
+            ),
+          ),
+        ],
       ),
     );
   }

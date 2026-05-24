@@ -157,9 +157,9 @@ class TarjetaBusqueda extends StatelessWidget {
                       if (fecha != null)
                         _ChipMeta(
                           icono: Icons.calendar_today_outlined,
-                          texto: formatearFecha(
-                            '${formatearFecha(fecha!)}${fechaFin != null && fechaFin!.isNotEmpty ? ' - ${formatearFecha(fechaFin!)}' : ''}',
-                          ),
+                          texto:
+                              '${formatearFecha(fecha!)}${fechaFin != null && fechaFin!.isNotEmpty ? ' - ${formatearFecha(fechaFin!)}' : ''}',
+
                           fondoColor: const Color(0xFFF0F8E6),
                           textoColor: const Color(0xFF4A7A10),
                         ),

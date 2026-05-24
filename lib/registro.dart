@@ -145,7 +145,7 @@ class _RegistroPageState extends State<RegistroPage> {
         }),
       );
       return true;
-    } catch (_, e) {
+    } catch (e) {
       final errorStr = e.toString();
 
       if (errorStr.contains('409')) {

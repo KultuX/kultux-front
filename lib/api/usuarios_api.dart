@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:kultux/models/usuario.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:kultux/core/utils/api_url.dart';
 
 class UsuarioApiService {
@@ -40,7 +39,7 @@ class UsuarioApiService {
       body: jsonEncode(userRegistro.toJsonRegistro()),
     );
 
-    print(jsonEncode(userRegistro.toJsonRegistro()));
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       return userRegistro.email;
     } else {
@@ -64,7 +63,7 @@ class UsuarioApiService {
       http.MultipartFile.fromString(
         'datos',
         jsonEncode(datos),
-        contentType: MediaType('application', 'json'),
+        contentType: http.MediaType('application', 'json'),
       ),
     );
 

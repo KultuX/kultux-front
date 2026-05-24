@@ -10,9 +10,11 @@ import 'package:kultux/API/actividades_api.dart';
 import 'package:kultux/componentes/tarjetas.dart';
 import 'package:kultux/detalles.dart';
 
+import 'componentes/barra_carga.dart';
 import 'componentes/cabecera.dart';
 import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/contenedor_web.dart';
+import 'core/utils/estados_widgets.dart';
 
 class PuntoMapa {
   final int ine;
@@ -56,7 +58,6 @@ class _MapasPageState extends State<MapasPage> {
 
   Future<void> _cargarDatos() async {
     try {
-
       final localidades = await LocalidadApiService.obtenerLocalidadesMapa();
       final ines = localidades.map((l) => l.ine).toList();
       final totales = await ActividadesApiService.actividadesTotalMapa(
@@ -68,13 +69,22 @@ class _MapasPageState extends State<MapasPage> {
       };
 
       final puntos = localidades
-          .where((l) => l.lat != null && l.lon != null && totalMap[l.ine] != null && totalMap[l.ine]! > 0)
-          .map((l) => PuntoMapa(
-        ine: l.ine,
-        nombre: l.nombre,
-        coordenadas: LatLng(l.lat!, l.lon!),
-        totalActividades: totalMap[l.ine]!,
-      )).toList();
+          .where(
+            (l) =>
+                l.lat != null &&
+                l.lon != null &&
+                totalMap[l.ine] != null &&
+                totalMap[l.ine]! > 0,
+          )
+          .map(
+            (l) => PuntoMapa(
+              ine: l.ine,
+              nombre: l.nombre,
+              coordenadas: LatLng(l.lat!, l.lon!),
+              totalActividades: totalMap[l.ine]!,
+            ),
+          )
+          .toList();
 
       if (mounted)
         setState(() {
@@ -108,7 +118,7 @@ class _MapasPageState extends State<MapasPage> {
   List<List<LatLng>> _extremadura = [];
 
   Future<void> _cargarExtremadura() async {
-    if(_extremaduraCache != null){
+    if (_extremaduraCache != null) {
       setState(() {
         _extremadura = _extremaduraCache!;
       });
@@ -132,10 +142,10 @@ class _MapasPageState extends State<MapasPage> {
       }).toList();
     }).toList();
     _extremaduraCache = result;
-  if(mounted)
-    setState(() {
-      _extremadura = result;
-    });
+    if (mounted)
+      setState(() {
+        _extremadura = result;
+      });
   }
 
   void _resetMapa() {
@@ -162,7 +172,7 @@ class _MapasPageState extends State<MapasPage> {
             initialCenter: const LatLng(39.2, -6.15),
             initialZoom: 7.75,
             minZoom: 7.5,
-            maxZoom: 13.0,
+            maxZoom: 12.0,
             onPositionChanged: (position, hasGesture) {
               if (!hasGesture) return;
 
@@ -180,6 +190,9 @@ class _MapasPageState extends State<MapasPage> {
               userAgentPackageName: 'com.kultux.kultux',
               keepBuffer: 5,
               panBuffer: 2,
+              maxNativeZoom: 18,
+              tileSize: 256,
+              evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             ),
             if (_extremadura.isNotEmpty)
               PolygonLayer(
@@ -262,7 +275,21 @@ class _MapasPageState extends State<MapasPage> {
             child: CircularProgressIndicator(color: Color(0xFFA8D63F)),
           ),
 
-        if (_errorMapa != null) Center(child: Text('Error al cargar mapa')),
+        if (_errorMapa != null)
+          Container(
+            color: Colors.white,
+            child: estadoError(
+              icon: Icons.wifi_off,
+              mensaje: 'No hay conexión a internet',
+              onRetry: () {
+                setState(() {
+                  _errorMapa = null;
+                  _cargandoMapa = true;
+                });
+                _cargarDatos();
+              },
+            ),
+          ),
 
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
@@ -277,39 +304,41 @@ class _MapasPageState extends State<MapasPage> {
           ),
           child: _actividadSeleccionada != null
               ? ContenedorWeb(
-            key: const ValueKey('detalle_mapa'),
-            child: Column(
-              children: [
-                CabeceraPagina(
-                  titulo: _localidadSeleccionada!.nombre,
-                  subtitulo: 'Detalle',
-                  onVolver: _volverALista,
-                ),
-                Expanded(
-                  child: Detalle.desdeObjeto(objeto: _actividadSeleccionada!),
-                ),
-              ],
-            ),
-          )
+                  key: const ValueKey('detalle_mapa'),
+                  child: Column(
+                    children: [
+                      CabeceraPagina(
+                        titulo: _localidadSeleccionada!.nombre,
+                        subtitulo: 'Detalle',
+                        onVolver: _volverALista,
+                      ),
+                      Expanded(
+                        child: Detalle.desdeObjeto(
+                          objeto: _actividadSeleccionada!,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               : _localidadSeleccionada != null
               ? ContenedorWeb(
-            key: const ValueKey('lista_mapa'),
-            child: Column(
-              children: [
-                CabeceraPagina(
-                  titulo: _localidadSeleccionada!.nombre,
-                  subtitulo: 'Actividades en',
-                  onVolver: _volverAlMapa,
-                ),
-                Expanded(
-                  child: _ListaActividades(
-                    punto: _localidadSeleccionada!,
-                    onDetalle: _abrirDetalle,
+                  key: const ValueKey('lista_mapa'),
+                  child: Column(
+                    children: [
+                      CabeceraPagina(
+                        titulo: _localidadSeleccionada!.nombre,
+                        subtitulo: 'Actividades en',
+                        onVolver: _volverAlMapa,
+                      ),
+                      Expanded(
+                        child: _ListaActividades(
+                          punto: _localidadSeleccionada!,
+                          onDetalle: _abrirDetalle,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          )
+                )
               : const SizedBox.shrink(key: ValueKey('vacio_mapa')),
         ),
       ],
@@ -333,6 +362,7 @@ class _ListaActividadesState extends State<_ListaActividades> {
   int _pagina = 0;
   bool _cargando = false;
   bool _hayMas = true;
+  bool _cargandoDetalle = false;
 
   @override
   void initState() {
@@ -384,30 +414,42 @@ class _ListaActividadesState extends State<_ListaActividades> {
     if (_actividades.isEmpty) {
       return const Center(child: Text('No hay actividades disponibles'));
     }
-    return ListView.separated(
-      controller: _scroll,
-      padding: const EdgeInsets.all(16),
-      itemCount: _actividades.length + (_hayMas ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, i) {
-        if (i == _actividades.length) {
-          return const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: SkeletonTarjetaBusqueda(),
+    return BarraCarga(
+      cargando: _cargandoDetalle,
+      child: ListView.separated(
+        controller: _scroll,
+        padding: const EdgeInsets.all(16),
+        itemCount: _actividades.length + (_hayMas ? 1 : 0),
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, i) {
+          if (i == _actividades.length) {
+            return const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: SkeletonTarjetaBusqueda(),
+            );
+          }
+          final a = _actividades[i];
+          return Tarjeta.actividades(
+            titulo: a.titulo,
+            localidad: a.localidad ?? '',
+            fecha: a.fechaInicio,
+            imagenUrl: a.imagenPrincipal,
+            onTap: () async {
+              setState(() => _cargandoDetalle = true);
+              try {
+                final detalle = await ActividadesApiService.detalleActividad(
+                  a.id,
+                );
+                widget.onDetalle(detalle);
+              } catch (e) {
+                if (!context.mounted) return;
+              } finally {
+                setState(() => _cargandoDetalle = false);
+              }
+            },
           );
-        }
-        final a = _actividades[i];
-        return Tarjeta.actividades(
-          titulo: a.titulo,
-          localidad: a.localidad ?? '',
-          fecha: a.fechaInicio,
-          imagenUrl: a.imagenPrincipal,
-          onTap: () async {
-            final detalle = await ActividadesApiService.detalleActividad(a.id);
-            widget.onDetalle(detalle);
-          },
-        );
-      },
+        },
+      ),
     );
   }
 }

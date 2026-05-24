@@ -9,6 +9,8 @@ import 'package:kultux/componentes/tarjeta_busqueda.dart';
 import 'package:kultux/componentes/scroll_boton.dart';
 
 import 'package:kultux/core/utils/iconos.dart';
+import 'componentes/barra_carga.dart';
+import 'componentes/modal_alerta.dart';
 import 'componentes/selector_localidad.dart';
 import 'componentes/skeleton_tarjeta.dart';
 import 'core/utils/estado_ui.dart';
@@ -51,6 +53,8 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
   String mensajeError = '';
 
   Key _selectorLocalidadKey = UniqueKey();
+
+  bool _cargandoDetalle = false;
 
   @override
   void initState() {
@@ -128,7 +132,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
 
   @override
   Widget build(BuildContext context) {
-    return _contenidoConEstado();
+    return BarraCarga(cargando: _cargandoDetalle, child: _contenidoConEstado());
   }
 
   Widget _contenidoConEstado() {
@@ -173,7 +177,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
       case EstadoUi.cargando:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
-                (_, _) => const SkeletonTarjetaBusqueda(),
+            (_, _) => const SkeletonTarjetaBusqueda(),
             childCount: 5,
           ),
         );
@@ -235,23 +239,30 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
                     abierto: r.abierto!,
                     localidad: r.localidad,
                     onTap: () async {
-                      final detalle =
-                          await RestauranteApiService.restauranteDetalle(r.id);
-                      widget.onDetalleSeleccionado?.call(detalle);
+                      setState(() => _cargandoDetalle = true);
+                      try {
+                        final detalle =
+                            await RestauranteApiService.restauranteDetalle(
+                              r.id,
+                            );
+                        widget.onDetalleSeleccionado?.call(detalle);
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        Alerta.show(
+                          context,
+                          mensaje: 'No se han podido cargar los datos.',
+                          tipo: TipoAviso.error,
+                        );
+                      } finally {
+                        setState(() => _cargandoDetalle = false);
+                      }
                     },
                   ),
                 );
               }
 
               if (cargando) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: Color.fromARGB(255, 166, 226, 70),
-                    ),
-                  ),
-                );
+                return const SkeletonTarjetaBusqueda();
               }
 
               if (paginaActual >= totalPaginas) {

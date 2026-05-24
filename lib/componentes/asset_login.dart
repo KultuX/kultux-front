@@ -196,7 +196,7 @@ class _AssetLoginState extends State<AssetLogin> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Campo(
+                _campo(
                   child: CamposPersonalizados.normal(
                     titulo: 'Correo electrónico',
                     controller: email,
@@ -205,7 +205,7 @@ class _AssetLoginState extends State<AssetLogin> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _Campo(
+                _campo(
                   child: CamposPersonalizados.password(
                     titulo: 'Contraseña',
                     controller: pass,
@@ -364,6 +364,4 @@ class _AssetLoginState extends State<AssetLogin> {
   }
 }
 
-Widget _Campo({required Widget child}) => Container(
-  child: Padding(padding: const EdgeInsets.all(10), child: child),
-);
+Widget _campo({required Widget child}) => Padding(padding: const EdgeInsets.all(10), child: child);

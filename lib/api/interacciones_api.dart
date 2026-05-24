@@ -112,7 +112,6 @@ class InteraccionesApiService {
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
-    print(url);
     if (response.statusCode == 200) {
       final List<dynamic> lista = jsonDecode(response.body);
       return lista.map((e) => e as int).toList();
@@ -183,14 +182,12 @@ class InteraccionesApiService {
   static Future<List<int>> listarGuardadosAlojamiento({
     required int idUsuario,
   }) async {
-    print(idUsuario);
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/alojamiento/listar_guardados',
       {'idUsuario': idUsuario.toString()},
     );
     final response = await http.get(url, headers: _headers);
-    print(url);
     if (response.statusCode == 200) {
       final List<dynamic> lista = jsonDecode(response.body);
       return lista.map((e) => e as int).toList();
