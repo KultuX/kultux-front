@@ -417,7 +417,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             begin: const Offset(
                               0.05,
                               0.0,
-                            ), // Efecto lateral sutil
+                            ),
                             end: Offset.zero,
                           ).animate(animation),
                           child: FadeTransition(

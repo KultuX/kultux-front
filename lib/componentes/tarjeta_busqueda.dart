@@ -392,7 +392,6 @@ class _HorarioInline extends StatelessWidget {
             ],
           ),
 
-          // Fila 2: días que abre
           if (diasQueAbre.isNotEmpty) ...[
             const SizedBox(height: 6),
             Row(

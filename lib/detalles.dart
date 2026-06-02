@@ -59,6 +59,11 @@ class Detalle extends StatefulWidget {
   final String? logotipoEmpresa;
   final String? categoria;
   final String? iconoEtiqueta;
+  final double? precio;
+  final int? aforoMaximo;
+  final String? horaInicio;
+  final String? horaFin;
+  final String? estado;
 
   const Detalle._({
     super.key,
@@ -83,6 +88,11 @@ class Detalle extends StatefulWidget {
     this.logotipoEmpresa,
     this.categoria,
     this.iconoEtiqueta,
+    this.precio,
+    this.aforoMaximo,
+    this.horaInicio,
+    this.horaFin,
+    this.estado
   });
 
   List<String> get imagenesLista {
@@ -119,6 +129,11 @@ class Detalle extends StatefulWidget {
         logotipoEmpresa: objeto.logotipoEmpresa,
         categoria: objeto.categoriaActividad,
         iconoEtiqueta: 'assets/iconos/actividad_etiquetas.svg',
+        precio: objeto.precio,
+        aforoMaximo: objeto.aforoMaximo,
+        horaInicio: objeto.horaInicio,
+        horaFin: objeto.horaFin,
+        estado: objeto.estado
       );
     }
     if (objeto is Alojamiento) {
@@ -178,6 +193,7 @@ class _DetalleState extends State<Detalle> {
 
   @override
   void didUpdateWidget(covariant Detalle oldWidget) {
+    super.didUpdateWidget(oldWidget);
     if (oldWidget.imagenesLista != widget.imagenesLista) {
       _indiceActual = 0;
       if (_pageController?.hasClients ?? false) {
@@ -255,6 +271,10 @@ class _DetalleState extends State<Detalle> {
                     _indiceActual = index;
                   });
                 },
+                direccion:widget.direccion,
+                horaInicio: widget.horaInicio,
+                horaFin: widget.horaFin,
+                estado: widget.estado
               ),
 
               const SizedBox(height: 16),
@@ -341,7 +361,20 @@ class _DetalleState extends State<Detalle> {
                         },
                       ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
+
+                    if(widget.precio != null)
+                          _FilaInfo(
+                            icono: Icons.euro_symbol_sharp,
+                            label: 'Precio',
+                            valor: widget.precio == 0 ? 'Gratis' : widget.precio.toString(),
+                          ),
+                    if(widget.aforoMaximo != null )
+                      _FilaInfo(
+                        icono: Icons.people_alt_outlined,
+                        label: 'Aforo Máximo',
+                        valor: widget.aforoMaximo == 0 ? 'Sin aforo máximo' : widget.aforoMaximo.toString()
+                      ),
 
                     _BotonCTA(
                       activo: _tieneUrlReserva,
@@ -397,6 +430,10 @@ class _TarjetaPrincipal extends StatelessWidget {
   final String? iconoEtiqueta;
   final PageController pageController;
   final Function(int) onPageChanged;
+  final String? direccion;
+  final String? horaInicio;
+  final String? horaFin;
+  final String? estado;
 
   const _TarjetaPrincipal({
     required this.titulo,
@@ -420,7 +457,11 @@ class _TarjetaPrincipal extends StatelessWidget {
     this.categoria,
     this.iconoEtiqueta,
     required this.pageController,
-    required this.onPageChanged
+    required this.onPageChanged,
+    this.direccion,
+    this.horaInicio,
+    this.horaFin,
+    this.estado
   });
 
   @override
@@ -612,6 +653,24 @@ class _TarjetaPrincipal extends StatelessWidget {
                   ],
                 ),
               ),
+              if(estado != null && estado!.isNotEmpty)
+                Positioned(
+                  top:10,
+                  left:10,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical:6),
+                    decoration: BoxDecoration(
+                      color: estado == 'PROXIMAMENTE' ? Colors.blueAccent : Colors.grey
+                    ),
+                    child: Text(
+                      estado!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white
+                      ),
+                    )
+                  )
+                )
             ],
           ),
 
@@ -659,12 +718,26 @@ class _TarjetaPrincipal extends StatelessWidget {
                     Text(
                       localidad ?? '',
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         color: _KTheme.textoSuave,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8,),
+                Row(
+                    children: [
+                      const Icon(
+                          Icons.near_me,
+                          size:14,
+                          color: Colors.red
+                      ),
+                      const SizedBox(width:6),
+                      Text(
+                          direccion ?? ''
+                      )
+                    ]
                 ),
 
                 if (esActividad &&
@@ -700,6 +773,32 @@ class _TarjetaPrincipal extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if(esActividad && horaInicio != null)...[
+                    const SizedBox(height: 10,),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _KTheme.verde.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: _KTheme.verde.withOpacity(0.3)),
+                      ),
+                      child:Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time, size: 14, color: _KTheme.verde),
+                          const SizedBox(width: 6),
+                          Text(
+                              horaFin != null
+                                  ? '${horaInicio ?? ''} a $horaFin'
+                                  : (horaInicio ?? ''),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _KTheme.texto
+                            )
+                          )
+                          ],
+                      )
+                  )]
                 ],
               ],
             ),

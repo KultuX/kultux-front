@@ -308,6 +308,7 @@ class _BuscarAlojamientoState extends State<BuscarAlojamientoPage> {
           categoria = null;
           localidad = null;
           nombre = "";
+          _selectorLocalidadKey = UniqueKey();
           _searchController.clear();
           _categoriaController?.clear();
           _localidadController?.clear();

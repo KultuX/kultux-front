@@ -21,6 +21,8 @@ class Actividad {
   String? direccion;
   String? nombreEmpresa;
   String? logotipoEmpresa;
+  double? precio;
+  int? aforoMaximo;
 
   Actividad._({
     required this.id,
@@ -42,6 +44,8 @@ class Actividad {
     this.direccion,
     this.nombreEmpresa,
     this.logotipoEmpresa,
+    this.precio,
+    this.aforoMaximo
   });
 
   factory Actividad.inicio(Map<String, dynamic> json) {
@@ -98,6 +102,8 @@ class Actividad {
       direccion: json['direccion'],
       nombreEmpresa: json['nombreEmpresa'],
       logotipoEmpresa: json['logotipoUrl'],
+      precio: json['precio'],
+      aforoMaximo: json['aforoMaximo']
     );
   }
 

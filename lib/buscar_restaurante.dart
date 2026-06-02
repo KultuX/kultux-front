@@ -344,6 +344,7 @@ class _BuscarRestaurantePageState extends State<BuscarRestaurantePage> {
           localidad = null;
           soloAbiertos = null;
           nombre = "";
+          _selectorLocalidadKey = UniqueKey();
           _searchController.clear();
           _localidadController?.clear();
           _categoriaController?.clear();
