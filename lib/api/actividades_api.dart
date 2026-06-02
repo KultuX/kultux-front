@@ -170,12 +170,14 @@ class ActividadesApiService {
   }
 
   static Future<List<ActividadTotal>> actividadesTotalMapa({
-    required List<int> ines,
+    //required List<int> ines,
+    DateTime? fechaInicio,
+    DateTime? fechaFin
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-actividades/mapa/total_actividades',
-      {'ines': ines.map((e) => e.toString()).toList()},
+      {'fechaInicio': fechaInicio, 'fechaFin': fechaFin},
     );
 
     final response = await http.get(
@@ -195,16 +197,20 @@ class ActividadesApiService {
     }
   }
 
-  static Future<Pages<Actividad>> listaActividadesGuardadas({
+  static Future<Pages<Actividad>> listaActividadesMapa({
     required int ine,
     required int page,
+    DateTime? fechaInicio,
+    DateTime? fechaFin
   }) async {
-    final params = <String, String>{'page': page.toString(), 'size': '8'};
+    final params = <String, String>{'page': page.toString(), 'size': '8', 'fechaInicio': fechaInicio.toString(), 'fechaFin': fechaFin.toString() };
+
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-actividades/mapa/lista_actividades/$ine',
       params,
+
     );
 
     final response = await http.get(

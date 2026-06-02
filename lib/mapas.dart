@@ -60,9 +60,7 @@ class _MapasPageState extends State<MapasPage> {
     try {
       final localidades = await LocalidadApiService.obtenerLocalidadesMapa();
       final ines = localidades.map((l) => l.ine).toList();
-      final totales = await ActividadesApiService.actividadesTotalMapa(
-        ines: ines,
-      );
+      final totales = await ActividadesApiService.actividadesTotalMapa();
 
       final Map<int, int> totalMap = {
         for (final t in totales) t.ine!: t.total ?? 0,
@@ -240,7 +238,7 @@ class _MapasPageState extends State<MapasPage> {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: Colors.black,
-                                width: 1, // fino
+                                width: 1,
                               ),
                             ),
                             alignment: Alignment.center,
@@ -384,9 +382,11 @@ class _ListaActividadesState extends State<_ListaActividades> {
     if (_cargando || !_hayMas) return;
     setState(() => _cargando = true);
     try {
-      final page = await ActividadesApiService.listaActividadesGuardadas(
+      final page = await ActividadesApiService.listaActividadesMapa(
         ine: widget.punto.ine,
         page: _pagina,
+        fechaInicio: null, //TODO: Añadir los picker de fechas
+        fechaFin: null
       );
       setState(() {
         _actividades.addAll(page.contenido);
