@@ -1,0 +1,779 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kultux/features/profile/edit_profile_page.dart';
+import 'package:kultux/core/models/user.dart';
+import 'package:kultux/data/api/user_api.dart';
+import 'package:kultux/data/repository/user_repository.dart';
+import 'package:kultux/shared/widget/legal_dialog.dart';
+import 'package:kultux/shared/widget/alert_modal.dart';
+import 'package:kultux/shared/widget/page_header.dart';
+
+const _verde = Color(0xFFA6E246);
+const _fondoPagina = Color(0xFFF1EFE9);
+const _fondoCard = Color(0xFFF8F7F4);
+const _texto = Color(0xFF1A1A1A);
+const _textoSuave = Color(0xFF6B6B6B);
+const _borde = Color(0xFFE0DDD6);
+
+class ProfilePage extends StatefulWidget {
+  final VoidCallback cerrarSesion;
+  final User? usuario;
+  final VoidCallback onVolver;
+
+  const ProfilePage({
+    super.key,
+    required this.cerrarSesion,
+    this.usuario,
+    required this.onVolver,
+  });
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool _editandoPerfil = false;
+
+  final _opciones = {
+    'Editar perfil': ('assets/iconos/editar_perfil.svg', 'ajustes'),
+    'Contacta con nosotros': (
+      'assets/iconos/contactar_nosotros.svg',
+      'soporte',
+    ),
+    'Términos y condiciones': (
+      'assets/iconos/terminos_condiciones.svg',
+      'soporte',
+    ),
+    'Política de privacidad': (
+      'assets/iconos/politica_privacidad.svg',
+      'soporte',
+    ),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: _fondoPagina,
+      child: Column(
+        children: [
+          PageHeader(
+            title: _editandoPerfil ? 'Editar perfil' : 'Perfil',
+            subtitle: 'Mi cuenta',
+            onBack: _editandoPerfil
+                ? () {
+                    setState(() {
+                      _editandoPerfil = false;
+                    });
+                  }
+                : widget.onVolver,
+          ),
+
+          Expanded(child: _buildContenido()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContenido() {
+    if (_editandoPerfil) {
+      return EditProfilePage(
+        onVolver: () {
+          setState(() {
+            _editandoPerfil = false;
+          });
+        },
+        usuario: widget.usuario ?? User.activeUser,
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TarjetaAvatar(),
+          _SeccionLabel('Ajustes'),
+
+          ..._opciones.entries
+              .where((e) => e.value.$2 == 'ajustes')
+              .map(
+                (e) => _OpcionTile(
+                  texto: e.key,
+                  icono: e.value.$1,
+                  onTap: () => _manejarOpcion(e.key),
+                ),
+              ),
+
+          _SeccionLabel('Soporte'),
+
+          ..._opciones.entries
+              .where((e) => e.value.$2 == 'soporte')
+              .map(
+                (e) => _OpcionTile(
+                  texto: e.key,
+                  icono: e.value.$1,
+                  onTap: () => _manejarOpcion(e.key),
+                ),
+              ),
+
+          const SizedBox(height: 20),
+
+          _BotonesAccion(
+            onCerrar: _confirmarCerrarSesion,
+            onEliminar: _confirmarEliminarCuenta,
+          ),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  void _manejarOpcion(String texto) {
+    switch (texto) {
+      case 'Editar perfil':
+        setState(() => _editandoPerfil = true);
+        return;
+      case 'Contacta con nosotros':
+        _mostrarContacto();
+        return;
+      case 'Términos y condiciones':
+        LegalDialog.show(context,isPrivacy: false);
+      //  TerminosCondicionesDialog.mostrar(context);
+        return;
+      case 'Política de privacidad':
+        LegalDialog.show(context, isPrivacy: true);
+       // PrivacyDialog.show(context);
+        return;
+      default:
+        _mostrarProximamente();
+        return;
+    }
+  }
+
+  Widget _TarjetaAvatar() {
+    final usuario = User.activeUser ?? widget.usuario;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      decoration: BoxDecoration(
+        color: _fondoCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _borde),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: _verde, width: 3),
+            ),
+            child: ClipOval(
+              child:
+                  (usuario?.imagenPerfil != null &&
+                      usuario!.imagenPerfil!.isNotEmpty)
+                  ? Image.network(usuario.imagenPerfil!, fit: BoxFit.cover)
+                  : Image.asset(
+                      'assets/images/logo_registro.png',
+                      fit: BoxFit.cover,
+                    ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            usuario?.nombre ?? 'Nombre usuario',
+            style: const TextStyle(
+              fontFamily: 'RobotoCondensed',
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _texto,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            usuario?.email ?? 'correo@correo.com',
+            style: const TextStyle(
+              fontFamily: 'RobotoCondensed',
+              fontSize: 13,
+              color: _textoSuave,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _SeccionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 14, 16, 6),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          fontFamily: 'RobotoCondensed',
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: _textoSuave,
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+
+  Widget _OpcionTile({
+    required String texto,
+    required String icono,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: _fondoCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _borde),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: _texto,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  icono,
+                  width: 16,
+                  height: 16,
+                  colorFilter: const ColorFilter.mode(_verde, BlendMode.srcIn),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                texto,
+                style: const TextStyle(
+                  fontFamily: 'RobotoCondensed',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _texto,
+                ),
+              ),
+            ),
+            SvgPicture.asset(
+              'assets/iconos/flecha_siguiente.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(_textoSuave, BlendMode.srcIn),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _BotonesAccion({
+    required VoidCallback onCerrar,
+    required VoidCallback onEliminar,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: onCerrar,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: _verde,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Cerrar sesión',
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onTap: onEliminar,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0xFFC62828),
+                    width: 1.5,
+                  ),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Eliminar cuenta',
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFC62828),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _mostrarContacto() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          // El insetPadding evita que se pegue a los bordes de la pantalla
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 40,
+          ),
+          child: SizedBox(
+            width:
+                360, // Forzamos el ancho exacto de una pantalla móvil estándar
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 20,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(255, 166, 226, 70),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      SvgPicture.asset(
+                        "assets/iconos/contactar_nosotros.svg",
+                        width: 24,
+                        height: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Contacta con nosotros',
+                          style: TextStyle(
+                            fontFamily: 'RobotoCondensed',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close, color: Colors.black),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Si tienes cualquier duda o sugerencia, pueden contactarnos en los siguientes correos electrónicos:',
+                        style: TextStyle(
+                          fontFamily: 'RobotoCondensed',
+                          fontSize: 13,
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'RobotoCondensed',
+                            color: Colors.black,
+                            fontSize: 14,
+                          ),
+                          children: [
+                            TextSpan(text: '1: '),
+                            TextSpan(
+                              text: 'smmoninog01@iesalbarregas.es',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontFamily: 'RobotoCondensed',
+                            color: Colors.black,
+                            fontSize: 14,
+                          ),
+                          children: [
+                            TextSpan(text: '2: '),
+                            TextSpan(
+                              text: 'cmaciasi01@iesalbarregas.es',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          166,
+                          226,
+                          70,
+                        ),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Cerrar',
+                        style: TextStyle(
+                          fontFamily: 'RobotoCondensed',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmarCerrarSesion() async {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: _fondoCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: _borde),
+          ),
+          child: SizedBox(
+            width: 360, // Encapsulamos el ancho aquí también
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.logout, size: 50, color: _verde),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Cerrar sesión',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '¿Estás segur@ de que quieres cerrar sesión?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 13,
+                      color: _textoSuave,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              border: Border.all(color: _borde),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _texto,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            widget.cerrarSesion();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _verde,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Cerrar sesión',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _mostrarProximamente() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color.fromARGB(255, 166, 226, 70),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.construction, size: 60, color: Colors.black),
+              const SizedBox(height: 20),
+              const Text(
+                'Próximamente',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const CircularProgressIndicator(color: Colors.white),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Cerrar',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmarEliminarCuenta() async {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: _fondoCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: Color(0xFFC62828)),
+          ),
+          child: SizedBox(
+            width: 360, // Mismo límite de ancho móvil
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.delete_forever,
+                    size: 50,
+                    color: Color(0xFFC62828),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Eliminar cuenta',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _texto,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Esta acción no se puede deshacer. Se eliminarán todos tus datos.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'RobotoCondensed',
+                      fontSize: 13,
+                      color: _textoSuave,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              border: Border.all(color: _borde),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _texto,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            Navigator.of(context).pop();
+                            await _eliminarCuenta();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC62828),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Eliminar',
+                                style: TextStyle(
+                                  fontFamily: 'RobotoCondensed',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _eliminarCuenta() async {
+    try {
+      await UserApiService.deleteUser(User.activeUser!.id!);
+      await UserRepository.closeSession();
+
+      if (!mounted) return;
+      widget.cerrarSesion();
+      AlertModal.show(
+        context,
+        message: 'Cuenta eliminada correctamente.',
+        type: AlertTipe.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AlertModal.show(
+        context,
+        message: 'Error al eliminar la cuenta',
+        type: AlertTipe.error,
+      );
+    }
+  }
+}

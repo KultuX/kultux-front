@@ -86,6 +86,7 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/assets/
+    - assets/legal/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

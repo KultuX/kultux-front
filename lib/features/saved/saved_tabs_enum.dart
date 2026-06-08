@@ -1,0 +1,1 @@
+enum SavedTabs { activities, restaurants, accommodations }

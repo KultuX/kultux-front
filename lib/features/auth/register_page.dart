@@ -1,0 +1,632 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/gestures.dart';
+import 'package:kultux/shared/widget/legal_dialog.dart';
+import 'package:kultux/shared/widget/locality_selector.dart';
+import 'package:kultux/shared/widget/text_fields.dart';
+import 'package:kultux/core/models/location.dart';
+import 'package:kultux/data/api/location_api.dart';
+import 'package:kultux/data/api/user_api.dart';
+import 'package:kultux/core/models/user.dart';
+import 'package:kultux/shared/widget/alert_modal.dart';
+import 'package:kultux/core/utils/validations.dart';
+
+import 'package:kultux/shared/widget/page_header.dart';
+import 'package:kultux/core/utils/web_container.dart';
+
+const _verde = Color(0xFFA6E246);
+const _fondoPagina = Color(0xFFF1EFE9);
+const _fondoCard = Color(0xFFF8F7F4);
+const _texto = Color(0xFF1A1A1A);
+const _textoSuave = Color(0xFF6B6B6B);
+const _borde = Color(0xFFE0DDD6);
+
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  bool _checkedTerminos = false;
+  bool _checkedPolitica = false;
+  String? email;
+  Location? _localidadSeleccionada;
+
+  static Map<String, TextEditingController>? controllers;
+
+  late Future<List<Location>> futureLocations;
+
+  String _emailActual = '';
+  String? _emailErrorApi;
+  bool _emailValido = true;
+
+  String _passwordActual = '';
+  bool _passwordValida = true;
+
+  String _password2Actual = '';
+  bool _passwordsCoinciden = true;
+
+  String _fechaNacimiento = '';
+
+  @override
+  void initState() {
+    super.initState();
+    futureLocations = LocationApiService.locationsNames();
+    controllers = {
+      'nombre': TextEditingController(),
+      'apellidos': TextEditingController(),
+      'email': TextEditingController(),
+      'password': TextEditingController(),
+      'password2': TextEditingController(),
+      'fechaNacimiento': TextEditingController(),
+    };
+  }
+
+  Future<bool> registerUser() async {
+    if (!_checkedTerminos || !_checkedPolitica) {
+      AlertModal.show(
+        context,
+        message: 'Debes aceptar los Términos y la Política de privacidad.',
+        type: AlertTipe.warning,
+      );
+      return false;
+    }
+
+    final campos = {
+      'Nombre': controllers!['nombre']!.text,
+      'Apellidos': controllers!['apellidos']!.text,
+      'Correo electrónico': controllers!['email']!.text,
+      'Contraseña': controllers!['password']!.text,
+      'Repite contraseña': controllers!['password2']!.text,
+      'Fecha de nacimiento': _fechaNacimiento,
+    };
+
+    for (final entry in campos.entries) {
+      if (entry.value.trim().isEmpty) {
+        AlertModal.show(
+          context,
+          message: 'El campo ${entry.key} es obligatorio.',
+          type: AlertTipe.error,
+        );
+        return false;
+      }
+    }
+
+    final emailInput = controllers!['email']!.text.trim();
+    final password = controllers!['password']!.text.trim();
+
+    if (Validaciones.emailError(emailInput) != null) {
+      AlertModal.show(
+        context,
+        message: Validaciones.emailError(emailInput)!,
+        type: AlertTipe.error,
+      );
+      return false;
+    }
+
+    if (Validaciones.passwordError(password) != null) {
+      AlertModal.show(
+        context,
+        message: Validaciones.passwordError(password)!,
+        type: AlertTipe.error,
+      );
+      return false;
+    }
+
+    if (password != controllers!['password2']!.text.trim()) {
+      AlertModal.show(
+        context,
+        message: 'Las contraseñas no coinciden',
+        type: AlertTipe.error,
+      );
+      return false;
+    }
+
+    if (_localidadSeleccionada == null) {
+      AlertModal.show(
+        context,
+        message: 'Selecciona una localidad válida.',
+        type: AlertTipe.error,
+      );
+      return false;
+    }
+
+    try {
+      email = await UserApiService.registerUser(
+        User.register({
+          'nombre': controllers!['nombre']!.text,
+          'apellidos': controllers!['apellidos']!.text,
+          'email': controllers!['email']!.text,
+          'password': controllers!['password']!.text,
+          'localidad': _localidadSeleccionada!.ine,
+          'fechaNacimiento': _fechaNacimiento,
+        }),
+      );
+      return true;
+    } catch (e) {
+      final errorStr = e.toString();
+
+      if (errorStr.contains('409')) {
+        setState(() {
+          _emailErrorApi = 'Este correo ya está en uso';
+        });
+        return false;
+      }
+
+      AlertModal.show(
+        context,
+        message: 'Alguno de los datos no son correctos, revísalos.',
+        type: AlertTipe.error,
+      );
+      return false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final errorEmail = _emailErrorApi ?? Validaciones.emailError(_emailActual);
+    final emailEsValido = errorEmail == null;
+
+    return Scaffold(
+      backgroundColor: _fondoPagina,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(),
+            PageHeader(
+              title: 'Crear cuenta',
+              subtitle: 'Bienvenid@',
+              showRightImage: true,
+              minHeight: 120,
+              logoAsset: 'assets/images/logo_kultux.png',
+            ),
+            WebContainer(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SeccionLabel('Datos personales'),
+                    _Campo(
+                      child: TextFieldApp.normal(
+                        titulo: 'Nombre',
+                        controller: controllers!['nombre']!,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _Campo(
+                      child: TextFieldApp.normal(
+                        titulo: 'Apellidos',
+                        controller: controllers!['apellidos']!,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _Campo(child: _calendarioCampo()),
+
+                    const SizedBox(height: 16),
+                    _SeccionLabel('Cuenta'),
+                    _Campo(
+                      child: TextFieldApp.normal(
+                        titulo: 'Correo electrónico',
+                        controller: controllers!['email']!,
+                        tipo: TextInputType.emailAddress,
+                        mostrarError: _emailActual.isNotEmpty && !emailEsValido,
+                        onChanged: (value) {
+                          setState(() {
+                            _emailActual = value;
+                            _emailValido = Validaciones.email(value);
+                            _emailErrorApi = null;
+                          });
+                        },
+                      ),
+                    ),
+                    if (_emailActual.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, left: 4),
+                        child: Text(
+                          errorEmail ?? 'Email válido',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: emailEsValido ? _verde : Colors.red,
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 10),
+                    _Campo(
+                      child: TextFieldApp.password(
+                        titulo: 'Contraseña',
+                        controller: controllers!['password']!,
+                        mostrarError:
+                            _passwordActual.isNotEmpty && !_passwordValida,
+                        onChanged: (value) {
+                          setState(() {
+                            _passwordActual = value;
+                            _passwordValida = Validaciones.password(value);
+                            _passwordsCoinciden =
+                                _password2Actual.isEmpty ||
+                                _password2Actual == value;
+                          });
+                        },
+                      ),
+                    ),
+
+                    if (_passwordActual.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, left: 4),
+                        child: Text(
+                          Validaciones.passwordError(_passwordActual) ??
+                              'Contraseña válida',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _passwordValida ? _verde : Colors.red,
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 10),
+                    _Campo(
+                      child: TextFieldApp.password(
+                        titulo: 'Repite contraseña',
+                        controller: controllers!['password2']!,
+                        mostrarError:
+                            _password2Actual.isNotEmpty && !_passwordsCoinciden,
+                        onChanged: (value) {
+                          setState(() {
+                            _password2Actual = value;
+                            _passwordsCoinciden = value == _passwordActual;
+                          });
+                        },
+                      ),
+                    ),
+                    if (_password2Actual.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, left: 4),
+                        child: Text(
+                          _passwordsCoinciden
+                              ? 'Las contraseñas coinciden'
+                              : 'Las contraseñas no coinciden',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _passwordsCoinciden ? _verde : Colors.red,
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
+                    _SeccionLabel('Localidad'),
+                    _Campo(child: _selectorLocalidad()),
+
+                    const SizedBox(height: 16),
+                    _SeccionLabel('Legal'),
+                    _CheckLegal(
+                      checked: _checkedTerminos,
+                      onChanged: (v) =>
+                          setState(() => _checkedTerminos = v ?? false),
+                      normal: 'Acepto los ',
+                      link: 'Términos y Condiciones',
+                      onTap: () {
+                        FocusScope.of(context).unfocus();
+                        LegalDialog.show(context, isPrivacy: false);
+                      },
+                    ),
+                    const SizedBox(height: 6),
+                    _CheckLegal(
+                      checked: _checkedPolitica,
+                      onChanged: (v) =>
+                          setState(() => _checkedPolitica = v ?? false),
+                      normal: 'Acepto la ',
+                      link: 'Política de Privacidad',
+                      onTap: () {
+                        FocusScope.of(context).unfocus();
+                        LegalDialog.show(context, isPrivacy: true);
+
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: _borde, width: 1.5),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Volver',
+                                  style: TextStyle(
+                                    fontFamily: 'RobotoCondensed',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: _textoSuave,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              if (await registerUser()) {
+                                Navigator.pop(context);
+                                AlertModal.show(
+                                  context,
+                                  message: '¡Registro completado!',
+                                  type: AlertTipe.success,
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: _verde,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Registrarse',
+                                  style: TextStyle(
+                                    fontFamily: 'RobotoCondensed',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: _texto,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _SeccionLabel(String label) => Padding(
+    padding: const EdgeInsets.only(bottom: 8, left: 2),
+    child: Text(
+      label.toUpperCase(),
+      style: const TextStyle(
+        fontFamily: 'RobotoCondensed',
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: _textoSuave,
+        letterSpacing: 0.8,
+      ),
+    ),
+  );
+
+  Widget _Campo({required Widget child}) => Container(
+    padding: EdgeInsets.zero,
+    decoration: BoxDecoration(
+      color: _fondoCard,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: _borde),
+    ),
+    child: Padding(padding: const EdgeInsets.all(10), child: child),
+  );
+
+  Widget _selectorLocalidad() {
+    return FutureBuilder<List<Location>>(
+      future: futureLocations,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox(
+            height: 40,
+            child: Center(
+              child: CircularProgressIndicator(color: _verde, strokeWidth: 2),
+            ),
+          );
+        }
+        return LocalitySelector(
+          localidades: snapshot.data!,
+          onSelected: (loc) => setState(() => _localidadSeleccionada = loc),
+          label: 'Localidad',
+        );
+      },
+    );
+  }
+
+  Widget _calendarioCampo() {
+    final ctrl = controllers!['fechaNacimiento']!;
+
+    String _formatearFechaEspanol(DateTime fecha) {
+      return '${fecha.day}-${fecha.month}-${fecha.year}';
+    }
+
+    return GestureDetector(
+      onTap: () async {
+        FocusScope.of(context).unfocus();
+
+        final hoy = DateTime.now();
+        final limiteMaximo = DateTime(hoy.year - 18, hoy.month, hoy.day);
+
+        final fecha = await showDatePicker(
+          context: context,
+          locale: const Locale('es', 'ES'),
+          initialDate: limiteMaximo,
+          firstDate: DateTime(1900),
+          lastDate: hoy,
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: _verde,
+                  onPrimary: _texto,
+                  onSurface: _texto,
+                  surface: _fondoCard,
+                ),
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(foregroundColor: _verde),
+                ),
+                dialogBackgroundColor: _fondoPagina,
+              ),
+              child: child!,
+            );
+          },
+        );
+
+        if (fecha != null) {
+          final esMayorDeEdad =
+              fecha.isBefore(limiteMaximo) ||
+              fecha.isAtSameMomentAs(limiteMaximo);
+
+          if (!esMayorDeEdad) {
+            AlertModal.show(
+              context,
+              message: 'Debes tener al menos 18 años para registrarte.',
+              type: AlertTipe.error,
+            );
+            ctrl.clear();
+            return;
+          }
+          final m = fecha.month.toString().padLeft(2, '0');
+          final d = fecha.day.toString().padLeft(2, '0');
+          _fechaNacimiento = '${fecha.year}-$m-$d';
+          ctrl.text = _formatearFechaEspanol(fecha);
+        }
+        if (_fechaNacimiento.isEmpty) {
+          AlertModal.show(
+            context,
+            message: 'El campo Fecha de nacimiento es obligatorio.',
+            type: AlertTipe.error,
+          );
+          return;
+        }
+      },
+      child: AbsorbPointer(
+        child: TextField(
+          controller: ctrl,
+          readOnly: true,
+          style: const TextStyle(
+            fontFamily: 'RobotoCondensed',
+            fontSize: 13,
+            color: _texto,
+          ),
+          decoration: InputDecoration(
+            labelText: 'Fecha de nacimiento',
+            labelStyle: TextStyle(
+              fontFamily: 'RobotoCondensed',
+              fontSize: 12,
+              color: _textoSuave,
+            ),
+            filled: true,
+            fillColor: _fondoCard,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.all(10),
+              child: SvgPicture.asset(
+                'assets/iconos/calendario_registro.svg',
+                width: 16,
+                height: 16,
+                colorFilter: const ColorFilter.mode(
+                  _textoSuave,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borde),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _borde),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: _verde, width: 1.5),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CheckLegal extends StatelessWidget {
+  final bool checked;
+  final ValueChanged<bool?> onChanged;
+  final String normal;
+  final String link;
+  final VoidCallback onTap;
+
+  const _CheckLegal({
+    required this.checked,
+    required this.onChanged,
+    required this.normal,
+    required this.link,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: _fondoCard,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: checked ? _verde.withOpacity(0.6) : _borde),
+      ),
+      child: Row(
+        children: [
+          Checkbox(
+            value: checked,
+            onChanged: onChanged,
+            checkColor: _texto,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            fillColor: WidgetStateProperty.resolveWith<Color?>(
+              (s) => s.contains(WidgetState.selected) ? _verde : null,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
+          ),
+          Flexible(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontFamily: 'RobotoCondensed',
+                  color: _textoSuave,
+                  fontSize: 13,
+                ),
+                children: [
+                  TextSpan(text: normal),
+                  TextSpan(
+                    text: link,
+                    style: const TextStyle(
+                      color: _verde,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    recognizer: TapGestureRecognizer()..onTap = onTap,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
