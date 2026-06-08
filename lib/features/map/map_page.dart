@@ -51,7 +51,9 @@ class _MapPageState extends State<MapPage> {
       final localidades = await LocationApiService.locationsMap();
       final ines = localidades.map((l) => l.ine).toList();
       final totales = await ActivityApiService.activitiesTotalMap(
-        ines: ines,
+        //ines: ines,
+        fechaInicio: null,
+        fechaFin:null
       );
 
       final Map<int, int> totalMap = {

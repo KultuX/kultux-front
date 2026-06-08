@@ -48,6 +48,8 @@ class _ActivitiesListState extends State<ActivitiesList> {
     try {
       final page = await ActivityApiService.activitiesListMap(
         ine: widget.punto.ine,
+        fechaInicio: null,
+        fechaFin: null,
         page: _pagina,
       );
       setState(() {
