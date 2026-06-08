@@ -26,7 +26,7 @@ class UserApiService {
     }
   }
 
-  static Future<String> registerUser(User userRegistro) async {
+  static Future<String> registerUser(User registerUser) async {
     final url = Uri.https(ApiUrl.BASE_URL, '/api/v1/gateway-user/registrar');
 
     final response = await http.post(
@@ -36,12 +36,12 @@ class UserApiService {
         'Accept': 'application/json',
         'User-Agent': 'KultuX APP',
       },
-      body: jsonEncode(userRegistro.toJsonRegister()),
+      body: jsonEncode(registerUser.toJsonRegister()),
     );
 
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return userRegistro.email;
+      return registerUser.email;
     } else {
       throw Exception('Error al registrarse ${response.statusCode}');
     }
@@ -49,8 +49,8 @@ class UserApiService {
 
   static Future<User> editUser({
     required int id,
-    required Map<String, dynamic> datos,
-    File? imagen,
+    required Map<String, dynamic> data,
+    File? image,
   }) async {
     final uri = Uri.https(
       ApiUrl.BASE_URL,
@@ -62,14 +62,14 @@ class UserApiService {
     request.files.add(
       http.MultipartFile.fromString(
         'datos',
-        jsonEncode(datos),
+        jsonEncode(data),
         contentType: http.MediaType('application', 'json'),
       ),
     );
 
-    if (imagen != null) {
+    if (image != null) {
       request.files.add(
-        await http.MultipartFile.fromPath('imagen', imagen.path),
+        await http.MultipartFile.fromPath('imagen', image.path),
       );
     }
 

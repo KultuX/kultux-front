@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 String accentFormatter(String input) {
   const withDiacritics = 'áéíóúÁÉÍÓÚüÜñÑ';
@@ -29,3 +28,12 @@ String dateFormatter(String? fecha) {
   if (partes.length != 3) return fecha;
   return '${partes[2]}-${partes[1]}-${partes[0]}';
 }
+
+String formatToSpanishDate(DateTime fecha) {
+  return '${fecha.day}-${fecha.month}-${fecha.year}';
+}
+
+String normUrl(String url) =>
+    url.startsWith('http') ? url : 'https://$url';
+
+

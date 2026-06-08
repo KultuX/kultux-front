@@ -136,13 +136,13 @@ class _SavedPageState extends State<SavedPage> {
         return;
       }
       final page = await ActivityApiService.activitiesSaved(
-        idUsuario: _idUsuario!,
+        userId: _idUsuario!,
         page: _paginaActividades,
       );
       setState(() {
-        _actividades.addAll(page.contenido);
-        _totalPaginasActividades = page.totalPaginas;
-        _totalActividades = page.totalElementos;
+        _actividades.addAll(page.content);
+        _totalPaginasActividades = page.totalPages;
+        _totalActividades = page.totalElements;
         _paginaActividades++;
         _estadoActividades = _actividades.isEmpty
             ? UiState.vacio
@@ -194,13 +194,13 @@ class _SavedPageState extends State<SavedPage> {
         return;
       }
       final page = await RestaurantApiService.restaurantsSaved(
-        idUsuario: _idUsuario!,
+        userId: _idUsuario!,
         page: _paginaRestaurantes,
       );
       setState(() {
-        _restaurantes.addAll(page.contenido);
-        _totalPaginasRestaurantes = page.totalPaginas;
-        _totalRestaurantes = page.totalElementos;
+        _restaurantes.addAll(page.content);
+        _totalPaginasRestaurantes = page.totalPages;
+        _totalRestaurantes = page.totalElements;
         _paginaRestaurantes++;
         _estadoRestaurantes = _restaurantes.isEmpty
             ? UiState.vacio
@@ -252,13 +252,13 @@ class _SavedPageState extends State<SavedPage> {
         return;
       }
       final page = await AccommodationApiService.accommodationsSaved(
-        idUsuario: _idUsuario!,
+        userId: _idUsuario!,
         page: _paginaAlojamientos,
       );
       setState(() {
-        _alojamientos.addAll(page.contenido);
-        _totalPaginasAlojamientos = page.totalPaginas;
-        _totalAlojamientos = page.totalElementos;
+        _alojamientos.addAll(page.content);
+        _totalPaginasAlojamientos = page.totalPages;
+        _totalAlojamientos = page.totalElements;
         _paginaAlojamientos++;
         _estadoAlojamientos = _alojamientos.isEmpty
             ? UiState.vacio
@@ -407,11 +407,11 @@ class _SavedPageState extends State<SavedPage> {
         }
         final actividad = _actividades[i];
         return SavedCard.activity(
-          titulo: actividad.titulo,
-          localidad: actividad.localidad,
-          categoria: actividad.categoriaActividad,
-          imagenUrl: actividad.imagenPrincipal,
-          fecha: actividad.fechaInicio,
+          title: actividad.title,
+          location: actividad.location,
+          category: actividad.activityCategory,
+          imageUrl: actividad.coverImage,
+          startDate: actividad.startDate,
           onTap: () async {
             setState(() => _cargandoDetalle = true);
             try {
@@ -489,11 +489,11 @@ class _SavedPageState extends State<SavedPage> {
         }
         final r = _restaurantes[i];
         return SavedCard.restaurant(
-          titulo: r.nombre,
-          localidad: r.localidad,
-          categoria: r.categoriaRestaurante,
-          imagenUrl: r.imagenPrincipal,
-          abierto: r.abierto,
+          name: r.name,
+          location: r.location,
+          category: r.restaurantCategory,
+          imageUrl: r.coverImage,
+          isOpen: r.isOpen,
           onTap: () async {
             setState(() => _cargandoDetalle = true);
             try {
@@ -571,10 +571,10 @@ class _SavedPageState extends State<SavedPage> {
         }
         final a = _alojamientos[i];
         return SavedCard.accommodation(
-          titulo: a.nombre,
-          localidad: a.localidad,
-          categoria: a.categoriaAlojamiento,
-          imagenUrl: a.imagenPrincipal,
+          name: a.name,
+          location: a.location,
+          category: a.accommodationCategory,
+          imageUrl: a.coverImage,
           onTap: () async {
             setState(() => _cargandoDetalle = true);
             try {

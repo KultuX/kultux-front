@@ -1,14 +1,14 @@
 class Pages<T> {
-  final List<T> contenido;
-  final int numero;
-  final int totalPaginas;
-  final int totalElementos;
+  final List<T> content;
+  final int number;
+  final int totalPages;
+  final int totalElements;
 
   Pages._({
-    required this.contenido,
-    required this.numero,
-    required this.totalPaginas,
-    required this.totalElementos,
+    required this.content,
+    required this.number,
+    required this.totalPages,
+    required this.totalElements,
   });
 
   factory Pages.fromJson(
@@ -18,10 +18,10 @@ class Pages<T> {
     final List contentRaw = json['content'] ?? [];
 
     return Pages._(
-      contenido: contentRaw.map((e) => fromJsonT(e)).toList(),
-      numero: json['number'],
-      totalPaginas: json['totalPages'],
-      totalElementos: json['totalElements'] ?? 0
+      content: contentRaw.map((e) => fromJsonT(e)).toList(),
+      number: json['number'],
+      totalPages: json['totalPages'],
+      totalElements: json['totalElements'] ?? 0
     );
   }
 }

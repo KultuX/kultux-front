@@ -8,18 +8,15 @@ import 'package:kultux/data/repository/user_repository.dart';
 import 'package:kultux/shared/widget/alert_modal.dart';
 import 'package:kultux/features/auth/recover_password_widget.dart';
 
-const _verde = Color(0xFFA6E246);
-const _fondoCard = Color(0xFFF8F7F4);
-const _texto = Color(0xFF1A1A1A);
-const _textoSuave = Color(0xFF6B6B6B);
-const _borde = Color(0xFFE0DDD6);
+import '../../config/app_colors.dart';
+
 
 class LoginWidget extends StatefulWidget {
-  final VoidCallback? cerrar;
-  final void Function(User user)? logeado;
-  final VoidCallback? invitado;
+  final VoidCallback? onClose;
+  final void Function(User user)? userLoged;
+  final VoidCallback? userGuest;
 
-  const LoginWidget({super.key, this.cerrar, this.logeado, this.invitado});
+  const LoginWidget({super.key, this.onClose, this.userLoged, this.userGuest});
 
   @override
   State<LoginWidget> createState() => _LoginWidgetState();
@@ -32,7 +29,7 @@ class _LoginWidgetState extends State<LoginWidget> {
   bool _errorEmail = false;
   bool _errorPass = false;
   bool _checked = false;
-  bool _mostrandoRecuperar = false;
+  bool _showRecoveryPass = false;
 
   Future<void> _login() async {
     setState(() {
@@ -73,19 +70,19 @@ class _LoginWidgetState extends State<LoginWidget> {
     }
 
     try {
-      final usuario = await UserApiService.loginUser(
+      final user = await UserApiService.loginUser(
         User.login(email.text, pass.text),
       );
-      if (_checked) await UserRepository.save(usuario);
+      if (_checked) await UserRepository.save(user);
 
       AlertModal.show(
         context,
         message:
-            '👋🏻 ¡¡Bienvenid@, ${usuario.nombre?.toUpperCase() ?? usuario.email}!!',
+            '👋🏻 ¡¡Bienvenid@, ${user.name?.toUpperCase() ?? user.email}!!',
         type: AlertTipe.success,
       );
-      widget.logeado?.call(usuario);
-      User.activeUser = usuario;
+      widget.userLoged?.call(user);
+      User.activeUser = user;
     } catch (_) {
       setState(() {
         _errorEmail = true;
@@ -108,11 +105,11 @@ class _LoginWidgetState extends State<LoginWidget> {
           child: Material(
             color: Colors.transparent,
             child: SingleChildScrollView(
-              child: _mostrandoRecuperar
+              child: _showRecoveryPass
                   ? RecoverPasswordWidget(
-                      cerrar: widget.cerrar,
-                      onVolverLogin: () =>
-                          setState(() => _mostrandoRecuperar = false),
+                      onClose: widget.onClose,
+                      onBackLogin: () =>
+                          setState(() => _showRecoveryPass = false),
                     )
                   : _buildLogin(),
             ),
@@ -126,9 +123,9 @@ class _LoginWidgetState extends State<LoginWidget> {
     return Container(
       width: 360,
       decoration: BoxDecoration(
-        color: _fondoCard,
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _borde),
+        border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
             color: Color(0x33000000),
@@ -180,7 +177,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                           width: 30,
                           height: 2,
                           decoration: BoxDecoration(
-                            color: _verde,
+                            color: AppColors.green,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -198,18 +195,18 @@ class _LoginWidgetState extends State<LoginWidget> {
               children: [
                 _campo(
                   child: TextFieldApp.normal(
-                    titulo: 'Correo electrónico',
+                    title: 'Correo electrónico',
                     controller: email,
-                    mostrarError: _errorEmail,
-                    tipo: TextInputType.emailAddress,
+                    showError: _errorEmail,
+                    type: TextInputType.emailAddress,
                   ),
                 ),
                 const SizedBox(height: 10),
                 _campo(
                   child: TextFieldApp.password(
-                    titulo: 'Contraseña',
+                    title: 'Contraseña',
                     controller: pass,
-                    mostrarError: _errorPass,
+                    showError: _errorPass,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -227,12 +224,12 @@ class _LoginWidgetState extends State<LoginWidget> {
                           value: _checked,
                           onChanged: (v) =>
                               setState(() => _checked = v ?? false),
-                          checkColor: _texto,
+                          checkColor: AppColors.text,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                           fillColor: WidgetStateProperty.resolveWith(
                             (s) => s.contains(WidgetState.selected)
-                                ? _verde
+                                ? AppColors.green
                                 : null,
                           ),
                           shape: RoundedRectangleBorder(
@@ -246,7 +243,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                         style: TextStyle(
                           fontFamily: 'RobotoCondensed',
                           fontSize: 13,
-                          color: _textoSuave,
+                          color: AppColors.textSoft,
                         ),
                       ),
                     ],
@@ -257,15 +254,15 @@ class _LoginWidgetState extends State<LoginWidget> {
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
                     onTap: () =>
-                        setState(() => _mostrandoRecuperar = true), // NUEVO
+                        setState(() => _showRecoveryPass = true), // NUEVO
                     child: const Text(
                       '¿Olvidaste tu contraseña?',
                       style: TextStyle(
                         fontFamily: 'RobotoCondensed',
                         fontSize: 12,
-                        color: _textoSuave,
+                        color: AppColors.textSoft,
                         decoration: TextDecoration.underline,
-                        decorationColor: _textoSuave,
+                        decorationColor: AppColors.textSoft,
                       ),
                     ),
                   ),
@@ -276,7 +273,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: _verde,
+                      color: AppColors.green,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Center(
@@ -286,7 +283,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                           fontFamily: 'RobotoCondensed',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: _texto,
+                          color: AppColors.text,
                         ),
                       ),
                     ),
@@ -294,13 +291,13 @@ class _LoginWidgetState extends State<LoginWidget> {
                 ),
                 const SizedBox(height: 10),
                 GestureDetector(
-                  onTap: widget.invitado,
+                  onTap: widget.userGuest,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _borde, width: 1.5),
+                      border: Border.all(color: AppColors.border, width: 1.5),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -308,7 +305,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                         Icon(
                           Icons.person_outline,
                           size: 16,
-                          color: _textoSuave,
+                          color: AppColors.textSoft,
                         ),
                         SizedBox(width: 6),
                         Text(
@@ -316,7 +313,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                           style: TextStyle(
                             fontFamily: 'RobotoCondensed',
                             fontSize: 13,
-                            color: _textoSuave,
+                            color: AppColors.textSoft,
                           ),
                         ),
                       ],
@@ -331,7 +328,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                       style: const TextStyle(
                         fontFamily: 'RobotoCondensed',
                         fontSize: 13,
-                        color: _textoSuave,
+                        color: AppColors.textSoft,
                       ),
                       children: [
                         TextSpan(
@@ -339,10 +336,10 @@ class _LoginWidgetState extends State<LoginWidget> {
                           style: const TextStyle(
                             fontFamily: 'RobotoCondensed',
                             fontSize: 13,
-                            color: _verde,
+                            color: AppColors.green,
                             fontWeight: FontWeight.w700,
                             decoration: TextDecoration.underline,
-                            decorationColor: _verde,
+                            decorationColor: AppColors.green,
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () => Navigator.push(

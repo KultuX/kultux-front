@@ -14,12 +14,13 @@ import 'package:kultux/core/utils/validations.dart';
 import 'package:kultux/shared/widget/page_header.dart';
 import 'package:kultux/core/utils/web_container.dart';
 
-const _verde = Color(0xFFA6E246);
-const _fondoPagina = Color(0xFFF1EFE9);
-const _fondoCard = Color(0xFFF8F7F4);
-const _texto = Color(0xFF1A1A1A);
-const _textoSuave = Color(0xFF6B6B6B);
-const _borde = Color(0xFFE0DDD6);
+import 'package:kultux/config/app_colors.dart';
+
+import '../../core/utils/formatter.dart';
+
+
+
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -28,26 +29,26 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  bool _checkedTerminos = false;
-  bool _checkedPolitica = false;
+  bool _termsChecked = false;
+  bool _privacyChecked = false;
   String? email;
-  Location? _localidadSeleccionada;
+  Location? _locationSelected;
 
   static Map<String, TextEditingController>? controllers;
 
   late Future<List<Location>> futureLocations;
 
-  String _emailActual = '';
+  String _currentEmail = '';
   String? _emailErrorApi;
   bool _emailValido = true;
 
-  String _passwordActual = '';
-  bool _passwordValida = true;
+  String _currentPassword = '';
+  bool _isValidPassword = true;
 
-  String _password2Actual = '';
-  bool _passwordsCoinciden = true;
+  String currentConfirmPassword = '';
+  bool _isSamePassword = true;
 
-  String _fechaNacimiento = '';
+  String _dateOfBirth = '';
 
   @override
   void initState() {
@@ -64,7 +65,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<bool> registerUser() async {
-    if (!_checkedTerminos || !_checkedPolitica) {
+    if (!_termsChecked || !_privacyChecked) {
       AlertModal.show(
         context,
         message: 'Debes aceptar los Términos y la Política de privacidad.',
@@ -73,16 +74,16 @@ class _RegisterPageState extends State<RegisterPage> {
       return false;
     }
 
-    final campos = {
+    final fields = {
       'Nombre': controllers!['nombre']!.text,
       'Apellidos': controllers!['apellidos']!.text,
       'Correo electrónico': controllers!['email']!.text,
       'Contraseña': controllers!['password']!.text,
       'Repite contraseña': controllers!['password2']!.text,
-      'Fecha de nacimiento': _fechaNacimiento,
+      'Fecha de nacimiento': _dateOfBirth,
     };
 
-    for (final entry in campos.entries) {
+    for (final entry in fields.entries) {
       if (entry.value.trim().isEmpty) {
         AlertModal.show(
           context,
@@ -96,19 +97,19 @@ class _RegisterPageState extends State<RegisterPage> {
     final emailInput = controllers!['email']!.text.trim();
     final password = controllers!['password']!.text.trim();
 
-    if (Validaciones.emailError(emailInput) != null) {
+    if (Validations.emailError(emailInput) != null) {
       AlertModal.show(
         context,
-        message: Validaciones.emailError(emailInput)!,
+        message: Validations.emailError(emailInput)!,
         type: AlertTipe.error,
       );
       return false;
     }
 
-    if (Validaciones.passwordError(password) != null) {
+    if (Validations.passwordError(password) != null) {
       AlertModal.show(
         context,
-        message: Validaciones.passwordError(password)!,
+        message: Validations.passwordError(password)!,
         type: AlertTipe.error,
       );
       return false;
@@ -123,7 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
       return false;
     }
 
-    if (_localidadSeleccionada == null) {
+    if (_locationSelected == null) {
       AlertModal.show(
         context,
         message: 'Selecciona una localidad válida.',
@@ -139,8 +140,8 @@ class _RegisterPageState extends State<RegisterPage> {
           'apellidos': controllers!['apellidos']!.text,
           'email': controllers!['email']!.text,
           'password': controllers!['password']!.text,
-          'localidad': _localidadSeleccionada!.ine,
-          'fechaNacimiento': _fechaNacimiento,
+          'localidad': _locationSelected!.ine,
+          'fechaNacimiento': _dateOfBirth,
         }),
       );
       return true;
@@ -165,11 +166,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final errorEmail = _emailErrorApi ?? Validaciones.emailError(_emailActual);
+    final errorEmail = _emailErrorApi ?? Validations.emailError(_currentEmail);
     final emailEsValido = errorEmail == null;
 
     return Scaffold(
-      backgroundColor: _fondoPagina,
+      backgroundColor: AppColors.pageBg,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -187,123 +188,123 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _SeccionLabel('Datos personales'),
-                    _Campo(
+                    _LabelSection('Datos personales'),
+                    _Field(
                       child: TextFieldApp.normal(
-                        titulo: 'Nombre',
+                        title: 'Nombre',
                         controller: controllers!['nombre']!,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _Campo(
+                    _Field(
                       child: TextFieldApp.normal(
-                        titulo: 'Apellidos',
+                        title: 'Apellidos',
                         controller: controllers!['apellidos']!,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _Campo(child: _calendarioCampo()),
+                    _Field(child: _calendarField()),
 
                     const SizedBox(height: 16),
-                    _SeccionLabel('Cuenta'),
-                    _Campo(
+                    _LabelSection('Cuenta'),
+                    _Field(
                       child: TextFieldApp.normal(
-                        titulo: 'Correo electrónico',
+                        title: 'Correo electrónico',
                         controller: controllers!['email']!,
-                        tipo: TextInputType.emailAddress,
-                        mostrarError: _emailActual.isNotEmpty && !emailEsValido,
+                        type: TextInputType.emailAddress,
+                        showError: _currentEmail.isNotEmpty && !emailEsValido,
                         onChanged: (value) {
                           setState(() {
-                            _emailActual = value;
-                            _emailValido = Validaciones.email(value);
+                            _currentEmail = value;
+                            _emailValido = Validations.email(value);
                             _emailErrorApi = null;
                           });
                         },
                       ),
                     ),
-                    if (_emailActual.isNotEmpty)
+                    if (_currentEmail.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 6, left: 4),
                         child: Text(
                           errorEmail ?? 'Email válido',
                           style: TextStyle(
                             fontSize: 12,
-                            color: emailEsValido ? _verde : Colors.red,
+                            color: emailEsValido ? AppColors.green : Colors.red,
                           ),
                         ),
                       ),
 
                     const SizedBox(height: 10),
-                    _Campo(
+                    _Field(
                       child: TextFieldApp.password(
-                        titulo: 'Contraseña',
+                        title: 'Contraseña',
                         controller: controllers!['password']!,
-                        mostrarError:
-                            _passwordActual.isNotEmpty && !_passwordValida,
+                        showError:
+                            _currentPassword.isNotEmpty && !_isValidPassword,
                         onChanged: (value) {
                           setState(() {
-                            _passwordActual = value;
-                            _passwordValida = Validaciones.password(value);
-                            _passwordsCoinciden =
-                                _password2Actual.isEmpty ||
-                                _password2Actual == value;
+                            _currentPassword = value;
+                            _isValidPassword = Validations.password(value);
+                            _isSamePassword =
+                                currentConfirmPassword.isEmpty ||
+                                currentConfirmPassword == value;
                           });
                         },
                       ),
                     ),
 
-                    if (_passwordActual.isNotEmpty)
+                    if (_currentPassword.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 6, left: 4),
                         child: Text(
-                          Validaciones.passwordError(_passwordActual) ??
+                          Validations.passwordError(_currentPassword) ??
                               'Contraseña válida',
                           style: TextStyle(
                             fontSize: 12,
-                            color: _passwordValida ? _verde : Colors.red,
+                            color: _isValidPassword ? AppColors.green : Colors.red,
                           ),
                         ),
                       ),
 
                     const SizedBox(height: 10),
-                    _Campo(
+                    _Field(
                       child: TextFieldApp.password(
-                        titulo: 'Repite contraseña',
+                        title: 'Repite contraseña',
                         controller: controllers!['password2']!,
-                        mostrarError:
-                            _password2Actual.isNotEmpty && !_passwordsCoinciden,
+                        showError:
+                            currentConfirmPassword.isNotEmpty && !_isSamePassword,
                         onChanged: (value) {
                           setState(() {
-                            _password2Actual = value;
-                            _passwordsCoinciden = value == _passwordActual;
+                            currentConfirmPassword = value;
+                            _isSamePassword = value == _currentPassword;
                           });
                         },
                       ),
                     ),
-                    if (_password2Actual.isNotEmpty)
+                    if (currentConfirmPassword.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 6, left: 4),
                         child: Text(
-                          _passwordsCoinciden
+                          _isSamePassword
                               ? 'Las contraseñas coinciden'
                               : 'Las contraseñas no coinciden',
                           style: TextStyle(
                             fontSize: 12,
-                            color: _passwordsCoinciden ? _verde : Colors.red,
+                            color: _isSamePassword ? AppColors.green : Colors.red,
                           ),
                         ),
                       ),
 
                     const SizedBox(height: 16),
-                    _SeccionLabel('Localidad'),
-                    _Campo(child: _selectorLocalidad()),
+                    _LabelSection('Localidad'),
+                    _Field(child: _locationSelector()),
 
                     const SizedBox(height: 16),
-                    _SeccionLabel('Legal'),
+                    _LabelSection('Legal'),
                     _CheckLegal(
-                      checked: _checkedTerminos,
+                      checked: _termsChecked,
                       onChanged: (v) =>
-                          setState(() => _checkedTerminos = v ?? false),
+                          setState(() => _termsChecked = v ?? false),
                       normal: 'Acepto los ',
                       link: 'Términos y Condiciones',
                       onTap: () {
@@ -313,9 +314,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 6),
                     _CheckLegal(
-                      checked: _checkedPolitica,
+                      checked: _privacyChecked,
                       onChanged: (v) =>
-                          setState(() => _checkedPolitica = v ?? false),
+                          setState(() => _privacyChecked = v ?? false),
                       normal: 'Acepto la ',
                       link: 'Política de Privacidad',
                       onTap: () {
@@ -336,7 +337,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               decoration: BoxDecoration(
                                 color: Colors.transparent,
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: _borde, width: 1.5),
+                                border: Border.all(color: AppColors.border, width: 1.5),
                               ),
                               child: const Center(
                                 child: Text(
@@ -345,7 +346,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     fontFamily: 'RobotoCondensed',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: _textoSuave,
+                                    color: AppColors.textSoft,
                                   ),
                                 ),
                               ),
@@ -368,7 +369,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               decoration: BoxDecoration(
-                                color: _verde,
+                                color: AppColors.green,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Center(
@@ -378,7 +379,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     fontFamily: 'RobotoCondensed',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: _texto,
+                                    color: AppColors.text,
                                   ),
                                 ),
                               ),
@@ -398,7 +399,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _SeccionLabel(String label) => Padding(
+  Widget _LabelSection(String label) => Padding(
     padding: const EdgeInsets.only(bottom: 8, left: 2),
     child: Text(
       label.toUpperCase(),
@@ -406,23 +407,23 @@ class _RegisterPageState extends State<RegisterPage> {
         fontFamily: 'RobotoCondensed',
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: _textoSuave,
+        color: AppColors.textSoft,
         letterSpacing: 0.8,
       ),
     ),
   );
 
-  Widget _Campo({required Widget child}) => Container(
+  Widget _Field({required Widget child}) => Container(
     padding: EdgeInsets.zero,
     decoration: BoxDecoration(
-      color: _fondoCard,
+      color: AppColors.cardBg,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: _borde),
+      border: Border.all(color: AppColors.border),
     ),
     child: Padding(padding: const EdgeInsets.all(10), child: child),
   );
 
-  Widget _selectorLocalidad() {
+  Widget _locationSelector() {
     return FutureBuilder<List<Location>>(
       future: futureLocations,
       builder: (context, snapshot) {
@@ -430,64 +431,60 @@ class _RegisterPageState extends State<RegisterPage> {
           return const SizedBox(
             height: 40,
             child: Center(
-              child: CircularProgressIndicator(color: _verde, strokeWidth: 2),
+              child: CircularProgressIndicator(color: AppColors.green, strokeWidth: 2),
             ),
           );
         }
         return LocalitySelector(
-          localidades: snapshot.data!,
-          onSelected: (loc) => setState(() => _localidadSeleccionada = loc),
+          locations: snapshot.data!,
+          onSelected: (loc) => setState(() => _locationSelected = loc),
           label: 'Localidad',
         );
       },
     );
   }
 
-  Widget _calendarioCampo() {
+  Widget _calendarField() {
     final ctrl = controllers!['fechaNacimiento']!;
-
-    String _formatearFechaEspanol(DateTime fecha) {
-      return '${fecha.day}-${fecha.month}-${fecha.year}';
-    }
 
     return GestureDetector(
       onTap: () async {
         FocusScope.of(context).unfocus();
 
-        final hoy = DateTime.now();
-        final limiteMaximo = DateTime(hoy.year - 18, hoy.month, hoy.day);
+        final today = DateTime.now();
+        final maxLimit = DateTime(today.year - 18, today.month, today.day);
 
-        final fecha = await showDatePicker(
+        final date = await showDatePicker(
           context: context,
           locale: const Locale('es', 'ES'),
-          initialDate: limiteMaximo,
+          initialDate: maxLimit,
           firstDate: DateTime(1900),
-          lastDate: hoy,
+          lastDate: today,
           builder: (context, child) {
             return Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: const ColorScheme.light(
-                  primary: _verde,
-                  onPrimary: _texto,
-                  onSurface: _texto,
-                  surface: _fondoCard,
+                  primary: AppColors.green,
+                  onPrimary: AppColors.text,
+                  onSurface: AppColors.text,
+                  surface: AppColors.cardBg,
                 ),
                 textButtonTheme: TextButtonThemeData(
-                  style: TextButton.styleFrom(foregroundColor: _verde),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.green),
                 ),
-                dialogBackgroundColor: _fondoPagina,
+                dialogBackgroundColor: AppColors.pageBg,
               ),
               child: child!,
             );
           },
         );
 
-        if (fecha != null) {
-          final esMayorDeEdad =
-              fecha.isBefore(limiteMaximo) ||
-              fecha.isAtSameMomentAs(limiteMaximo);
+        if (date != null) {
+          final isAdult =
+              date.isBefore(maxLimit) ||
+              date.isAtSameMomentAs(maxLimit);
 
-          if (!esMayorDeEdad) {
+          if (!isAdult) {
             AlertModal.show(
               context,
               message: 'Debes tener al menos 18 años para registrarte.',
@@ -496,12 +493,12 @@ class _RegisterPageState extends State<RegisterPage> {
             ctrl.clear();
             return;
           }
-          final m = fecha.month.toString().padLeft(2, '0');
-          final d = fecha.day.toString().padLeft(2, '0');
-          _fechaNacimiento = '${fecha.year}-$m-$d';
-          ctrl.text = _formatearFechaEspanol(fecha);
+          final month = date.month.toString().padLeft(2, '0');
+          final day = date.day.toString().padLeft(2, '0');
+          _dateOfBirth = '${date.year}-$month-$day';
+          ctrl.text = formatToSpanishDate(date);
         }
-        if (_fechaNacimiento.isEmpty) {
+        if (_dateOfBirth.isEmpty) {
           AlertModal.show(
             context,
             message: 'El campo Fecha de nacimiento es obligatorio.',
@@ -517,17 +514,17 @@ class _RegisterPageState extends State<RegisterPage> {
           style: const TextStyle(
             fontFamily: 'RobotoCondensed',
             fontSize: 13,
-            color: _texto,
+            color: AppColors.text,
           ),
           decoration: InputDecoration(
             labelText: 'Fecha de nacimiento',
             labelStyle: TextStyle(
               fontFamily: 'RobotoCondensed',
               fontSize: 12,
-              color: _textoSuave,
+              color: AppColors.textSoft,
             ),
             filled: true,
-            fillColor: _fondoCard,
+            fillColor: AppColors.cardBg,
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -540,22 +537,22 @@ class _RegisterPageState extends State<RegisterPage> {
                 width: 16,
                 height: 16,
                 colorFilter: const ColorFilter.mode(
-                  _textoSuave,
+                  AppColors.textSoft,
                   BlendMode.srcIn,
                 ),
               ),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: _borde),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: _borde),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             focusedBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(color: _verde, width: 1.5),
+              borderSide: BorderSide(color: AppColors.green, width: 1.5),
             ),
           ),
         ),
@@ -584,19 +581,19 @@ class _CheckLegal extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: _fondoCard,
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: checked ? _verde.withOpacity(0.6) : _borde),
+        border: Border.all(color: checked ? AppColors.green.withOpacity(0.6) : AppColors.border),
       ),
       child: Row(
         children: [
           Checkbox(
             value: checked,
             onChanged: onChanged,
-            checkColor: _texto,
+            checkColor: AppColors.text,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             fillColor: WidgetStateProperty.resolveWith<Color?>(
-              (s) => s.contains(WidgetState.selected) ? _verde : null,
+              (s) => s.contains(WidgetState.selected) ? AppColors.green : null,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5),
@@ -607,7 +604,7 @@ class _CheckLegal extends StatelessWidget {
               text: TextSpan(
                 style: const TextStyle(
                   fontFamily: 'RobotoCondensed',
-                  color: _textoSuave,
+                  color: AppColors.textSoft,
                   fontSize: 13,
                 ),
                 children: [
@@ -615,7 +612,7 @@ class _CheckLegal extends StatelessWidget {
                   TextSpan(
                     text: link,
                     style: const TextStyle(
-                      color: _verde,
+                      color: AppColors.green,
                       decoration: TextDecoration.underline,
                       fontWeight: FontWeight.w600,
                     ),

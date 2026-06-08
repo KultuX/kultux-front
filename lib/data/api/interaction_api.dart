@@ -13,13 +13,13 @@ class InteractionApiService {
 
 
   static Future<Saved> activitySavedState({
-    required int idActividad,
-    required int idUsuario,
+    required int activityId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
-      '/api/v1/gateway-interaccion/actividad/$idActividad/guardados',
-      {'idUsuario': idUsuario.toString()},
+      '/api/v1/gateway-interaccion/actividad/$activityId/guardados',
+      {'idUsuario': userId.toString()},
     );
     final response = await http.get(url, headers: _headers);
     if (response.statusCode == 200) {
@@ -30,26 +30,26 @@ class InteractionApiService {
   }
 
   static Future<List<int>> activitiesListSaved({
-    required int idUsuario,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/actividad/listar_guardados',
-      {'idUsuario': idUsuario.toString()},
+      {'idUsuario': userId.toString()},
     );
     final response = await http.get(url, headers: _headers);
 
     if (response.statusCode == 200) {
-      final List<dynamic> lista = jsonDecode(response.body);
-      return lista.map((e) => e as int).toList();
+      final List<dynamic> list = jsonDecode(response.body);
+      return list.map((e) => e as int).toList();
     } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
   static Future<Saved> saveActivity({
-    required int idActividad,
-    required int idUsuario,
+    required int activityId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -58,7 +58,7 @@ class InteractionApiService {
     final response = await http.post(
       url,
       headers: _headers,
-      body: jsonEncode({'idActividad': idActividad, 'idUsuario': idUsuario}),
+      body: jsonEncode({'idActividad': activityId, 'idUsuario': userId}),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
       return Saved.fromJson(jsonDecode(response.body));
@@ -68,15 +68,15 @@ class InteractionApiService {
   }
 
   static Future<bool> unsavedActivity({
-    required int idActividad,
-    required int idUsuario,
+    required int activityId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/actividad/eliminar',
       {
-        'idActividad': idActividad.toString(),
-        'idUsuario': idUsuario.toString(),
+        'idActividad': activityId.toString(),
+        'idUsuario': userId.toString(),
       },
     );
     final response = await http.delete(url, headers: _headers);
@@ -87,13 +87,13 @@ class InteractionApiService {
 
 
   static Future<Saved> restaurantSavedState({
-    required int idRestaurante,
-    required int idUsuario,
+    required int restaurantId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
-      '/api/v1/gateway-interaccion/restaurante/$idRestaurante/guardados',
-      {'idUsuario': idUsuario.toString()},
+      '/api/v1/gateway-interaccion/restaurante/$restaurantId/guardados',
+      {'idUsuario': userId.toString()},
     );
     final response = await http.get(url, headers: _headers);
     if (response.statusCode == 200) {
@@ -104,25 +104,25 @@ class InteractionApiService {
   }
 
   static Future<List<int>> restaurantsListSaved({
-    required int idUsuario,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/restaurante/listar_guardados',
-      {'idUsuario': idUsuario.toString()},
+      {'idUsuario': userId.toString()},
     );
     final response = await http.get(url, headers: _headers);
     if (response.statusCode == 200) {
-      final List<dynamic> lista = jsonDecode(response.body);
-      return lista.map((e) => e as int).toList();
+      final List<dynamic> list = jsonDecode(response.body);
+      return list.map((e) => e as int).toList();
     } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
   static Future<Saved> saveRestaurant({
-    required int idRestaurante,
-    required int idUsuario,
+    required int restaurantId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -132,8 +132,8 @@ class InteractionApiService {
       url,
       headers: _headers,
       body: jsonEncode({
-        'idRestaurante': idRestaurante,
-        'idUsuario': idUsuario,
+        'idRestaurante': restaurantId,
+        'idUsuario': userId,
       }),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -144,15 +144,15 @@ class InteractionApiService {
   }
 
   static Future<bool> unsavedRestaurant({
-    required int idRestaurante,
-    required int idUsuario,
+    required int restaurantId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/restaurante/eliminar',
       {
-        'idRestaurante': idRestaurante.toString(),
-        'idUsuario': idUsuario.toString(),
+        'idRestaurante': restaurantId.toString(),
+        'idUsuario': userId.toString(),
       },
     );
     final response = await http.delete(url, headers: _headers);
@@ -163,13 +163,13 @@ class InteractionApiService {
 
 
   static Future<Saved> accommodationSavedState({
-    required int idAlojamiento,
-    required int idUsuario,
+    required int accommodationId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
-      '/api/v1/gateway-interaccion/alojamiento/$idAlojamiento/guardados',
-      {'idUsuario': idUsuario.toString()},
+      '/api/v1/gateway-interaccion/alojamiento/$accommodationId/guardados',
+      {'idUsuario': userId.toString()},
     );
     final response = await http.get(url, headers: _headers);
     if (response.statusCode == 200) {
@@ -180,25 +180,25 @@ class InteractionApiService {
   }
 
   static Future<List<int>> accommodationsListSaved({
-    required int idUsuario,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/alojamiento/listar_guardados',
-      {'idUsuario': idUsuario.toString()},
+      {'idUsuario': userId.toString()},
     );
     final response = await http.get(url, headers: _headers);
     if (response.statusCode == 200) {
-      final List<dynamic> lista = jsonDecode(response.body);
-      return lista.map((e) => e as int).toList();
+      final List<dynamic> list = jsonDecode(response.body);
+      return list.map((e) => e as int).toList();
     } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
   static Future<Saved> saveAccommodation({
-    required int idAlojamiento,
-    required int idUsuario,
+    required int accommodationId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -208,8 +208,8 @@ class InteractionApiService {
       url,
       headers: _headers,
       body: jsonEncode({
-        'idAlojamiento': idAlojamiento,
-        'idUsuario': idUsuario,
+        'idAlojamiento': accommodationId,
+        'idUsuario': userId,
       }),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -220,15 +220,15 @@ class InteractionApiService {
   }
 
   static Future<bool> unsavedAccommodation({
-    required int idAlojamiento,
-    required int idUsuario,
+    required int accommodationId,
+    required int userId,
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-interaccion/alojamiento/eliminar',
       {
-        'idAlojamiento': idAlojamiento.toString(),
-        'idUsuario': idUsuario.toString(),
+        'idAlojamiento': accommodationId.toString(),
+        'idUsuario': userId.toString(),
       },
     );
     final response = await http.delete(url, headers: _headers);

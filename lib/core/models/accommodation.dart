@@ -2,42 +2,42 @@ import 'package:kultux/core/models/image.dart';
 
 class Accommodation {
   final int id;
-  final String nombre;
-  final String categoriaAlojamiento;
-  String? imagenPrincipal;
+  final String name;
+  final String accommodationCategory;
+  String? coverImage;
 
-  String? localidad;
-  String? telefonoEmpresa;
-  String? correoCorporativo;
-  List<Image>? imagenes;
-  String? descripcion;
+  String? location;
+  String? companyPhone;
+  String? businessEmail;
+  List<Image>? images;
+  String? description;
 
-  String? urlReserva;
-  String? urlWeb;
+  String? bookingUrl;
+  String? webUrl;
 
-  String? direccion;
+  String? address;
 
   Accommodation._({
     required this.id,
-    required this.nombre,
-    required this.categoriaAlojamiento,
-    required this.imagenPrincipal,
-    this.telefonoEmpresa,
-    this.correoCorporativo,
-    this.localidad,
-    this.imagenes,
-    this.urlReserva,
-    this.urlWeb,
-    this.descripcion,
-    this.direccion,
+    required this.name,
+    required this.accommodationCategory,
+    required this.coverImage,
+    this.companyPhone,
+    this.businessEmail,
+    this.location,
+    this.images,
+    this.bookingUrl,
+    this.webUrl,
+    this.description,
+    this.address,
   });
 
   factory Accommodation.trending(Map<String, dynamic> json) {
     return Accommodation._(
       id: json['id'],
-      nombre: json['nombre'],
-      categoriaAlojamiento: json['categoriaAlojamiento'],
-      imagenPrincipal:
+      name: json['nombre'],
+      accommodationCategory: json['categoriaAlojamiento'],
+      coverImage:
           json['portada'] ??
           'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
     );
@@ -46,10 +46,10 @@ class Accommodation {
   factory Accommodation.search(Map<String, dynamic> json) {
     return Accommodation._(
       id: json['idAlojamiento'],
-      nombre: json['nombre'],
-      categoriaAlojamiento: json['categoriaAlojamiento'],
-      localidad: json['localidad'],
-      imagenPrincipal:
+      name: json['nombre'],
+      accommodationCategory: json['categoriaAlojamiento'],
+      location: json['localidad'],
+      coverImage:
           json['portada'] ??
           'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
     );
@@ -58,29 +58,29 @@ class Accommodation {
   factory Accommodation.detail(Map<String, dynamic> json) {
     return Accommodation._(
       id: json['id'],
-      nombre: json['nombre'],
-      categoriaAlojamiento: json['categoriaAlojamiento'],
-      imagenPrincipal: json['portada'],
-      telefonoEmpresa: json['telefono'],
-      correoCorporativo: json['email'],
-      localidad: json['localidad'],
-      imagenes: json['imagenes'] != null
+      name: json['nombre'],
+      accommodationCategory: json['categoriaAlojamiento'],
+      coverImage: json['portada'],
+      companyPhone: json['telefono'],
+      businessEmail: json['email'],
+      location: json['localidad'],
+      images: json['imagenes'] != null
           ? (json['imagenes'] as List).map((e) => Image.fromJson(e)).toList()
           : null,
-      urlReserva: json['urlReserva'],
-      urlWeb: json['urlWeb'],
-      descripcion: json['descripcion'],
-      direccion: json['direccion'],
+      bookingUrl: json['urlReserva'],
+      webUrl: json['urlWeb'],
+      description: json['descripcion'],
+      address: json['direccion'],
     );
   }
 
   factory Accommodation.saved(Map<String, dynamic> json) {
     return Accommodation._(
       id: json['idAlojamiento'],
-      nombre: json['nombre'],
-      imagenPrincipal: json['portada'],
-      categoriaAlojamiento: json['categoriaAlojamiento'],
-      localidad: json['localidad'],
+      name: json['nombre'],
+      coverImage: json['portada'],
+      accommodationCategory: json['categoriaAlojamiento'],
+      location: json['localidad'],
     );
   }
 }

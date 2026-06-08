@@ -1,13 +1,13 @@
 class Saved {
-  final bool guardado;
-  final bool yaExistia;
+  final bool saved;
+  final bool exists;
 
-  Saved({required this.guardado, required this.yaExistia});
+  Saved({required this.saved, required this.exists});
 
   factory Saved.fromJson(Map<String, dynamic> json) {
     return Saved(
-      guardado: json['guardado'] as bool,
-      yaExistia: json['yaExistia'] as bool,
+      saved: json['guardado'] as bool,
+      exists: json['yaExistia'] as bool,
     );
   }
 }

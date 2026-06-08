@@ -46,12 +46,12 @@ class _SplashPageState extends State<SplashPage> {
       final usuarioGuardado = results[6] as User?;
 
       await Future.wait(
-        page.contenido
+        page.content
             .take(5)
-            .where((a) => a.imagenPrincipal != null)
+            .where((a) => a.coverImage != null)
             .map(
               (a) => precacheImage(
-            NetworkImage(a.imagenPrincipal!),
+            NetworkImage(a.coverImage!),
             context,
           ).catchError((_) {}),
         ),
@@ -62,9 +62,9 @@ class _SplashPageState extends State<SplashPage> {
         context,
         MaterialPageRoute(
           builder: (_) => MyHomePage(
-            actividadesIniciales: page.contenido,
-            totalPaginas: page.totalPaginas,
-            usuarioInicial: usuarioGuardado,
+            startActivities: page.content,
+            totalPages: page.totalPages,
+            startUser: usuarioGuardado,
           ),
         ),
       );

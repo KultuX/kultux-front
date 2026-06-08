@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:kultux/core/utils/web_container.dart';
 
-import '../../config/app_colors.dart';
+import 'package:kultux/config/app_colors.dart';
 
 class AlertModal {
   static void show(

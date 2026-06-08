@@ -26,12 +26,12 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool tieneFlecha = onBack != null;
+    final bool hasArrow = onBack != null;
 
-    final fechaActual = DateTime.now();
+    final today = DateTime.now();
 
-    const dias = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-    final dia = dias[fechaActual.weekday - 1];
+    const days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final day = days[today.weekday - 1];
 
     return Container(
       height: minHeight > 0 ? minHeight : null,
@@ -74,7 +74,7 @@ class PageHeader extends StatelessWidget {
                 ),
               ),
             ),
-          if (tieneFlecha)
+          if (hasArrow)
             Positioned(
               top: -20,
               left: -14,
@@ -93,7 +93,7 @@ class PageHeader extends StatelessWidget {
             ),
 
           Padding(
-            padding: EdgeInsets.only(top: tieneFlecha ? 18 : 0),
+            padding: EdgeInsets.only(top: hasArrow ? 18 : 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +154,7 @@ class PageHeader extends StatelessWidget {
                       if (showTodayLabel) const SizedBox(height: 2),
 
                       Text(
-                        "$dia. ${fechaActual.day}/${fechaActual.month}/${fechaActual.year}",
+                        "$day. ${today.day}/${today.month}/${today.year}",
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,

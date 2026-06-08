@@ -3,44 +3,44 @@ import 'package:kultux/core/models/time_slot.dart';
 
 class Restaurant {
   final int id;
-  final String nombre;
-  final String categoriaRestaurante;
-  String? imagenPrincipal;
+  final String name;
+  final String restaurantCategory;
+  String? coverImage;
 
-  String? descripcion;
-  String? telefonoEmpresa;
-  String? correoCorporativo;
-  Map<String, List<TimeSlot>>? horario;
-  String? localidad;
-  List<Image>? imagenes;
-  bool? abierto;
-  String? urlReserva;
-  String? urlWeb;
-  String? direccion;
+  String? description;
+  String? companyPhone;
+  String? businessEmail;
+  Map<String, List<TimeSlot>>? schedule;
+  String? location;
+  List<Image>? images;
+  bool? isOpen;
+  String? bookingUrl;
+  String? webUrl;
+  String? address;
 
   Restaurant._({
     required this.id,
-    required this.nombre,
-    required this.categoriaRestaurante,
-    this.imagenPrincipal,
-    this.descripcion,
-    this.telefonoEmpresa,
-    this.correoCorporativo,
-    this.horario,
-    this.localidad,
-    this.imagenes,
-    this.abierto,
-    this.urlReserva,
-    this.urlWeb,
-    this.direccion,
+    required this.name,
+    required this.restaurantCategory,
+    this.coverImage,
+    this.description,
+    this.companyPhone,
+    this.businessEmail,
+    this.schedule,
+    this.location,
+    this.images,
+    this.isOpen,
+    this.bookingUrl,
+    this.webUrl,
+    this.address,
   });
 
   factory Restaurant.trending(Map<String, dynamic> json) {
     return Restaurant._(
       id: json['id'],
-      nombre: json['nombre'],
-      categoriaRestaurante: json['categoriaRestaurante'],
-      imagenPrincipal:
+      name: json['nombre'],
+      restaurantCategory: json['categoriaRestaurante'],
+      coverImage:
           json['portada'] ??
           'https://www.tooltyp.com/wp-content/uploads/2014/10/1900x920-8-beneficios-de-usar-imagenes-en-nuestros-sitios-web.jpg',
     );
@@ -49,43 +49,43 @@ class Restaurant {
   factory Restaurant.detail(Map<String, dynamic> json) {
     return Restaurant._(
       id: json['id'],
-      nombre: json['nombre'],
-      categoriaRestaurante: json['categoria'],
-      descripcion: json['descripcion'],
-      telefonoEmpresa: json['telefono'],
-      correoCorporativo: json['email'],
-      horario: _parseHorario(json['horario']),
-      localidad: json['localidad'],
-      imagenes: json['imagenes'] != null
+      name: json['nombre'],
+      restaurantCategory: json['categoria'],
+      description: json['descripcion'],
+      companyPhone: json['telefono'],
+      businessEmail: json['email'],
+      schedule: _parseHorario(json['horario']),
+      location: json['localidad'],
+      images: json['imagenes'] != null
           ? (json['imagenes'] as List).map((e) => Image.fromJson(e)).toList()
           : [],
-      abierto: json['abierto'],
-      urlReserva: json['urlReserva'],
-      urlWeb: json['urlWeb'],
-      direccion: json['direccion'],
+      isOpen: json['abierto'],
+      bookingUrl: json['urlReserva'],
+      webUrl: json['urlWeb'],
+      address: json['direccion'],
     );
   }
 
   factory Restaurant.search(Map<String, dynamic> json) {
     return Restaurant._(
       id: json['id'],
-      nombre: json['nombre'],
-      horario: _parseHorario(json['horario']),
-      localidad: json['localidad'],
-      categoriaRestaurante: json['categoria'],
-      imagenPrincipal: json['portada'],
-      abierto: json['abierto'],
+      name: json['nombre'],
+      schedule: _parseHorario(json['horario']),
+      location: json['localidad'],
+      restaurantCategory: json['categoria'],
+      coverImage: json['portada'],
+      isOpen: json['abierto'],
     );
   }
 
   factory Restaurant.saved(Map<String, dynamic> json) {
     return Restaurant._(
       id: json['id'],
-      nombre: json['nombre'],
-      imagenPrincipal: json['portada'],
-      categoriaRestaurante: json['categoria'],
-      localidad: json['localidad'],
-      abierto: json['abierto'],
+      name: json['nombre'],
+      coverImage: json['portada'],
+      restaurantCategory: json['categoria'],
+      location: json['localidad'],
+      isOpen: json['abierto'],
     );
   }
 

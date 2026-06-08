@@ -58,8 +58,20 @@ class AppColors{
   static const categoryBadgeBorder = Color.fromARGB(77,  166, 226, 70); // borde verde translúcido
 
 // == Images Colors == //
-  static const imagePlaceholder = Color(0xFFD4D0C8);
-  static const imageErrorIcon = Color(0xFF99999);
+  static const imagePlaceholder = Color.fromARGB(255, 212, 208, 200);
+  static const imageErrorIcon = Color.fromARGB(255, 153, 153, 153);
+
+
+
+  static const statusNext = Color.fromARGB(136, 166, 226, 70);
+  static const statusCancel = Color.fromARGB(92, 255, 82, 100);
+
+
+  static const dateGreenBg      = Color(0x4D639922);                  // Fondo verde de la fecha
+  static const dateGreenText    = Color(0xFFC0DD97);                  // Texto e icono verde de la fecha
+  static const scheduleClosed   = Color(0xFFE24B4A);
+
+
 
 
 

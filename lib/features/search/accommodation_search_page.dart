@@ -96,16 +96,16 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
 
     try {
       final pageResponse = await AccommodationApiService.accommodationsSearching(
-        nombre: nombre.isEmpty ? null : nombre,
-        categoria: categoria,
-        localidad: localidad,
+        name: nombre.isEmpty ? null : nombre,
+        category: categoria,
+        location: localidad,
         page: paginaActual,
       );
 
       setState(() {
         if (paginaActual == 0) alojamientos.clear();
-        alojamientos.addAll(pageResponse.contenido);
-        totalPaginas = pageResponse.totalPaginas;
+        alojamientos.addAll(pageResponse.content);
+        totalPaginas = pageResponse.totalPages;
         paginaActual++;
         estado = alojamientos.isEmpty ? UiState.vacio : UiState.contenido;
       });
@@ -210,12 +210,12 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
                     vertical: 5,
                   ),
                   child: AppCard.accommodation(
-                    name: a.nombre,
-                    location: a.localidad,
-                    imageUrl: a.imagenPrincipal!,
-                    textBadge: a.categoriaAlojamiento,
+                    name: a.name,
+                    location: a.location,
+                    imageUrl: a.coverImage!,
+                    textBadge: a.accommodationCategory,
                     iconBadge: AppIcons.getAccommodationIcon(
-                      a.categoriaAlojamiento,
+                      a.accommodationCategory,
                     ),
                     onTap: () async {
                       setState(() => _cargandoDetalle = true);
@@ -436,7 +436,7 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
         if (!snapshot.hasData) return _shimmerLoader();
         return LocalitySelector(
           key: _selectorLocalidadKey,
-          localidades: snapshot.data!,
+          locations: snapshot.data!,
           onSelected: (loc) {
             setState(() => localidad = loc?.ine);
             _resetYcargar();

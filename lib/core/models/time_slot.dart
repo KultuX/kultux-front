@@ -1,10 +1,10 @@
 class TimeSlot {
-  final String inicio;
-  final String fin;
+  final String start;
+  final String end;
 
-  TimeSlot._({required this.inicio, required this.fin});
+  TimeSlot._({required this.start, required this.end});
 
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
-    return TimeSlot._(inicio: json['inicio'], fin: json['fin']);
+    return TimeSlot._(start: json['inicio'], end: json['fin']);
   }
 }

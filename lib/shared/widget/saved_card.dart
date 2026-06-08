@@ -2,87 +2,83 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:kultux/core/utils/formatter.dart';
 
+import '../../config/app_colors.dart';
+
 class SavedCard extends StatelessWidget {
-  final String titulo;
-  final String? localidad;
-  final String? categoria;
-  final String? imagenUrl;
+  final String title;
+  final String? location;
+  final String? category;
+  final String? imageUrl;
   final VoidCallback onTap;
-  final String? fecha;
-  final bool? abierto;
-  final String? fechaFin;
+  final String? startDate;
+  final bool? isOpen;
+  final String? endDate;
 
   const SavedCard._({
     super.key,
-    required this.titulo,
+    required this.title,
     required this.onTap,
-    this.localidad,
-    this.categoria,
-    this.imagenUrl,
-    this.fecha,
-    this.abierto,
-    this.fechaFin,
+    this.location,
+    this.category,
+    this.imageUrl,
+    this.startDate,
+    this.isOpen,
+    this.endDate,
   });
 
   const SavedCard.activity({
     Key? key,
-    required String titulo,
+    required String title,
     required VoidCallback onTap,
-    String? localidad,
-    String? categoria,
-    String? imagenUrl,
-    String? fecha,
-    String? fechaFin,
+    String? location,
+    String? category,
+    String? imageUrl,
+    String? startDate,
+    String? endDate,
   }) : this._(
          key: key,
-         titulo: titulo,
+         title: title,
          onTap: onTap,
-         localidad: localidad,
-         categoria: categoria,
-         imagenUrl: imagenUrl,
-         fecha: fecha,
-         fechaFin: fechaFin,
+         location: location,
+         category: category,
+         imageUrl: imageUrl,
+         startDate: startDate,
+         endDate: endDate,
        );
 
   const SavedCard.restaurant({
     Key? key,
-    required String titulo,
+    required String name,
     required VoidCallback onTap,
-    String? localidad,
-    String? categoria,
-    String? imagenUrl,
-    bool? abierto,
+    String? location,
+    String? category,
+    String? imageUrl,
+    bool? isOpen,
   }) : this._(
          key: key,
-         titulo: titulo,
+         title: name,
          onTap: onTap,
-         localidad: localidad,
-         categoria: categoria,
-         imagenUrl: imagenUrl,
-         abierto: abierto,
+         location: location,
+         category: category,
+         imageUrl: imageUrl,
+         isOpen: isOpen,
        );
 
   const SavedCard.accommodation({
     Key? key,
-    required String titulo,
+    required String name,
     required VoidCallback onTap,
-    String? localidad,
-    String? categoria,
-    String? imagenUrl,
+    String? location,
+    String? category,
+    String? imageUrl,
   }) : this._(
          key: key,
-         titulo: titulo,
+         title: name,
          onTap: onTap,
-         localidad: localidad,
-         categoria: categoria,
-         imagenUrl: imagenUrl,
+         location: location,
+         category: category,
+         imageUrl: imageUrl,
        );
-
-  static const _verde = Color(0xFFA6E246);
-  static const _texto = Color(0xFF1A1A1A);
-  static const _textoSuave = Color(0xFF6B6B6B);
-  static const _borde = Color(0xFFE0DDD6);
-  static const _fondoCard = Color(0xFFF8F7F4);
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +88,9 @@ class SavedCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: _fondoCard,
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _borde),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -103,9 +99,9 @@ class SavedCard extends StatelessWidget {
               child: SizedBox(
                 width: 64,
                 height: 64,
-                child: imagenUrl != null && imagenUrl!.isNotEmpty
+                child: imageUrl != null && imageUrl!.isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl: imagenUrl!,
+                        imageUrl: imageUrl!,
                         fit: BoxFit.cover,
                         memCacheWidth: 100,
                         memCacheHeight: 100,
@@ -118,9 +114,9 @@ class SavedCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        errorWidget: (_, __, ___) => _imagenFallback(),
+                        errorWidget: (_, __, ___) => _imageFallback(),
                       )
-                    : _imagenFallback(),
+                    : _imageFallback(),
               ),
             ),
             const SizedBox(width: 12),
@@ -129,14 +125,14 @@ class SavedCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    titulo,
+                    title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'RobotoCondensed',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: _texto,
+                      color: AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -144,35 +140,35 @@ class SavedCard extends StatelessWidget {
                     spacing: 5,
                     runSpacing: 4,
                     children: [
-                      if (localidad != null && localidad!.isNotEmpty)
-                        _Chip(
-                          icono: Icons.location_on_outlined,
-                          texto: localidad!,
-                          fondo: const Color(0xFFF0F0F0),
-                          color: _textoSuave,
+                      if (location != null && location!.isNotEmpty)
+                        _Badge(
+                          icon: Icons.location_on_outlined,
+                          text: location!,
+                          background: const Color(0xFFF0F0F0),
+                          color: AppColors.textSoft,
                         ),
-                      if (fecha != null)
-                        _Chip(
-                          icono: Icons.calendar_today_outlined,
-                          texto:
-                              '${dateFormatter(fecha!)}${fechaFin != null && fechaFin!.isNotEmpty ? ' - ${dateFormatter(fechaFin!)}' : ''}',
-                          fondo: const Color(0xFFEAF3DE),
+                      if (startDate != null)
+                        _Badge(
+                          icon: Icons.calendar_today_outlined,
+                          text:
+                              '${dateFormatter(startDate!)}${endDate != null && endDate!.isNotEmpty ? ' - ${dateFormatter(endDate!)}' : ''}',
+                          background: const Color(0xFFEAF3DE),
                           color: const Color(0xFF3B6D11),
                         ),
-                      if (abierto != null)
-                        _Chip(
-                          icono: Icons.circle,
-                          texto: abierto! ? 'Abierto' : 'Cerrado',
-                          fondo: abierto!
+                      if (isOpen != null)
+                        _Badge(
+                          icon: Icons.circle,
+                          text: isOpen! ? 'Abierto' : 'Cerrado',
+                          background: isOpen!
                               ? const Color(0xFFEAF3DE)
                               : const Color(0xFFFFEBEE),
-                          color: abierto!
+                          color: isOpen!
                               ? const Color(0xFF3B6D11)
                               : const Color(0xFFC62828),
                           iconSize: 8,
                         ),
-                      if (categoria != null && categoria!.isNotEmpty)
-                        _Chip(texto: categoria!, fondo: _texto, color: _verde),
+                      if (category != null && category!.isNotEmpty)
+                        _Badge(text: category!, background: AppColors.text, color: AppColors.green),
                     ],
                   ),
                 ],
@@ -183,10 +179,10 @@ class SavedCard extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: _verde,
+                color: AppColors.green,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.chevron_right, size: 18, color: _texto),
+              child: const Icon(Icons.chevron_right, size: 18, color: AppColors.text),
             ),
           ],
         ),
@@ -194,7 +190,7 @@ class SavedCard extends StatelessWidget {
     );
   }
 
-  Widget _imagenFallback() {
+  Widget _imageFallback() {
     return Container(
       color: const Color(0xFFE8E5DF),
       child: const Icon(
@@ -206,17 +202,17 @@ class SavedCard extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  final IconData? icono;
-  final String texto;
-  final Color fondo;
+class _Badge extends StatelessWidget {
+  final IconData? icon;
+  final String text;
+  final Color background;
   final Color color;
   final double iconSize;
 
-  const _Chip({
-    this.icono,
-    required this.texto,
-    required this.fondo,
+  const _Badge({
+    this.icon,
+    required this.text,
+    required this.background,
     required this.color,
     this.iconSize = 12,
   });
@@ -226,20 +222,20 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: fondo,
+        color: background,
         borderRadius: BorderRadius.circular(5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icono != null) ...[
-            Icon(icono, size: iconSize, color: color),
+          if (icon != null) ...[
+            Icon(icon, size: iconSize, color: color),
             const SizedBox(width: 3),
           ],
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 110),
             child: Text(
-              categoryFormatter(texto),
+              categoryFormatter(text),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

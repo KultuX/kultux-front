@@ -1,25 +1,25 @@
 class Image {
-  final int idImagen;
-  final int idAsociado;
-  final bool esPortada;
+  final int imageId;
+  final int modelId;
+  final bool isCover;
   final String url;
 
   Image({
-    required this.idImagen,
-    required this.idAsociado,
-    required this.esPortada,
+    required this.imageId,
+    required this.modelId,
+    required this.isCover,
     required this.url,
   });
   factory Image.fromJson(Map<String, dynamic> json) {
     return Image(
-      idImagen:
+      imageId:
           json['idImagenActividad'] ??
           json['idImagenAlojamiento'] ??
           json['idImagenRestaurante'],
-      idAsociado:
+      modelId:
           json['idActividad'] ?? json['idAlojamiento'] ?? json['idRestaurante'],
       url: json['urlImagen'],
-      esPortada: json['esPortada'],
+      isCover: json['esPortada'],
     );
   }
 }

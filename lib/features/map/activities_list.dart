@@ -48,14 +48,14 @@ class _ActivitiesListState extends State<ActivitiesList> {
     try {
       final page = await ActivityApiService.activitiesListMap(
         ine: widget.punto.ine,
-        fechaInicio: null,
-        fechaFin: null,
+        startDate: null,
+        endDate: null,
         page: _pagina,
       );
       setState(() {
-        _actividades.addAll(page.contenido);
+        _actividades.addAll(page.content);
         _pagina++;
-        _hayMas = _pagina < page.totalPaginas;
+        _hayMas = _pagina < page.totalPages;
         _cargando = false;
       });
     } catch (_) {
@@ -71,7 +71,7 @@ class _ActivitiesListState extends State<ActivitiesList> {
         itemCount: 4,
         itemBuilder: (_, __) => const Padding(
           padding: EdgeInsets.only(bottom: 12),
-          child: SkeletonCard(),
+          child: AppCardSkeleton(),
         ),
       );
     }
@@ -89,15 +89,15 @@ class _ActivitiesListState extends State<ActivitiesList> {
           if (i == _actividades.length) {
             return const Padding(
               padding: EdgeInsets.only(bottom: 12),
-              child: SkeletonCard(),
+              child: AppCardSkeleton(),
             );
           }
           final a = _actividades[i];
           return AppCard.activity(
-              title: a.titulo,
-              location: a.localidad ?? '',
-              startDate: a.fechaInicio,
-              imageUrl: a.imagenPrincipal,
+              title: a.title,
+              location: a.location ?? '',
+              startDate: a.startDate,
+              imageUrl: a.coverImage,
               onTap: () async {
                 setState(() => _cargandoDetalle = true);
                 try {
@@ -112,9 +112,9 @@ class _ActivitiesListState extends State<ActivitiesList> {
                 }
               },
               iconBadge: 'assets/iconos/actividad_etiquetas.svg',
-              textBadge: a.categoriaActividad ?? '',
-              status: a.estado,
-              endDate: a.fechaFin
+              textBadge: a.activityCategory ?? '',
+              status: a.status,
+              endDate: a.endDate
           );
         },
       ),

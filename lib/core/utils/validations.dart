@@ -1,4 +1,4 @@
-class Validaciones {
+class Validations {
   static bool password(String value) {
     final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$');
     return regex.hasMatch(value);

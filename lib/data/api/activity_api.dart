@@ -9,7 +9,7 @@ import 'package:kultux/core/models/activity_total.dart';
 import 'package:kultux/core/utils/api_url.dart';
 
 class ActivityApiService {
-  static List<String>? categoriasCache;
+  static List<String>? categoriesCache;
   static Future<Pages<Activity>> trendingActivities(int page) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -66,7 +66,7 @@ class ActivityApiService {
   }
 
   static Future<List<String>> activityCategories() async {
-    if(categoriasCache != null ) return categoriasCache!;
+    if(categoriesCache != null ) return categoriesCache!;
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-actividades/categoria_actividad',
@@ -83,28 +83,28 @@ class ActivityApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
-      categoriasCache = json.map((c) => c.toString()).toList();
-      return categoriasCache!;
+      categoriesCache = json.map((c) => c.toString()).toList();
+      return categoriesCache!;
     } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
   static Future<Pages<Activity>> activitiesSearching({
-    String? titulo,
-    String? categoria,
-    int? localidad,
-    DateTime? fecha,
+    String? title,
+    String? category,
+    int? location,
+    DateTime? startDate,
     required int page,
   }) async {
     final params = <String, String>{'page': page.toString(), 'size': '5'};
 
-    if (titulo != null && titulo.isNotEmpty) params['titulo'] = titulo;
-    if (categoria != null) params['categoria'] = categoria;
-    if (localidad != null) params['localidad'] = localidad.toString();
-    if (fecha != null) {
+    if (title != null && title.isNotEmpty) params['titulo'] = title;
+    if (category != null) params['categoria'] = category;
+    if (location != null) params['localidad'] = location.toString();
+    if (startDate != null) {
       params['fecha'] =
-          "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+          "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
     } else {
       final now = DateTime.now();
       params['fecha'] =
@@ -135,11 +135,11 @@ class ActivityApiService {
   }
 
   static Future<Pages<Activity>> activitiesSaved({
-    required int idUsuario,
+    required int userId,
     required int page,
   }) async {
     final params = <String, String>{
-      'idUsuario': idUsuario.toString(),
+      'idUsuario': userId.toString(),
       'page': page.toString(),
       'size': '5',
     };
@@ -170,13 +170,13 @@ class ActivityApiService {
   }
 
   static Future<List<ActivityTotal>> activitiesTotalMap({
-    DateTime? fechaInicio,
-    DateTime? fechaFin
+    DateTime? startDate,
+    DateTime? endDate
   }) async {
     final url = Uri.https(
       ApiUrl.BASE_URL,
       '/api/v1/gateway-actividades/mapa/total_actividades',
-      {'fechaInicio': fechaInicio, 'fechaFin': fechaFin},
+      {'fechaInicio': startDate, 'fechaFin': endDate},
     );
 
     final response = await http.get(
@@ -199,13 +199,13 @@ class ActivityApiService {
   static Future<Pages<Activity>> activitiesListMap({
     required int ine,
     required int page,
-    DateTime? fechaInicio,
-    DateTime? fechaFin
+    DateTime? startDate,
+    DateTime? endDate
   }) async {
     final params = <String, String>{'page': page.toString(), 'size': '8'};
 
-    if(fechaInicio != null ) params['fechaInicio'] = fechaInicio.toString();
-    if(fechaFin != null ) params['fechaFin'] = fechaFin.toString();
+    if(startDate != null ) params['fechaInicio'] = startDate.toString();
+    if(endDate != null ) params['fechaFin'] = endDate.toString();
 
     final url = Uri.https(
       ApiUrl.BASE_URL,

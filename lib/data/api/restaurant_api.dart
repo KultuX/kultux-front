@@ -6,7 +6,7 @@ import 'package:kultux/core/models/pages.dart';
 import 'package:kultux/core/utils/api_url.dart';
 
 class RestaurantApiService {
-  static List<String>? categoriasCache;
+  static List<String>? categoriesCache;
   static Future<Pages<Restaurant>> restaurantsTrending({
     required int page,
   }) async {
@@ -57,7 +57,7 @@ class RestaurantApiService {
   }
 
   static Future<List<String>> restaurantsCategories() async {
-    if ( categoriasCache != null ) return categoriasCache!;
+    if ( categoriesCache != null ) return categoriesCache!;
     final url = Uri.https(
       ApiUrl.BASE_URL,
       'api/v1/gateway-restaurantes/categoria_restaurante',
@@ -74,26 +74,26 @@ class RestaurantApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
-      categoriasCache  = json.map((c) => c.toString()).toList();
-      return  categoriasCache!;
+      categoriesCache  = json.map((c) => c.toString()).toList();
+      return  categoriesCache!;
     } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
   static Future<Pages<Restaurant>> restaurantsSearching({
-    String? nombre,
-    String? categoria,
-    int? localidad,
-    bool? soloAbiertos,
+    String? name,
+    String? category,
+    int? location,
+    bool? onlyOpen,
     required int page,
   }) async {
     final params = <String, String>{'page': page.toString(), 'size': '8'};
 
-    if (nombre != null && nombre.isNotEmpty) params['nombre'] = nombre;
-    if (categoria != null) params['categoria'] = categoria;
-    if (localidad != null) params['localidad'] = localidad.toString();
-    if (soloAbiertos != null) params['soloAbiertos'] = soloAbiertos.toString();
+    if (name != null && name.isNotEmpty) params['nombre'] = name;
+    if (category != null) params['categoria'] = category;
+    if (location != null) params['localidad'] = location.toString();
+    if (onlyOpen != null) params['soloAbiertos'] = onlyOpen.toString();
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -121,11 +121,11 @@ class RestaurantApiService {
   }
 
   static Future<Pages<Restaurant>> restaurantsSaved({
-    required int idUsuario,
+    required int userId,
     required int page,
   }) async {
     final params = <String, String>{
-      'idUsuario': idUsuario.toString(),
+      'idUsuario': userId.toString(),
       'page': page.toString(),
       'size': '8',
     };

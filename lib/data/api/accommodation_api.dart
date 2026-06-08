@@ -6,7 +6,7 @@ import 'package:kultux/core/models/pages.dart';
 import 'package:kultux/core/utils/api_url.dart';
 
 class AccommodationApiService {
-  static List<String>? categoriasCache;
+  static List<String>? categoriesCache;
   static Future<Pages<Accommodation>> accommodationTrending({
     required int page,
   }) async {
@@ -54,7 +54,7 @@ class AccommodationApiService {
   }
 
   static Future<List<String>> accommodationCategories() async {
-    if(categoriasCache != null ) return categoriasCache!;
+    if(categoriesCache != null ) return categoriesCache!;
     final url = Uri.https(
       ApiUrl.BASE_URL,
       'api/v1/gateway-alojamientos/categoria_alojamiento',
@@ -71,24 +71,24 @@ class AccommodationApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
-      categoriasCache = json.map((c) => c.toString()).toList();
-      return categoriasCache!;
+      categoriesCache = json.map((c) => c.toString()).toList();
+      return categoriesCache!;
     } else {
       throw HttpException(response.statusCode.toString());
     }
   }
 
   static Future<Pages<Accommodation>> accommodationsSearching({
-    String? nombre,
-    String? categoria,
-    int? localidad,
+    String? name,
+    String? category,
+    int? location,
     required int page,
   }) async {
     final params = <String, String>{'page': page.toString(), 'size': '8'};
 
-    if (nombre != null && nombre.isNotEmpty) params['nombre'] = nombre;
-    if (categoria != null) params['categoria'] = categoria;
-    if (localidad != null) params['localidad'] = localidad.toString();
+    if (name != null && name.isNotEmpty) params['nombre'] = name;
+    if (category != null) params['categoria'] = category;
+    if (location != null) params['localidad'] = location.toString();
 
     final url = Uri.https(
       ApiUrl.BASE_URL,
@@ -114,11 +114,11 @@ class AccommodationApiService {
   }
 
   static Future<Pages<Accommodation>> accommodationsSaved({
-    required int idUsuario,
+    required int userId,
     required int page,
   }) async {
     final params = <String, String>{
-      'idUsuario': idUsuario.toString(),
+      'idUsuario': userId.toString(),
       'page': page.toString(),
       'size': '8',
     };

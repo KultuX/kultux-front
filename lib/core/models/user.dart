@@ -2,11 +2,11 @@ class User {
   final String email;
   int? id;
   String? password;
-  String? nombre;
-  String? apellidos;
-  int? localidad;
-  String? fechaNacimiento;
-  String? imagenPerfil;
+  String? name;
+  String? surname;
+  int? location;
+  String? dateOfBirth;
+  String? profileImage;
 
   static User? activeUser;
 
@@ -14,34 +14,34 @@ class User {
     required this.email,
     this.id,
     this.password,
-    this.nombre,
-    this.localidad,
-    this.apellidos,
-    this.fechaNacimiento,
-    this.imagenPerfil,
+    this.name,
+    this.location,
+    this.surname,
+    this.dateOfBirth,
+    this.profileImage,
   });
 
   factory User.logged(Map<String, dynamic> json) {
     return User._(
       email: json['email'],
       id: json['id'],
-      apellidos: json['apellidos'],
+      surname: json['apellidos'],
       password: json['password'],
-      nombre: json['nombre'],
-      localidad: json['localidad'],
-      fechaNacimiento: json['fechaNacimiento'],
-      imagenPerfil: json['imagenPerfil'],
+      name: json['nombre'],
+      location: json['localidad'],
+      dateOfBirth: json['fechaNacimiento'],
+      profileImage: json['imagenPerfil'],
     );
   }
 
   factory User.register(Map<String, dynamic> datos) {
     return User._(
-      nombre: datos['nombre'],
-      apellidos: datos['apellidos'],
+      name: datos['nombre'],
+      surname: datos['apellidos'],
       email: datos['email'],
       password: datos['password'],
-      localidad: datos['localidad'],
-      fechaNacimiento: datos['fechaNacimiento'],
+      location: datos['localidad'],
+      dateOfBirth: datos['fechaNacimiento'],
     );
   }
   factory User.login(String email, String password) {
@@ -54,12 +54,12 @@ class User {
 
   Map<String, dynamic> toJsonRegister() {
     return {
-      "nombre": this.nombre,
-      "apellidos": this.apellidos,
+      "nombre": this.name,
+      "apellidos": this.surname,
       "email": this.email,
       "password": this.password,
-      "localidad": this.localidad,
-      "fechaNacimiento": this.fechaNacimiento,
+      "localidad": this.location,
+      "fechaNacimiento": this.dateOfBirth,
     };
   }
 
@@ -67,11 +67,11 @@ class User {
     return {
       'email': email,
       'id': id,
-      'nombre': nombre,
-      'apellidos': apellidos,
-      'localidad': localidad,
-      'fechaNacimiento': fechaNacimiento,
-      'imagenPerfil': imagenPerfil,
+      'nombre': name,
+      'apellidos': surname,
+      'localidad': location,
+      'fechaNacimiento': dateOfBirth,
+      'imagenPerfil': profileImage,
       // password no se guarda en disco por seguridad
     };
   }
@@ -81,22 +81,22 @@ class User {
     return User._(
       email: json['email'],
       id: json['id'],
-      nombre: json['nombre'],
-      apellidos: json['apellidos'],
-      localidad: json['localidad'],
-      fechaNacimiento: json['fechaNacimiento'],
-      imagenPerfil: json['imagenPerfil'],
+      name: json['nombre'],
+      surname: json['apellidos'],
+      location: json['localidad'],
+      dateOfBirth: json['fechaNacimiento'],
+      profileImage: json['imagenPerfil'],
     );
   }
 
   factory User.fromEdit(Map<String, dynamic> json) {
     return User._(
       email: json['email'],
-      nombre: json['nombre'],
-      apellidos: json['apellidos'],
-      localidad: json['localidad'],
-      fechaNacimiento: json['fechaNacimiento'],
-      imagenPerfil: json['urlImagenPerfil'],
+      name: json['nombre'],
+      surname: json['apellidos'],
+      location: json['localidad'],
+      dateOfBirth: json['fechaNacimiento'],
+      profileImage: json['urlImagenPerfil'],
       id: User.activeUser?.id,
     );
   }
@@ -107,11 +107,11 @@ class User {
         Usuario(
           id: $id,
           email: $email,
-          nombre: $nombre,
-          apellidos: $apellidos,
-          localidad: $localidad,
-          fechaNacimiento: $fechaNacimiento,
-          imagenPerfil: $imagenPerfil
+          nombre: $name,
+          apellidos: $surname,
+          localidad: $location,
+          fechaNacimiento: $dateOfBirth,
+          imagenPerfil: $profileImage
         )
         ''';
    }

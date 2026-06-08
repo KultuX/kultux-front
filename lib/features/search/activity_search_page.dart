@@ -98,16 +98,16 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
     });
     try {
       final pageResponse = await ActivityApiService.activitiesSearching(
-        titulo: titulo.isEmpty ? null : titulo,
-        categoria: categoria,
-        localidad: localidad,
-        fecha: fecha,
+        title: titulo.isEmpty ? null : titulo,
+        category: categoria,
+        location: localidad,
+        startDate: fecha,
         page: paginaActual,
       );
       setState(() {
         if (paginaActual == 0) actividades.clear();
-        actividades.addAll(pageResponse.contenido);
-        totalPaginas = pageResponse.totalPaginas;
+        actividades.addAll(pageResponse.content);
+        totalPaginas = pageResponse.totalPages;
         paginaActual++;
         estado = actividades.isEmpty ? UiState.vacio : UiState.contenido;
       });
@@ -175,10 +175,10 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
                     vertical: 5,
                   ),
                   child: AppCard.activity(
-                    title: a.titulo,
-                    location: a.localidad!,
-                    startDate: a.fechaInicio,
-                    imageUrl: a.imagenPrincipal,
+                    title: a.title,
+                    location: a.location!,
+                    startDate: a.startDate,
+                    imageUrl: a.coverImage,
                     onTap: () async {
                       setState(() => _cargandoDetalle = true);
                       try {
@@ -196,10 +196,10 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
                         setState(() => _cargandoDetalle = false);
                       }
                     },
-                    textBadge: a.categoriaActividad!,
+                    textBadge: a.activityCategory!,
                     iconBadge: 'assets/iconos/actividad_etiquetas.svg',
-                    endDate: a.fechaFin,
-                    status: a.estado
+                    endDate: a.endDate,
+                    status: a.status
                   ),
                 );
               }
@@ -462,7 +462,7 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
         if (!snapshot.hasData) return _shimmerLoader();
         return LocalitySelector(
           key: _selectorLocalidadKey,
-          localidades: snapshot.data!,
+          locations: snapshot.data!,
           onSelected: (loc) {
             setState(() => localidad = loc?.ine);
             _cargarActividades();

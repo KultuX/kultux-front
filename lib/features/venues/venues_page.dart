@@ -130,11 +130,11 @@ class _VenuesPageState extends State<VenuesPage> {
       );
       print(pagina.toString());
       setState(() {
-        _todosRestaurantes = pagina.contenido;
-        _hayMasRestaurantes = pagina.numero + 1 < pagina.totalPaginas;
+        _todosRestaurantes = pagina.content;
+        _hayMasRestaurantes = pagina.number + 1 < pagina.totalPages;
         _pageRestaurantes = 1;
         _restaurantesCargados = true;
-        _estadoRestaurantes = pagina.contenido.isEmpty
+        _estadoRestaurantes = pagina.content.isEmpty
             ? UiState.vacio
             : UiState.contenido;
       });
@@ -165,8 +165,8 @@ class _VenuesPageState extends State<VenuesPage> {
         page: _pageRestaurantes,
       );
       setState(() {
-        _todosRestaurantes.addAll(pagina.contenido);
-        _hayMasRestaurantes = pagina.numero + 1 < pagina.totalPaginas;
+        _todosRestaurantes.addAll(pagina.content);
+        _hayMasRestaurantes = pagina.number + 1 < pagina.totalPages;
         _pageRestaurantes++;
       });
     } catch (_) {
@@ -184,11 +184,11 @@ class _VenuesPageState extends State<VenuesPage> {
       );
 
       setState(() {
-        _todosAlojamientos = pagina.contenido;
-        _hayMasAlojamientos = pagina.numero + 1 < pagina.totalPaginas;
+        _todosAlojamientos = pagina.content;
+        _hayMasAlojamientos = pagina.number + 1 < pagina.totalPages;
         _pageAlojamientos = 1;
         _alojamientosCargados = true;
-        _estadoAlojamientos = pagina.contenido.isEmpty
+        _estadoAlojamientos = pagina.content.isEmpty
             ? UiState.vacio
             : UiState.contenido;
       });
@@ -219,8 +219,8 @@ class _VenuesPageState extends State<VenuesPage> {
         page: _pageAlojamientos,
       );
       setState(() {
-        _todosAlojamientos.addAll(pagina.contenido);
-        _hayMasAlojamientos = pagina.numero + 1 < pagina.totalPaginas;
+        _todosAlojamientos.addAll(pagina.content);
+        _hayMasAlojamientos = pagina.number + 1 < pagina.totalPages;
         _pageAlojamientos++;
       });
     } catch (_) {
@@ -323,8 +323,8 @@ class _VenuesPageState extends State<VenuesPage> {
                     items: _restaurantes
                         .map(
                           (r) => _ItemEstablecimiento(
-                            titulo: r.nombre,
-                            imagenUrl: r.imagenPrincipal!,
+                            titulo: r.name,
+                            imagenUrl: r.coverImage!,
                             onTap: () async {
                               try {
                                 setState(() => _cargandoDetalle = true);
@@ -359,8 +359,8 @@ class _VenuesPageState extends State<VenuesPage> {
                     items: _alojamientos
                         .map(
                           (a) => _ItemEstablecimiento(
-                            titulo: a.nombre,
-                            imagenUrl: a.imagenPrincipal!,
+                            titulo: a.name,
+                            imagenUrl: a.coverImage!,
                             onTap: () async {
                               try {
                                 setState(() => _cargandoDetalle = true);
@@ -442,13 +442,13 @@ class _VenuesPageState extends State<VenuesPage> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: AppCard.restaurant(
-                    name: r.nombre,
-                    imageUrl: r.imagenPrincipal!,
+                    name: r.name,
+                    imageUrl: r.coverImage!,
                     textBadge:
-                        r.categoriaRestaurante[0].toUpperCase() +
-                        r.categoriaRestaurante.substring(1).toLowerCase(),
+                        r.restaurantCategory[0].toUpperCase() +
+                        r.restaurantCategory.substring(1).toLowerCase(),
                     iconBadge: AppIcons.getRestaurantIcon(
-                      r.categoriaRestaurante,
+                      r.restaurantCategory,
                     ),
                     onTap: () async {
                       try {
@@ -473,9 +473,9 @@ class _VenuesPageState extends State<VenuesPage> {
                         });
                       }
                     },
-                    schedule: r.horario!,
-                    isOpen: r.abierto!,
-                    location: r.localidad,
+                    schedule: r.schedule!,
+                    isOpen: r.isOpen!,
+                    location: r.location,
                   ),
                 );
               },
@@ -530,13 +530,13 @@ class _VenuesPageState extends State<VenuesPage> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: AppCard.accommodation(
-                    name: a.nombre,
-                    imageUrl: a.imagenPrincipal!,
+                    name: a.name,
+                    imageUrl: a.coverImage!,
                     textBadge:
-                        a.categoriaAlojamiento[0].toUpperCase() +
-                        a.categoriaAlojamiento.substring(1).toLowerCase(),
+                        a.accommodationCategory[0].toUpperCase() +
+                        a.accommodationCategory.substring(1).toLowerCase(),
                     iconBadge: AppIcons.getAccommodationIcon(
-                      a.categoriaAlojamiento,
+                      a.accommodationCategory,
                     ),
                     onTap: () async {
                       try {
@@ -561,7 +561,7 @@ class _VenuesPageState extends State<VenuesPage> {
                         });
                       }
                     },
-                    location: a.localidad,
+                    location: a.location,
                   ),
                 );
               },

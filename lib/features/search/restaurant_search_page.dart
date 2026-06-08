@@ -96,17 +96,17 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
 
     try {
       final pageResponse = await RestaurantApiService.restaurantsSearching(
-        nombre: nombre.isEmpty ? null : nombre,
-        categoria: categoria,
-        localidad: localidad,
-        soloAbiertos: soloAbiertos,
+        name: nombre.isEmpty ? null : nombre,
+        category: categoria,
+        location: localidad,
+        onlyOpen: soloAbiertos,
         page: paginaActual,
       );
 
       setState(() {
         if (paginaActual == 0) restaurantes.clear();
-        restaurantes.addAll(pageResponse.contenido);
-        totalPaginas = pageResponse.totalPaginas;
+        restaurantes.addAll(pageResponse.content);
+        totalPaginas = pageResponse.totalPages;
         paginaActual++;
         estado = restaurantes.isEmpty ? UiState.vacio : UiState.contenido;
       });
@@ -230,15 +230,15 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                     vertical: 5,
                   ),
                   child: AppCard.restaurant(
-                    name: r.nombre,
-                    imageUrl: r.imagenPrincipal!,
-                    textBadge: r.categoriaRestaurante,
+                    name: r.name,
+                    imageUrl: r.coverImage!,
+                    textBadge: r.restaurantCategory,
                     iconBadge: AppIcons.getRestaurantIcon(
-                      r.categoriaRestaurante,
+                      r.restaurantCategory,
                     ),
-                    schedule: r.horario!,
-                    isOpen: r.abierto!,
-                    location: r.localidad,
+                    schedule: r.schedule!,
+                    isOpen: r.isOpen!,
+                    location: r.location,
                     onTap: () async {
                       setState(() => _cargandoDetalle = true);
                       try {
@@ -473,7 +473,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
         if (!snapshot.hasData) return _shimmerLoader();
         return LocalitySelector(
           key: _selectorLocalidadKey,
-          localidades: snapshot.data!,
+          locations: snapshot.data!,
           onSelected: (loc) {
             setState(() => localidad = loc?.ine);
             _resetYcargar();

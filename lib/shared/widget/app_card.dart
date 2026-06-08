@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kultux/core/utils/formatter.dart';
 import 'package:kultux/core/models/time_slot.dart';
 
-import '../../config/app_colors.dart';
+import 'package:kultux/config/app_colors.dart';
 
 class AppCard extends StatelessWidget {
   final String title;
@@ -119,7 +119,7 @@ class AppCard extends StatelessWidget {
                 fit: BoxFit.cover,
                 memCacheWidth: 800,
                 placeholder: (_, __) => const ColoredBox(
-                  color: Color(0xFFD4D0C8),
+                  color: AppColors.imagePlaceholder,
                 ),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.imagePlaceholder,
@@ -152,12 +152,12 @@ class AppCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (status != null && status!.isNotEmpty)
-                      _Estado(estado: status!),
+                      _Status(status: status!),
                     const Spacer(),
                     if (textBadge != null && iconBadge != null)
-                      _Categoria(
-                        iconoPath: iconBadge!,
-                        texto: categoryFormatter(textBadge!),
+                      _Category(
+                        iconPath: iconBadge!,
+                        text: categoryFormatter(textBadge!),
                       ),
                   ],
                 ),
@@ -179,7 +179,7 @@ class AppCard extends StatelessWidget {
                         fontFamily: 'RobotoCondensed',
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppColors.white,
                         height: 1.2,
                       ),
                     ),
@@ -189,22 +189,22 @@ class AppCard extends StatelessWidget {
                       runSpacing: 6,
                       children: [
                         if (location != null)
-                          _Fechas(
-                            icono: Icons.location_on_outlined,
-                            texto: location!,
+                          _Dates(
+                            icon: Icons.location_on_outlined,
+                            text: location!,
                           ),
                         if (startDate != null)
-                          _Fechas(
-                            icono: Icons.calendar_today_outlined,
-                            texto:
+                          _Dates(
+                            icon: Icons.calendar_today_outlined,
+                            text:
                             '${dateFormatter(startDate!)}${endDate != null && endDate!.isNotEmpty ? ' – ${dateFormatter(endDate!)}' : ''}',
-                            verde: true,
+                            green: true,
                           ),
                       ],
                     ),
                     if (schedule != null && isOpen != null) ...[
                       const SizedBox(height: 8),
-                      _HorarioLinea(horario: schedule!, abierto: isOpen!),
+                      _ScheduleLine(schedule: schedule!, isOpen: isOpen!),
                     ],
                   ],
                 ),
@@ -217,27 +217,27 @@ class AppCard extends StatelessWidget {
   }
 }
 
-class _Estado extends StatelessWidget {
-  final String estado;
-  const _Estado({required this.estado});
+class _Status extends StatelessWidget {
+  final String status;
+  const _Status({required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final esProximo = estado == 'PROXIMAMENTE';
+    final isNext = status == 'PROXIMAMENTE';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: esProximo
-            ? const Color.fromARGB(136, 166, 226, 70)
-            : const Color.fromARGB(92, 255, 82, 100),
+        color: isNext
+            ? AppColors.statusNext
+            : AppColors.statusCancel,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        estado,
+        status,
         style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: Color.fromARGB(255, 255, 255, 255),
+          color: AppColors.white,
           letterSpacing: 0.6,
         ),
       ),
@@ -245,20 +245,20 @@ class _Estado extends StatelessWidget {
   }
 }
 
-class _Categoria extends StatelessWidget {
-  final String iconoPath;
-  final String texto;
-  const _Categoria({required this.iconoPath, required this.texto});
+class _Category extends StatelessWidget {
+  final String iconPath;
+  final String text;
+  const _Category({required this.iconPath, required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
+        color: AppColors.navBg.withOpacity(0.8),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFA6E246).withOpacity(0.25),
+          color: AppColors.categoryBadgeBorder,
           width: 1,
         ),
       ),
@@ -266,21 +266,21 @@ class _Categoria extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SvgPicture.asset(
-            iconoPath,
+            iconPath,
             width: 13,
             height: 13,
             colorFilter: const ColorFilter.mode(
-              Color(0xFFA6E246),
+              AppColors.green,
               BlendMode.srcIn,
             ),
           ),
           const SizedBox(width: 5),
           Text(
-            texto,
+            text,
             style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFFA6E246),
+              color: AppColors.green,
               letterSpacing: 0.4,
             ),
           ),
@@ -290,44 +290,44 @@ class _Categoria extends StatelessWidget {
   }
 }
 
-class _Fechas extends StatelessWidget {
-  final IconData icono;
-  final String texto;
-  final bool verde;
-  const _Fechas({required this.icono, required this.texto, this.verde = false});
+class _Dates extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final bool green;
+  const _Dates({required this.icon, required this.text, this.green = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: verde
-            ? const Color(0x4D639922)
-            : Colors.white.withOpacity(0.14),
+        color: green
+            ? AppColors.dateGreenBg
+            : AppColors.white.withOpacity(0.14),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            icono,
+            icon,
             size: 12,
-            color: verde
-                ? const Color(0xFFC0DD97)
-                : Colors.white.withOpacity(0.9),
+            color: green
+                ? AppColors.dateGreenText
+                : Colors.white.withOpacity(0.14),
           ),
           const SizedBox(width: 4),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 140),
             child: Text(
-              texto,
+              text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: verde
-                    ? const Color(0xFFC0DD97)
+                color: green
+                    ? AppColors.dateGreenText
                     : Colors.white.withOpacity(0.9),
               ),
             ),
@@ -339,19 +339,19 @@ class _Fechas extends StatelessWidget {
 }
 
 
-class _HorarioLinea extends StatelessWidget {
-  final Map<String, List<TimeSlot>> horario;
-  final bool abierto;
-  const _HorarioLinea({required this.horario, required this.abierto});
+class _ScheduleLine extends StatelessWidget {
+  final Map<String, List<TimeSlot>> schedule;
+  final bool isOpen;
+  const _ScheduleLine({required this.schedule, required this.isOpen});
 
   String _fmt(String h) => h.length >= 5 ? h.substring(0, 5) : h;
 
   @override
   Widget build(BuildContext context) {
     final hoy = DateTime.now().weekday;
-    final franjas = horario['$hoy'] ?? [];
+    final franjas = schedule['$hoy'] ?? [];
     final color =
-    abierto ? const Color(0xFFA6E246) : const Color(0xFFE24B4A);
+    isOpen ? AppColors.success : AppColors.scheduleClosed;
 
     return Row(
       children: [
@@ -363,9 +363,9 @@ class _HorarioLinea extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: Text(
-            abierto && franjas.isNotEmpty
-                ? 'Abierto · ${franjas.map((f) => '${_fmt(f.inicio)}–${_fmt(f.fin)}').join(' | ')}'
-                : abierto
+            isOpen && franjas.isNotEmpty
+                ? 'Abierto · ${franjas.map((f) => '${_fmt(f.start)}–${_fmt(f.end)}').join(' | ')}'
+                : isOpen
                 ? 'Abierto'
                 : 'Cerrado',
             maxLines: 1,
@@ -373,7 +373,7 @@ class _HorarioLinea extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withOpacity(0.85),
+              color: AppColors.white.withOpacity(0.85),
             ),
           ),
         ),

@@ -3,17 +3,17 @@ import 'package:kultux/core/models/location.dart';
 import 'package:kultux/core/utils/formatter.dart';
 
 class LocalitySelector extends StatefulWidget {
-  final List<Location> localidades;
-  final int? ineInicial;
+  final List<Location> locations;
+  final int? startLocation;
   final ValueChanged<Location?> onSelected;
   final String label;
 
   const LocalitySelector({
     super.key,
-    required this.localidades,
+    required this.locations,
     required this.onSelected,
-    this.ineInicial,
-    this.label = 'Ubicación',
+    this.startLocation,
+    this.label = 'Localidad',
   });
 
   @override
@@ -22,7 +22,7 @@ class LocalitySelector extends StatefulWidget {
 
 class _LocalitySelectorState extends State<LocalitySelector> {
   late final TextEditingController _controller;
-  Location? _seleccionada;
+  Location? _selected;
   late final FocusNode _focusNode;
 
   @override
@@ -31,14 +31,13 @@ class _LocalitySelectorState extends State<LocalitySelector> {
 
     _focusNode = FocusNode();
     _controller = TextEditingController();
-    if (widget.ineInicial != null) {
-      final match = widget.localidades
-          .where((l) => l.ine == widget.ineInicial)
+    if (widget.startLocation != null) {
+      final match = widget.locations
+          .where((l) => l.ine == widget.startLocation)
           .firstOrNull;
-      print('match: ${match?.nombre}');
       if (match != null) {
-        _seleccionada = match;
-        _controller.text = match.nombre;
+        _selected = match;
+        _controller.text = match.name;
       }
     }
   }
@@ -55,27 +54,20 @@ class _LocalitySelectorState extends State<LocalitySelector> {
     return Autocomplete<Location>(
       optionsBuilder: (v) {
         if (v.text.isEmpty) return const Iterable<Location>.empty();
-        return widget.localidades.where(
-          (l) => accentFormatter(l.nombre).contains(accentFormatter(v.text)),
+        return widget.locations.where(
+          (l) => accentFormatter(l.name).contains(accentFormatter(v.text)),
         );
       },
-      displayStringForOption: (l) => l.nombre,
+      displayStringForOption: (l) => l.name,
       onSelected: (loc) {
-        setState(() => _seleccionada = loc);
-        _controller.text = loc.nombre;
+        setState(() => _selected = loc);
+        _controller.text = loc.name;
         widget.onSelected(loc);
       },
       fieldViewBuilder: (context, ctrl, internalFocusNode, _) {
-        if (_seleccionada != null && ctrl.text.isEmpty) {
-          ctrl.text = _seleccionada!.nombre;
+        if (_selected != null && ctrl.text.isEmpty) {
+          ctrl.text = _selected!.name;
         }
-        /* internalFocusNode.addListener(() {
-          if (internalFocusNode.hasFocus && _seleccionada != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              internalFocusNode.unfocus();
-            });
-          }
-        });*/
         return TextField(
           controller: ctrl,
           focusNode: internalFocusNode,
@@ -98,7 +90,7 @@ class _LocalitySelectorState extends State<LocalitySelector> {
                 final o = options.elementAt(i);
                 return ListTile(
                   dense: true,
-                  title: Text(o.nombre, style: const TextStyle(fontSize: 13)),
+                  title: Text(o.name, style: const TextStyle(fontSize: 13)),
                   onTap: () => onSelected(o),
                 );
               },
@@ -110,7 +102,7 @@ class _LocalitySelectorState extends State<LocalitySelector> {
   }
 
   InputDecoration _inputDeco(TextEditingController ctrl) {
-    final hasValue = _seleccionada != null;
+    final hasValue = _selected != null;
     return InputDecoration(
       labelText: widget.label,
       labelStyle: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -136,7 +128,7 @@ class _LocalitySelectorState extends State<LocalitySelector> {
       suffixIcon: hasValue
           ? GestureDetector(
               onTap: () {
-                setState(() => _seleccionada = null);
+                setState(() => _selected = null);
                 ctrl.clear();
                 widget.onSelected(null);
               },

@@ -51,8 +51,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     u = User.activeUser ?? widget.usuario;
     print(u.toString());
     _controllers = {
-      'nombre': TextEditingController(text: u?.nombre ?? ''),
-      'apellidos': TextEditingController(text: u?.apellidos ?? ''),
+      'nombre': TextEditingController(text: u?.name ?? ''),
+      'apellidos': TextEditingController(text: u?.surname ?? ''),
       'email': TextEditingController(text: u?.email ?? ''),
       'password': TextEditingController(),
     };
@@ -69,8 +69,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final localidades = LocationApiService.cache ?? [];
     return LocalitySelector(
       key: _selectorLocalidadKey,
-      localidades: localidades,
-      ineInicial: User.activeUser?.localidad,
+      locations: localidades,
+      startLocation: User.activeUser?.location,
       onSelected: (loc) => setState(() => _localidadSeleccionada = loc),
     );
   }
@@ -97,19 +97,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final password = _controllers['password']!.text.trim();
     final email = _controllers['email']!.text.trim();
 
-    if (Validaciones.emailError(email) != null) {
+    if (Validations.emailError(email) != null) {
       AlertModal.show(
         context,
-        message: Validaciones.emailError(email)!,
+        message: Validations.emailError(email)!,
         type: AlertTipe.error,
       );
       return;
     }
 
-    if (Validaciones.passwordError(password) != null) {
+    if (Validations.passwordError(password) != null) {
       AlertModal.show(
         context,
-        message: Validaciones.passwordError(password)!,
+        message: Validations.passwordError(password)!,
         type: AlertTipe.error,
       );
       return;
@@ -132,8 +132,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     try {
       final actualizado = await UserApiService.editUser(
         id: User.activeUser!.id!,
-        datos: datos,
-        imagen: _imagenSeleccionada,
+        data: datos,
+        image: _imagenSeleccionada,
       );
       print('Actualizado ${actualizado.toString()}');
       if (await UserRepository.activeSession())
@@ -240,7 +240,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     final u = User.activeUser ?? widget.usuario;
-    final errorEmail = _emailErrorApi ?? Validaciones.emailError(_emailActual);
+    final errorEmail = _emailErrorApi ?? Validations.emailError(_emailActual);
     final emailEsValido = errorEmail == null;
     return SingleChildScrollView(
       child: Column(
@@ -274,10 +274,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   _imagenSeleccionada!,
                                   fit: BoxFit.cover,
                                 )
-                              : (u?.imagenPerfil != null &&
-                                    u!.imagenPerfil!.isNotEmpty)
+                              : (u?.profileImage != null &&
+                                    u!.profileImage!.isNotEmpty)
                               ? Image.network(
-                                  u.imagenPerfil!,
+                                  u.profileImage!,
                                   fit: BoxFit.cover,
                                 )
                               : Image.asset(
@@ -299,7 +299,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  u?.nombre ?? '',
+                  u?.name ?? '',
                   style: const TextStyle(
                     fontFamily: 'RobotoCondensed',
                     fontSize: 15,
@@ -340,14 +340,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 _SeccionLabel('Datos personales'),
                 _Campo(
                   child: TextFieldApp.normal(
-                    titulo: 'Nombre',
+                    title: 'Nombre',
                     controller: _controllers['nombre']!,
                   ),
                 ),
                 const SizedBox(height: 10),
                 _Campo(
                   child: TextFieldApp.normal(
-                    titulo: 'Apellidos',
+                    title: 'Apellidos',
                     controller: _controllers['apellidos']!,
                   ),
                 ),
@@ -357,14 +357,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                 _Campo(
                   child: TextFieldApp.normal(
-                    titulo: 'Correo electrónico',
+                    title: 'Correo electrónico',
                     controller: _controllers['email']!,
-                    tipo: TextInputType.emailAddress,
-                    mostrarError: _emailActual.isNotEmpty && !emailEsValido,
+                    type: TextInputType.emailAddress,
+                    showError: _emailActual.isNotEmpty && !emailEsValido,
                     onChanged: (value) {
                       setState(() {
                         _emailActual = value;
-                        _emailValidoEstado = Validaciones.email(value);
+                        _emailValidoEstado = Validations.email(value);
                         _emailErrorApi = null;
                       });
                     },
@@ -385,14 +385,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 const SizedBox(height: 10),
                 _Campo(
                   child: TextFieldApp.password(
-                    titulo: 'Nueva contraseña (opcional)',
+                    title: 'Nueva contraseña (opcional)',
                     controller: _controllers['password']!,
-                    mostrarError:
+                    showError:
                         _passwordActual.isNotEmpty && !_passwordValidaEstado,
                     onChanged: (value) {
                       setState(() {
                         _passwordActual = value;
-                        _passwordValidaEstado = Validaciones.password(value);
+                        _passwordValidaEstado = Validations.password(value);
                       });
                     },
                   ),
@@ -402,7 +402,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   Padding(
                     padding: const EdgeInsets.only(top: 6, left: 4),
                     child: Text(
-                      Validaciones.passwordError(_passwordActual) ??
+                      Validations.passwordError(_passwordActual) ??
                           'Contraseña válida ',
                       style: TextStyle(
                         fontSize: 12,

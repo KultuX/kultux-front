@@ -3,17 +3,15 @@ import 'package:kultux/data/api/user_api.dart';
 import 'package:kultux/shared/widget/alert_modal.dart';
 import 'package:kultux/shared/widget/text_fields.dart';
 
-const _verde = Color(0xFFA6E246);
-const _fondoCard = Color(0xFFF8F7F4);
-const _texto = Color(0xFF1A1A1A);
-const _textoSuave = Color(0xFF6B6B6B);
-const _borde = Color(0xFFE0DDD6);
+import '../../config/app_colors.dart';
+
+
 
 class RecoverPasswordWidget extends StatefulWidget {
-  final VoidCallback? cerrar;
-  final VoidCallback? onVolverLogin;
+  final VoidCallback? onClose;
+  final VoidCallback? onBackLogin;
 
-  const RecoverPasswordWidget({super.key, this.cerrar, this.onVolverLogin});
+  const RecoverPasswordWidget({super.key, this.onClose, this.onBackLogin});
 
   @override
   State<RecoverPasswordWidget> createState() => _RecoverPasswordWidgetState();
@@ -22,8 +20,8 @@ class RecoverPasswordWidget extends StatefulWidget {
 class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
   final TextEditingController _email = TextEditingController();
   bool _errorEmail = false;
-  bool _cargando = false;
-  bool _enviado = false;
+  bool _loading = false;
+  bool _sending = false;
 
   Future<void> _restore() async {
     setState(() {
@@ -40,16 +38,16 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
       return;
     }
 
-    setState(() => _cargando = true);
+    setState(() => _loading = true);
 
     try {
       await UserApiService.recoverPassword(_email.text.trim());
       setState(() {
-        _enviado = true;
-        _cargando = false;
+        _sending = true;
+        _loading = false;
       });
     } catch (e) {
-      setState(() => _cargando = false);
+      setState(() => _loading = false);
       if (e.toString().contains('404')) {
         setState(() => _errorEmail = true);
         AlertModal.show(
@@ -72,7 +70,7 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
     return Stack(
       children: [
         GestureDetector(
-          onTap: widget.cerrar,
+          onTap: widget.onClose,
           child: Container(color: Colors.black54),
         ),
         Center(
@@ -82,9 +80,9 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
               child: Container(
                 width: 360,
                 decoration: BoxDecoration(
-                  color: _fondoCard,
+                  color: AppColors.cardBg,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _borde),
+                  border: Border.all(color: AppColors.border),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0x33000000),
@@ -119,12 +117,12 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: _verde.withOpacity(0.15),
+                                  color: AppColors.green.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
                                   Icons.lock_reset_rounded,
-                                  color: _verde,
+                                  color: AppColors.green,
                                   size: 24,
                                 ),
                               ),
@@ -153,7 +151,7 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                                     width: 30,
                                     height: 2,
                                     decoration: BoxDecoration(
-                                      color: _verde,
+                                      color: AppColors.green,
                                       borderRadius: BorderRadius.circular(1),
                                     ),
                                   ),
@@ -167,10 +165,10 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
 
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                      child: _enviado
+                      child: _sending
                           ? _SuccessWidget(
                               email: _email.text.trim(),
-                              onCerrar: widget.onVolverLogin ?? widget.cerrar,
+                              onClose: widget.onBackLogin ?? widget.onClose,
                             )
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -180,7 +178,7 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                                   style: TextStyle(
                                     fontFamily: 'RobotoCondensed',
                                     fontSize: 13,
-                                    color: _textoSuave,
+                                    color: AppColors.textSoft,
                                     height: 1.5,
                                   ),
                                 ),
@@ -188,27 +186,27 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                                 Padding(
                                   padding: const EdgeInsets.all(10),
                                   child: TextFieldApp.normal(
-                                    titulo: 'Correo electrónico',
+                                    title: 'Correo electrónico',
                                     controller: _email,
-                                    mostrarError: _errorEmail,
-                                    tipo: TextInputType.emailAddress,
+                                    showError: _errorEmail,
+                                    type: TextInputType.emailAddress,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
                                 GestureDetector(
-                                  onTap: _cargando ? null : _restore,
+                                  onTap: _loading ? null : _restore,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 14,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _cargando
-                                          ? _verde.withOpacity(0.6)
-                                          : _verde,
+                                      color: _loading
+                                          ? AppColors.green.withOpacity(0.6)
+                                          : AppColors.green,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Center(
-                                      child: _cargando
+                                      child: _loading
                                           ? const SizedBox(
                                               width: 18,
                                               height: 18,
@@ -223,7 +221,7 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                                                 fontFamily: 'RobotoCondensed',
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w700,
-                                                color: _texto,
+                                                color: AppColors.text,
                                               ),
                                             ),
                                     ),
@@ -232,18 +230,18 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                                 const SizedBox(height: 12),
                                 GestureDetector(
                                   onTap:
-                                      widget.onVolverLogin ??
+                                      widget.onBackLogin ??
                                       widget
-                                          .cerrar, // NUEVO: vuelve al login si está disponible
+                                          .onClose,
                                   child: const Center(
                                     child: Text(
                                       'Volver al inicio de sesión',
                                       style: TextStyle(
                                         fontFamily: 'RobotoCondensed',
                                         fontSize: 13,
-                                        color: _textoSuave,
+                                        color: AppColors.textSoft,
                                         decoration: TextDecoration.underline,
-                                        decorationColor: _textoSuave,
+                                        decorationColor: AppColors.textSoft,
                                       ),
                                     ),
                                   ),
@@ -264,9 +262,9 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
 
 class _SuccessWidget extends StatelessWidget {
   final String email;
-  final VoidCallback? onCerrar;
+  final VoidCallback? onClose;
 
-  const _SuccessWidget({required this.email, this.onCerrar});
+  const _SuccessWidget({required this.email, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -277,12 +275,12 @@ class _SuccessWidget extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: _verde.withOpacity(0.15),
+            color: AppColors.green.withOpacity(0.15),
             borderRadius: BorderRadius.circular(28),
           ),
           child: const Icon(
             Icons.mark_email_read_rounded,
-            color: _verde,
+            color: AppColors.green,
             size: 28,
           ),
         ),
@@ -293,7 +291,7 @@ class _SuccessWidget extends StatelessWidget {
             fontFamily: 'RobotoCondensed',
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: _texto,
+            color: AppColors.text,
           ),
         ),
         const SizedBox(height: 8),
@@ -303,18 +301,18 @@ class _SuccessWidget extends StatelessWidget {
           style: const TextStyle(
             fontFamily: 'RobotoCondensed',
             fontSize: 13,
-            color: _textoSuave,
+            color: AppColors.textSoft,
             height: 1.5,
           ),
         ),
         const SizedBox(height: 20),
         GestureDetector(
-          onTap: onCerrar,
+          onTap: onClose,
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              color: _verde,
+              color: AppColors.green,
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Center(
@@ -324,7 +322,7 @@ class _SuccessWidget extends StatelessWidget {
                   fontFamily: 'RobotoCondensed',
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: _texto,
+                  color: AppColors.text,
                 ),
               ),
             ),

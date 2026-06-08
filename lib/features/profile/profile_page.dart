@@ -171,9 +171,9 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             child: ClipOval(
               child:
-                  (usuario?.imagenPerfil != null &&
-                      usuario!.imagenPerfil!.isNotEmpty)
-                  ? Image.network(usuario.imagenPerfil!, fit: BoxFit.cover)
+                  (usuario?.profileImage != null &&
+                      usuario!.profileImage!.isNotEmpty)
+                  ? Image.network(usuario.profileImage!, fit: BoxFit.cover)
                   : Image.asset(
                       'assets/images/logo_registro.png',
                       fit: BoxFit.cover,
@@ -182,7 +182,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 10),
           Text(
-            usuario?.nombre ?? 'Nombre usuario',
+            usuario?.name ?? 'Nombre usuario',
             style: const TextStyle(
               fontFamily: 'RobotoCondensed',
               fontSize: 18,

@@ -6,7 +6,7 @@ import 'package:kultux/core/utils/api_url.dart';
 
 class LocationApiService {
   static List<Location>? _cache;
-  static List<Location>? _mapaCache;
+  static List<Location>? _mapCache;
 
   static Future<List<Location>> locationsNames() async {
     if (_cache != null) {
@@ -28,8 +28,8 @@ class LocationApiService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> lista = jsonDecode(response.body);
-      _cache = lista.map((json) => Location.fromJson(json)).toList();
+      final List<dynamic> list = jsonDecode(response.body);
+      _cache = list.map((json) => Location.fromJson(json)).toList();
       return _cache!;
     } else {
       throw HttpException(response.statusCode.toString());
@@ -37,8 +37,8 @@ class LocationApiService {
   }
 
   static Future<List<Location>> locationsMap() async {
-    if (_mapaCache != null) {
-      return _mapaCache!;
+    if (_mapCache != null) {
+      return _mapCache!;
     }
 
     final url = Uri.https(ApiUrl.BASE_URL, '/api/v1/gateway-localidades/mapas');
@@ -53,9 +53,9 @@ class LocationApiService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> lista = jsonDecode(response.body);
-      _mapaCache = lista.map((json) => Location.fromJson(json)).toList();
-      return _mapaCache!;
+      final List<dynamic> list = jsonDecode(response.body);
+      _mapCache = list.map((json) => Location.fromJson(json)).toList();
+      return _mapCache!;
     } else {
       throw HttpException(response.statusCode.toString());
     }
@@ -63,5 +63,5 @@ class LocationApiService {
 
   static List<Location>? get cache => _cache;
 
-  static List<Location>? get mapaCache => _mapaCache;
+  static List<Location>? get mapCache => _mapCache;
 }

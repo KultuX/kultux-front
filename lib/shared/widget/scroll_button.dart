@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class ScrollButton extends StatefulWidget {
   final ScrollController controller;
-  final double mostrarDesde;
+  final double showFrom;
 
   const ScrollButton({
     super.key,
     required this.controller,
-    this.mostrarDesde = 300,
+    this.showFrom = 300,
   });
 
   @override
@@ -24,9 +24,9 @@ class _ScrollButtonState extends State<ScrollButton> {
   }
 
   void _listenerScroll() {
-    final mostrar = widget.controller.offset > widget.mostrarDesde;
-    if (mostrar != _visible) {
-      setState(() => _visible = mostrar);
+    final show = widget.controller.offset > widget.showFrom;
+    if (show != _visible) {
+      setState(() => _visible = show);
     }
   }
 

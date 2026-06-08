@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class TextFieldApp extends StatefulWidget {
-  final String titulo;
-  final double ancho;
-  final TextInputType tipo;
-  final bool mostrarError;
+  final String title;
+  final double width;
+  final TextInputType type;
+  final bool showError;
   final bool pass;
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
 
   const TextFieldApp.normal({
     super.key,
-    required this.titulo,
-    this.ancho = 364,
-    this.tipo = TextInputType.text,
-    this.mostrarError = false,
+    required this.title,
+    this.width = 364,
+    this.type = TextInputType.text,
+    this.showError = false,
     this.pass = false,
     required this.controller,
     this.onChanged,
@@ -23,20 +23,20 @@ class TextFieldApp extends StatefulWidget {
 
   const TextFieldApp.password({
     super.key,
-    required this.titulo,
-    this.ancho = 364,
-    this.mostrarError = false,
+    required this.title,
+    this.width = 364,
+    this.showError = false,
     required this.controller,
     this.onChanged,
   }) : pass = true,
-       tipo = TextInputType.text;
+       type = TextInputType.text;
 
   @override
   State<TextFieldApp> createState() => _TextFieldAppState();
 }
 
 class _TextFieldAppState extends State<TextFieldApp> {
-  bool _mostrarPass = false;
+  bool _showPass = false;
 
   Widget? _prefix() {
     if (widget.pass) {
@@ -53,7 +53,7 @@ class _TextFieldAppState extends State<TextFieldApp> {
     return null;
   }
 
-  Widget _iconoError() {
+  Widget _iconError() {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: SvgPicture.asset(
@@ -72,23 +72,23 @@ class _TextFieldAppState extends State<TextFieldApp> {
           IconButton(
             padding: EdgeInsets.zero,
             icon: SvgPicture.asset(
-              _mostrarPass
+              _showPass
                   ? "assets/iconos/mostrar_contrasenia.svg"
                   : "assets/iconos/ocultar_contrasenia.svg",
               width: 18,
               height: 18,
             ),
             onPressed: () {
-              setState(() => _mostrarPass = !_mostrarPass);
+              setState(() => _showPass = !_showPass);
             },
           ),
-          if (widget.mostrarError) _iconoError(),
+          if (widget.showError) _iconError(),
         ],
       );
     }
 
-    if (widget.mostrarError) {
-      return _iconoError();
+    if (widget.showError) {
+      return _iconError();
     }
 
     return null;
@@ -96,18 +96,18 @@ class _TextFieldAppState extends State<TextFieldApp> {
 
   @override
   Widget build(BuildContext context) {
-    final bool hayError = widget.mostrarError;
+    final bool hayError = widget.showError;
 
     return SizedBox(
-      width: widget.ancho,
+      width: widget.width,
       child: TextField(
         controller: widget.controller,
-        keyboardType: widget.tipo,
-        obscureText: widget.pass ? !_mostrarPass : false,
+        keyboardType: widget.type,
+        obscureText: widget.pass ? !_showPass : false,
         style: const TextStyle(fontSize: 13),
         onChanged: widget.onChanged,
         decoration: InputDecoration(
-          labelText: widget.titulo,
+          labelText: widget.title,
           labelStyle: TextStyle(
             fontSize: 12,
             color: hayError ? Colors.red : Colors.grey.shade600,
