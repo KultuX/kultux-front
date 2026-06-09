@@ -33,7 +33,7 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
       AlertModal.show(
         context,
         message: 'Introduce tu correo electrónico.',
-        type: AlertTipe.warning,
+        type: AlertType.warning,
       );
       return;
     }
@@ -53,13 +53,13 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
         AlertModal.show(
           context,
           message: 'No existe ninguna cuenta con ese correo.',
-          type: AlertTipe.error,
+          type: AlertType.error,
         );
       } else {
         AlertModal.show(
           context,
           message: 'Ha ocurrido un error. Inténtalo más tarde.',
-          type: AlertTipe.error,
+          type: AlertType.error,
         );
       }
     }
@@ -94,7 +94,6 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header igual al login
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
@@ -190,9 +189,11 @@ class _RecoverPasswordWidgetState extends State<RecoverPasswordWidget> {
                                     controller: _email,
                                     showError: _errorEmail,
                                     type: TextInputType.emailAddress,
+                                    email: true,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
+
                                 GestureDetector(
                                   onTap: _loading ? null : _restore,
                                   child: Container(

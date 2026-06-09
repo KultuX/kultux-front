@@ -251,7 +251,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                         AlertModal.show(
                           context,
                           message: 'No se han podido cargar los datos.',
-                          type: AlertTipe.error,
+                          type: AlertType.error,
                         );
                       } finally {
                         setState(() => _loadingDetail = false);

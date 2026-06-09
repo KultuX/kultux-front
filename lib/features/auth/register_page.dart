@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/gestures.dart';
+import 'package:kultux/shared/widget/app_text_button.dart';
 import 'package:kultux/shared/widget/legal_dialog.dart';
 import 'package:kultux/shared/widget/locality_selector.dart';
 import 'package:kultux/shared/widget/text_fields.dart';
@@ -69,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
       AlertModal.show(
         context,
         message: 'Debes aceptar los Términos y la Política de privacidad.',
-        type: AlertTipe.warning,
+        type: AlertType.warning,
       );
       return false;
     }
@@ -88,7 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
         AlertModal.show(
           context,
           message: 'El campo ${entry.key} es obligatorio.',
-          type: AlertTipe.error,
+          type: AlertType.error,
         );
         return false;
       }
@@ -101,7 +102,7 @@ class _RegisterPageState extends State<RegisterPage> {
       AlertModal.show(
         context,
         message: Validations.emailError(emailInput)!,
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
       return false;
     }
@@ -110,7 +111,7 @@ class _RegisterPageState extends State<RegisterPage> {
       AlertModal.show(
         context,
         message: Validations.passwordError(password)!,
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
       return false;
     }
@@ -119,7 +120,7 @@ class _RegisterPageState extends State<RegisterPage> {
       AlertModal.show(
         context,
         message: 'Las contraseñas no coinciden',
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
       return false;
     }
@@ -128,7 +129,7 @@ class _RegisterPageState extends State<RegisterPage> {
       AlertModal.show(
         context,
         message: 'Selecciona una localidad válida.',
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
       return false;
     }
@@ -158,7 +159,7 @@ class _RegisterPageState extends State<RegisterPage> {
       AlertModal.show(
         context,
         message: 'Alguno de los datos no son correctos, revísalos.',
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
       return false;
     }
@@ -188,26 +189,26 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _LabelSection('Datos personales'),
-                    _Field(
+                    _labelSection('Datos personales'),
+                    _field(
                       child: TextFieldApp.normal(
                         title: 'Nombre',
                         controller: controllers!['nombre']!,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _Field(
+                    _field(
                       child: TextFieldApp.normal(
                         title: 'Apellidos',
                         controller: controllers!['apellidos']!,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _Field(child: _calendarField()),
+                    _field(child: _calendarField()),
 
                     const SizedBox(height: 16),
-                    _LabelSection('Cuenta'),
-                    _Field(
+                    _labelSection('Cuenta'),
+                    _field(
                       child: TextFieldApp.normal(
                         title: 'Correo electrónico',
                         controller: controllers!['email']!,
@@ -235,7 +236,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
 
                     const SizedBox(height: 10),
-                    _Field(
+                    _field(
                       child: TextFieldApp.password(
                         title: 'Contraseña',
                         controller: controllers!['password']!,
@@ -267,7 +268,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
 
                     const SizedBox(height: 10),
-                    _Field(
+                    _field(
                       child: TextFieldApp.password(
                         title: 'Repite contraseña',
                         controller: controllers!['password2']!,
@@ -296,11 +297,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
 
                     const SizedBox(height: 16),
-                    _LabelSection('Localidad'),
-                    _Field(child: _locationSelector()),
+                    _labelSection('Localidad'),
+                    _field(child: _locationSelector()),
 
                     const SizedBox(height: 16),
-                    _LabelSection('Legal'),
+                    _labelSection('Legal'),
                     _CheckLegal(
                       checked: _termsChecked,
                       onChanged: (v) =>
@@ -330,62 +331,26 @@ class _RegisterPageState extends State<RegisterPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: Colors.transparent,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.border, width: 1.5),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'Volver',
-                                  style: TextStyle(
-                                    fontFamily: 'RobotoCondensed',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textSoft,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                            child: AppTextButton(
+                                label: 'Volver',
+                                variant: AppButtonVariant.outline,
+                                onTap: () => Navigator.pop(context)
+                            )
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () async {
-                              if (await registerUser()) {
-                                Navigator.pop(context);
-                                AlertModal.show(
-                                  context,
-                                  message: '¡Registro completado!',
-                                  type: AlertTipe.success,
-                                );
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: AppColors.green,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'Registrarse',
-                                  style: TextStyle(
-                                    fontFamily: 'RobotoCondensed',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.text,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                            child: AppTextButton(
+                                label:'Registrarse',
+                                onTap: () async {
+                                  if (await registerUser()) {
+                                    Navigator.pop(context);
+                                    AlertModal.show(
+                                      context,
+                                      message: '¡Registro completado!',
+                                      type: AlertType.success,
+                                    );
+                                  }
+                        }))
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -399,7 +364,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _LabelSection(String label) => Padding(
+  Widget _labelSection(String label) => Padding(
     padding: const EdgeInsets.only(bottom: 8, left: 2),
     child: Text(
       label.toUpperCase(),
@@ -413,7 +378,7 @@ class _RegisterPageState extends State<RegisterPage> {
     ),
   );
 
-  Widget _Field({required Widget child}) => Container(
+  Widget _field({required Widget child}) => Container(
     padding: EdgeInsets.zero,
     decoration: BoxDecoration(
       color: AppColors.cardBg,
@@ -488,7 +453,7 @@ class _RegisterPageState extends State<RegisterPage> {
             AlertModal.show(
               context,
               message: 'Debes tener al menos 18 años para registrarte.',
-              type: AlertTipe.error,
+              type: AlertType.error,
             );
             ctrl.clear();
             return;
@@ -502,7 +467,7 @@ class _RegisterPageState extends State<RegisterPage> {
           AlertModal.show(
             context,
             message: 'El campo Fecha de nacimiento es obligatorio.',
-            type: AlertTipe.error,
+            type: AlertType.error,
           );
           return;
         }

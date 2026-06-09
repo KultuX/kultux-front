@@ -8,7 +8,7 @@ class AlertModal {
   static void show(
     BuildContext context, {
     required String message,
-    AlertTipe type = AlertTipe.info,
+    AlertType type = AlertType.info,
     Duration duration = const Duration(seconds: 3),
     bool showClose = true,
   }) {
@@ -19,15 +19,15 @@ class AlertModal {
     IconData icon;
 
     switch (type) {
-      case AlertTipe.success:
+      case AlertType.success:
         color = AppColors.success;
         icon = Icons.check_circle_outline;
         break;
-      case AlertTipe.error:
+      case AlertType.error:
         color = AppColors.error;
         icon = Icons.error_outline;
         break;
-      case AlertTipe.warning:
+      case AlertType.warning:
         color = AppColors.warning;
         icon = Icons.warning_amber_outlined;
         break;
@@ -54,7 +54,7 @@ class AlertModal {
   }
 }
 
-enum AlertTipe { success, error, warning, info }
+enum AlertType { success, error, warning, info }
 
 class _AlertModalWidget extends StatefulWidget {
   final String message;

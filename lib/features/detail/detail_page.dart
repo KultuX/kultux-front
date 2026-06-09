@@ -14,6 +14,8 @@ import 'package:kultux/core/utils/sharing.dart';
 import 'package:kultux/core/utils/app_icons.dart';
 import 'package:kultux/core/utils/formatter.dart';
 
+import '../../shared/widget/booking_button.dart';
+
 
 class AppColors {
   static const green     = Color(0xFFA6E246);
@@ -352,8 +354,8 @@ class _DetailPageState extends State<DetailPage> {
                       onTap: () async => launchUrl(Uri.parse('mailto:${widget.businessEmail}')),
                     ),
                   const SizedBox(height: 28),
-                  _BookingButton(
-                    active: _hasBooking,
+                  BookingButton(
+                    enable: _hasBooking,
                     isActivity: isActivity,
                     isRestaurant: isRestaurant,
                     onTap: _hasBooking
@@ -804,44 +806,6 @@ class _InfoRow extends StatelessWidget {
 }
 
 
-class _BookingButton extends StatelessWidget {
-  final bool active;
-  final bool isActivity;
-  final bool isRestaurant;
-  final VoidCallback? onTap;
-  const _BookingButton({required this.active, required this.isActivity, required this.isRestaurant, this.onTap});
-
-  @override
-  Widget build(BuildContext context) => Opacity(
-    opacity: active ? 1.0 : 0.4,
-    child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: AppColors.green,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isActivity ? Icons.confirmation_number_outlined : isRestaurant ? Icons.restaurant_outlined : Icons.hotel_outlined,
-              size: 20, color: Colors.black87,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              isActivity ? 'Comprar entradas' : 'Reservar ahora',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.black87, letterSpacing: 0.2),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
 
 class _SaveButton extends StatefulWidget {
   final bool isActivity, isRestaurant, isAccommodation;
@@ -908,7 +872,7 @@ class _SaveButtonState extends State<_SaveButton> {
         if (mounted) setState(() => _saved = true);
       }
     } catch (_) {
-      if (mounted) AlertModal.show(context, message: 'Error al guardar. Inténtalo de nuevo.', type: AlertTipe.error);
+      if (mounted) AlertModal.show(context, message: 'Error al guardar. Inténtalo de nuevo.', type: AlertType.error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

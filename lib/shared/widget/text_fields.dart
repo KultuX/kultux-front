@@ -7,6 +7,7 @@ class TextFieldApp extends StatefulWidget {
   final TextInputType type;
   final bool showError;
   final bool pass;
+  final bool? email;
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
 
@@ -19,6 +20,7 @@ class TextFieldApp extends StatefulWidget {
     this.pass = false,
     required this.controller,
     this.onChanged,
+    this.email = false
   });
 
   const TextFieldApp.password({
@@ -28,6 +30,7 @@ class TextFieldApp extends StatefulWidget {
     this.showError = false,
     required this.controller,
     this.onChanged,
+    this.email = false
   }) : pass = true,
        type = TextInputType.text;
 
@@ -50,6 +53,16 @@ class _TextFieldAppState extends State<TextFieldApp> {
         ),
       );
     }
+    if(widget.email != null && widget.email!){
+      return Padding(
+        padding: const EdgeInsets.all(10),
+        child: Icon(
+          Icons.email_outlined,
+          size: 18,
+          color:  Colors.grey.shade500
+        )
+      );
+    }
     return null;
   }
 
@@ -70,13 +83,14 @@ class _TextFieldAppState extends State<TextFieldApp> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
+            color:  Colors.grey.shade300,
             padding: EdgeInsets.zero,
             icon: SvgPicture.asset(
               _showPass
                   ? "assets/iconos/mostrar_contrasenia.svg"
                   : "assets/iconos/ocultar_contrasenia.svg",
-              width: 18,
-              height: 18,
+              width: 16,
+              height: 16,
             ),
             onPressed: () {
               setState(() => _showPass = !_showPass);

@@ -422,7 +422,7 @@ class _SavedPageState extends State<SavedPage> {
               AlertModal.show(
                 context,
                 message: 'No se han podido cargar los datos.',
-                type: AlertTipe.error,
+                type: AlertType.error,
               );
             } finally {
               setState(() => _loadingDetail = false);
@@ -504,7 +504,7 @@ class _SavedPageState extends State<SavedPage> {
               AlertModal.show(
                 context,
                 message: 'No se han podido cargar los datos.',
-                type: AlertTipe.error,
+                type: AlertType.error,
               );
             } finally {
               setState(() => _loadingDetail = false);
@@ -585,7 +585,7 @@ class _SavedPageState extends State<SavedPage> {
                 context,
                 message:
                     'No se han podido cargar los datos. Inténtalo más tarde.',
-                type: AlertTipe.error,
+                type: AlertType.error,
               );
             } finally {
               setState(() => _loadingDetail = false);

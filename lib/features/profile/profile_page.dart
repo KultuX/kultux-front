@@ -718,14 +718,14 @@ class _ProfilePageState extends State<ProfilePage> {
       AlertModal.show(
         context,
         message: 'Cuenta eliminada correctamente.',
-        type: AlertTipe.success,
+        type: AlertType.success,
       );
     } catch (e) {
       if (!mounted) return;
       AlertModal.show(
         context,
         message: 'Error al eliminar la cuenta',
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
     }
   }

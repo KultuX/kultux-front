@@ -99,7 +99,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertModal.show(
         context,
         message: Validations.emailError(email)!,
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
       return;
     }
@@ -108,7 +108,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertModal.show(
         context,
         message: Validations.passwordError(password)!,
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
       return;
     }
@@ -141,7 +141,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertModal.show(
         context,
         message: '¡Perfil actualizado correctamente!',
-        type: AlertTipe.success,
+        type: AlertType.success,
       );
 
       setState(() {
@@ -164,7 +164,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertModal.show(
         context,
         message: 'Algo ha salido mal. Prueba a intentarlo más tarde.',
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
     }
   }

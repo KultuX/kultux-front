@@ -9,6 +9,7 @@ import 'package:kultux/shared/widget/alert_modal.dart';
 import 'package:kultux/features/auth/recover_password_widget.dart';
 
 import '../../config/app_colors.dart';
+import '../../shared/widget/app_text_button.dart';
 
 
 class LoginWidget extends StatefulWidget {
@@ -45,7 +46,7 @@ class _LoginWidgetState extends State<LoginWidget> {
       AlertModal.show(
         context,
         message: 'Debes introducir correo y contraseña.',
-        type: AlertTipe.warning,
+        type: AlertType.warning,
       );
 
       return;
@@ -55,7 +56,7 @@ class _LoginWidgetState extends State<LoginWidget> {
       AlertModal.show(
         context,
         message: 'Introduce un correo',
-        type: AlertTipe.warning,
+        type: AlertType.warning,
       );
       return;
     }
@@ -64,7 +65,7 @@ class _LoginWidgetState extends State<LoginWidget> {
       AlertModal.show(
         context,
         message: 'Introduce una contraseña.',
-        type: AlertTipe.warning,
+        type: AlertType.warning,
       );
       return;
     }
@@ -79,7 +80,7 @@ class _LoginWidgetState extends State<LoginWidget> {
         context,
         message:
             '👋🏻 ¡¡Bienvenid@, ${user.name?.toUpperCase() ?? user.email}!!',
-        type: AlertTipe.success,
+        type: AlertType.success,
       );
       widget.userLoged?.call(user);
       User.activeUser = user;
@@ -91,7 +92,7 @@ class _LoginWidgetState extends State<LoginWidget> {
       AlertModal.show(
         context,
         message: 'Usuario o contraseña incorrectos.',
-        type: AlertTipe.error,
+        type: AlertType.error,
       );
     }
   }
@@ -199,6 +200,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     controller: email,
                     showError: _errorEmail,
                     type: TextInputType.emailAddress,
+                    email: true
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -268,57 +270,16 @@ class _LoginWidgetState extends State<LoginWidget> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: _login,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: AppColors.green,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Iniciar sesión',
-                        style: TextStyle(
-                          fontFamily: 'RobotoCondensed',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.text,
-                        ),
-                      ),
-                    ),
-                  ),
+                AppTextButton(
+                  label:'Iniciar sesión',
+                  onTap:_login
                 ),
                 const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: widget.userGuest,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border, width: 1.5),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(
-                          Icons.person_outline,
-                          size: 16,
-                          color: AppColors.textSoft,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          'Entrar como invitado',
-                          style: TextStyle(
-                            fontFamily: 'RobotoCondensed',
-                            fontSize: 13,
-                            color: AppColors.textSoft,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                AppTextButton(
+                  label: 'Entrar como Invitado',
+                  variant: AppButtonVariant.outline,
+                  onTap:widget.userGuest,
+                  icon: true
                 ),
                 const SizedBox(height: 16),
                 Center(

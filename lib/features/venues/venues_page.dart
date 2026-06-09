@@ -338,7 +338,7 @@ class _VenuesPageState extends State<VenuesPage> {
                                   context,
                                   message:
                                       'No se ha podido cargar correctamente el restaurante.',
-                                  type: AlertTipe.error,
+                                  type: AlertType.error,
                                 );
                               } finally {
                                 setState(() {
@@ -374,7 +374,7 @@ class _VenuesPageState extends State<VenuesPage> {
                                   context,
                                   message:
                                       'No se ha podido cargar correctamente el restaurante.',
-                                  type: AlertTipe.error,
+                                  type: AlertType.error,
                                 );
                               } finally {
                                 setState(() {
@@ -463,7 +463,7 @@ class _VenuesPageState extends State<VenuesPage> {
                           context,
                           message:
                               'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
-                          type: AlertTipe.error,
+                          type: AlertType.error,
                         );
                       } finally {
                         setState(() {
@@ -551,7 +551,7 @@ class _VenuesPageState extends State<VenuesPage> {
                           context,
                           message:
                               'No se han podido cargar correctamente los datos. Prueba a intentarlo más tarde.',
-                          type: AlertTipe.error,
+                          type: AlertType.error,
                         );
                       } finally {
                         setState(() {

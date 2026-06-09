@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kultux/config/app_colors.dart';
+import 'package:kultux/shared/widget/app_icon_button.dart';
+
+import 'app_text_button.dart';
 
 class AppBarCustom extends StatefulWidget
     implements PreferredSizeWidget {
@@ -11,7 +14,6 @@ class AppBarCustom extends StatefulWidget
   final VoidCallback? onShowLogin;
   final VoidCallback? onGoHome;
   final VoidCallback? onGoProfile;
-
   final bool activateProfile;
 
   const AppBarCustom({
@@ -34,16 +36,16 @@ class AppBarCustom extends StatefulWidget
 class _AppBarCustomState extends State<AppBarCustom> {
   @override
   Widget build(BuildContext context) {
-    final bool activo = widget.activateProfile;
+    final bool active = widget.activateProfile;
 
     return AppBar(
       backgroundColor: AppColors.navBg,
       elevation: 0,
       leadingWidth: 70,
-
       leading: Padding(
         padding: const EdgeInsets.only(left: 10),
-        child: GestureDetector(
+        child:
+        GestureDetector(
           onTap: widget.onGoHome,
           child: Align(
             alignment: Alignment.centerLeft,
@@ -60,50 +62,21 @@ class _AppBarCustomState extends State<AppBarCustom> {
         if (widget.isLogged)
           Padding(
             padding: const EdgeInsets.only(right: 20),
-            child: GestureDetector(
+            child: AppIconButton(
               onTap: widget.onGoProfile,
-              child: SvgPicture.asset(
-                'assets/iconos/perfil.svg',
-                width: activo ? 40 : 32,
-                height: activo ? 40 : 32,
-                colorFilter: ColorFilter.mode(
-                  activo ? AppColors.green : Colors.white,
-                  BlendMode.srcIn,
-                ),
-              ),
+              icon: 'assets/iconos/perfil.svg',
+              active: active
             ),
           ),
-
         if (widget.guest)
           Padding(
             padding: const EdgeInsets.only(right: 14),
-            child: Center(
-              child: GestureDetector(
-                onTap: widget.onShowLogin,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.green.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.green,
-                      width: 1,
-                    ),
-                  ),
-                  child: const Text(
-                    'Entrar',
-                    style: TextStyle(
-                      color: AppColors.green,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child: AppTextButton(
+                label:'Entrar',
+                variant: AppButtonVariant.soft,
+                width:60,
+                onTap: widget.onShowLogin
+            )
           ),
       ],
     );

@@ -223,7 +223,7 @@ class _AccommodationSearchPageState extends State<AccommodationSearchPage> {
                         widget.onSelectedDetail?.call(detail);
                       } catch (e) {
                         if (!context.mounted) return;
-                        AlertModal.show(context, message: 'No se han podido cargar los datos.', type: AlertTipe.error);
+                        AlertModal.show(context, message: 'No se han podido cargar los datos.', type: AlertType.error);
                       } finally {
                         setState(() => _loadingDetail = false);
                       }

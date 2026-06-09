@@ -72,6 +72,12 @@ class AppColors{
   static const scheduleClosed   = Color(0xFFE24B4A);
 
 
+  // == Button == //
+
+  static const destructiveBg      = Color.fromARGB(255, 198, 40,  40);
+  static const destructiveBorder  = Color.fromARGB(255, 198, 40,  40);
+
+
 
 
 
