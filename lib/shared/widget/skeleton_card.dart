@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kultux/shared/widget/slide_gradient.dart';
 
 
 class AppCardSkeleton extends StatefulWidget {
@@ -31,7 +32,7 @@ class _AppCardSkeletonState extends State<AppCardSkeleton>
     super.dispose();
   }
 
-  /// Genera un bloque animado adaptado a fondos oscuros si se solicita [onDarkBg]
+
   Widget _shimmer(double width, double height, {BorderRadius? radius, bool onDarkBg = false}) {
     return AnimatedBuilder(
       animation: _anim,
@@ -64,7 +65,7 @@ class _AppCardSkeletonState extends State<AppCardSkeleton>
 
   @override
   Widget build(BuildContext context) {
-    // Calculamos el tamaño basándonos exactamente en las mismas proporciones de tu AppCard original
+
     final width = MediaQuery.of(context).size.width - 32;
     final height = width * 3 / 3;
 
@@ -256,12 +257,3 @@ class _SkeletonCardState extends State<SkeletonCard>
   }
 }
 
-class SlideGradient extends GradientTransform {
-  final double value;
-  const SlideGradient(this.value);
-
-  @override
-  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(bounds.width * value, 0, 0);
-  }
-}

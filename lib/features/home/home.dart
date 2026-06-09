@@ -49,7 +49,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  bool _isLoged = false;
+  bool _isLogged = false;
   int _currentIndex = 0;
   bool _isGuest = false;
   User? user;
@@ -70,59 +70,59 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   bool _showSearchDetail = false;
   dynamic _searchSelectedDetail;
 
-  UiState startStatus = UiState.cargando;
-  String mensajeErrorInicio = '';
+  UiState startStatus = UiState.loading;
+  String homeMessageError = '';
 
-  int _buscarCategoriaIndex = 0;
+  int _indexCategorySearch = 0;
 
-  bool _mostrandoDetalleGuardado = false;
-  dynamic _guardadoDetalleSeleccionado;
+  bool _showSavedDetail = false;
+  dynamic _savedSelectedDetail;
 
-  bool _mostrandoGuardadosLista = false;
-  bool _mostrandoPerfil = false;
+  bool _showSavedList = false;
+  bool _showProfile = false;
 
-  SavedTabs _guardadosTabActivo = SavedTabs.activities;
+  SavedTabs _activeSavedTab = SavedTabs.activities;
 
-  late final VenuesPage _establecimientosPage;
+  late final VenuesPage _venuesPage;
 
-  bool _cargandoDetalleInicio = false;
+  bool _loadingHomeDetail = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.startUser != null) {
       user = widget.startUser;
-      _isLoged = true;
+      _isLogged = true;
     }
 
-    _establecimientosPage = VenuesPage(
-      onDetalleSeleccionado: _abrirDetalleEstablecimiento,
+    _venuesPage = VenuesPage(
+      onSelectedDetail: _openVenueDetail,
     );
 
     if (widget.startActivities != null) {
       _activities = widget.startActivities!;
       _totalPages = widget.totalPages ?? 1;
       _currentPage = 1;
-      startStatus = UiState.contenido;
+      startStatus = UiState.content;
     } else {
-      _cargarActividades(inicial: true);
+      _loadActivities(init: true);
     }
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        _cargarMas();
+        _loadMore();
       }
     });
   }
 
-  Future<void> _cargarActividades({bool inicial = false}) async {
+  Future<void> _loadActivities({bool init = false}) async {
     if (_loading) return;
     // _cargando = true;
     setState(() {
       _loading = true;
-      if (inicial) {
-        startStatus = UiState.cargando;
+      if (init) {
+        startStatus = UiState.loading;
       }
     });
 
@@ -137,53 +137,53 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         _totalPages = page.totalPages;
         _currentPage++;
         if (_activities.isEmpty) {
-          startStatus = UiState.vacio;
+          startStatus = UiState.empty;
         } else {
-          startStatus = UiState.contenido;
+          startStatus = UiState.content;
         }
       });
     } on SocketException {
       setState(() {
-        startStatus = UiState.sinConexion;
-        mensajeErrorInicio = 'No hay conexión a internet';
+        startStatus = UiState.noConnection;
+        homeMessageError = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
       final uiError = statusCodeMapper(int.parse(e.message));
 
       setState(() {
         startStatus = uiError.estado;
-        mensajeErrorInicio = uiError.mensaje;
+        homeMessageError = uiError.mensaje;
       });
     } catch (_) {
       setState(() {
         startStatus = UiState.error;
-        mensajeErrorInicio = 'Error inesperado';
-        mensajeErrorInicio = 'Error inesperado';
+        homeMessageError = 'Error inesperado';
+        homeMessageError = 'Error inesperado';
       });
     } finally {
       _loading = false;
     }
   }
 
-  Future<void> _cargarMas() async {
+  Future<void> _loadMore() async {
     if (_loading) return;
     if (_currentPage >= _totalPages) return;
-    await _cargarActividades();
+    await _loadActivities();
   }
 
-  void _cerrarSesion() async {
+  void _logout() async {
     await UserRepository.closeSession();
 
     setState(() {
       user = null;
       User.activeUser = null;
 
-      _isLoged = false;
+      _isLogged = false;
       _isGuest = false;
 
       _currentIndex = 0;
 
-      _mostrandoPerfil = false;
+      _showProfile = false;
 
       _showHomeDetail = false;
       _activitySelectedDetail = null;
@@ -194,99 +194,99 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       _showSearchDetail = false;
       _searchSelectedDetail = null;
 
-      _mostrandoDetalleGuardado = false;
-      _guardadoDetalleSeleccionado = null;
+      _showSavedDetail = false;
+      _savedSelectedDetail = null;
 
-      _mostrandoGuardadosLista = false;
+      _showSavedList = false;
     });
   }
 
-  void _abrirDetalleActividad(Activity actividad) {
+  void _openActivityDetail(Activity activity) {
     setState(() {
-      _activitySelectedDetail = actividad;
+      _activitySelectedDetail = activity;
       _showHomeDetail = true;
     });
   }
 
-  void _volverAListadoInicio() {
+  void _backHomeList() {
     setState(() {
       _showHomeDetail = false;
       _activitySelectedDetail = null;
       _activities.clear();
       _currentPage = 0;
     });
-    _cargarActividades();
+    _loadActivities();
   }
 
-  void _abrirDetalleEstablecimiento(dynamic objeto) {
+  void _openVenueDetail(dynamic object) {
     setState(() {
-      _venuesSelectedDetail = objeto;
+      _venuesSelectedDetail = object;
       _showVenuesDetail = true;
     });
   }
 
-  void _volverAListadoEstablecimientos() {
+  void _backVenuesList() {
     setState(() {
       _showVenuesDetail = false;
       _venuesSelectedDetail = null;
     });
   }
 
-  void _abrirDetalleBuscar(dynamic objeto) {
+  void _openSearchDetail(dynamic object) {
     setState(() {
-      _searchSelectedDetail = objeto;
+      _searchSelectedDetail = object;
       _showSearchDetail = true;
     });
   }
 
-  void _volverAListadoBuscar() {
+  void _backSearchList() {
     setState(() {
       _showSearchDetail = false;
       _searchSelectedDetail = null;
     });
   }
 
-  void _abrirDetalleGuardados(dynamic objeto, SavedTabs tab) {
+  void _openSavedDetail(dynamic object, SavedTabs tab) {
     setState(() {
-      _guardadoDetalleSeleccionado = objeto;
-      _mostrandoDetalleGuardado = true;
-      _guardadosTabActivo = tab;
+      _savedSelectedDetail = object;
+      _showSavedDetail = true;
+      _activeSavedTab = tab;
       _currentIndex = 4;
     });
   }
 
-  void _volverAGuardados() {
+  void _backToSaved() {
     setState(() {
-      _mostrandoDetalleGuardado = false;
-      _guardadoDetalleSeleccionado = null;
-      _mostrandoGuardadosLista = true;
+      _showSavedDetail = false;
+      _savedSelectedDetail = null;
+      _showSavedList = true;
     });
   }
 
-  Widget _getPaginaActual() {
-    if (_mostrandoPerfil) {
-      return WebContainer(key: ValueKey('perfil'), child: _bodyPerfil());
+  Widget _getCurrentPage() {
+    if (_showProfile) {
+      return WebContainer(key: ValueKey('perfil'), child: _profileBody());
     }
     switch (_currentIndex) {
       case 0:
         return WebContainer(
           key: ValueKey('inicio_${_showHomeDetail}'),
-          child: _bodyInicio(),
+          child: _homeBody(),
         );
       case 1:
         return const MapPage(key: ValueKey('mapas'));
       case 2:
         return WebContainer(
           key: ValueKey('buscar_${_showSearchDetail}'),
-          child: _bodyBuscar(),
+          child: _searchBody(),
         );
       case 3:
         return WebContainer(
           key: ValueKey('establecimientos'),
-          child: _bodyEstablecimientos(),
+          child: _venuesBody(),
         );
       case 4:
-        if (_mostrandoDetalleGuardado && _guardadoDetalleSeleccionado != null) {
+        if (_showSavedDetail && _savedSelectedDetail != null) {
           return WebContainer(
             key: const ValueKey('detalle_guardado'),
             child: Column(
@@ -294,11 +294,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 PageHeader(
                   title: 'Información',
                   subtitle: 'Detalle',
-                  onBack: _volverAGuardados,
+                  onBack: _backToSaved,
                 ),
                 Expanded(
                   child: DetailPage.fromObject(
-                    objeto: _guardadoDetalleSeleccionado!,
+                    objeto: _savedSelectedDetail!,
                   ),
                 ),
               ],
@@ -309,15 +309,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         return WebContainer(
           key: const ValueKey('guardados_lista'),
           child: SavedPage(
-            tabInicial: _guardadosTabActivo,
+            initTab: _activeSavedTab,
 
-            onVolver: () {
+            onBack: () {
               setState(() {
                 _currentIndex = 0;
               });
             },
-            onDetalleSeleccionado: (objeto, tab) {
-              _abrirDetalleGuardados(objeto, tab);
+            onSelectedSaved: (objeto, tab) {
+              _openSavedDetail(objeto, tab);
             },
           ),
         );
@@ -328,26 +328,26 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final anchoPantalla = MediaQuery.of(context).size.width;
-    final esWeb = anchoPantalla > 700;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWeb = screenWidth > 700;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: esWeb
+      appBar: isWeb
           ? null
           : AppBarCustom(
-              isLogged: _isLoged,
+              isLogged: _isLogged,
               guest: _isGuest,
               onShowLogin: () {
                 setState(() {
-                  _isLoged = false;
+                  _isLogged = false;
                   _isGuest = false;
                 });
               },
-              activateProfile: _mostrandoPerfil,
+              activateProfile: _showProfile,
               onGoHome: () {
                 setState(() {
-                  _mostrandoPerfil = false;
+                  _showProfile = false;
                   _currentIndex = 0;
                   _showHomeDetail = false;
                   _activitySelectedDetail = null;
@@ -355,13 +355,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   _venuesSelectedDetail = null;
                   _showSearchDetail = false;
                   _searchSelectedDetail = null;
-                  _mostrandoDetalleGuardado = false;
-                  _guardadoDetalleSeleccionado = null;
+                  _showSavedDetail = false;
+                  _savedSelectedDetail = null;
                 });
               },
               onGoProfile: () {
                 setState(() {
-                  _mostrandoPerfil = true;
+                  _showProfile = true;
                   _showHomeDetail = false;
                   _activitySelectedDetail = null;
                   _showVenuesDetail = false;
@@ -373,7 +373,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             ),
       body: Row(
         children: [
-          if (esWeb) _sidebarWeb(context),
+          if (isWeb) _sidebarWeb(context),
           Expanded(
             child: Stack(
               children: [
@@ -397,7 +397,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           ),
                         );
                       },
-                  child: _getPaginaActual(),
+                  child: _getCurrentPage(),
                 ),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 500),
@@ -417,7 +417,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         }
                         return FadeTransition(opacity: animation, child: child);
                       },
-                  child: !_isLoged && !_isGuest
+                  child: !_isLogged && !_isGuest
                       ? Container(
                           key: const ValueKey('bloqueo_login'),
 
@@ -429,13 +429,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                               key: const ValueKey('pantalla_asset_login'),
                               onClose: () {
                                 setState(() {
-                                  _isLoged = true;
+                                  _isLogged = true;
                                   _isGuest = true;
                                 });
                               },
                               userLoged: (User logeado) {
                                 setState(() {
-                                  _isLoged = true;
+                                  _isLogged = true;
                                   _isGuest = false;
                                   user = logeado;
                                 });
@@ -443,7 +443,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                               userGuest: () {
                                 setState(() {
                                   _isGuest = true;
-                                  _isLoged = false;
+                                  _isLogged = false;
                                 });
                               },
                             ),
@@ -456,16 +456,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
         ],
       ),
-      bottomNavigationBar: esWeb
+      bottomNavigationBar: isWeb
           ? null
           : BottomNav(
               selectedItem: _currentIndex,
-              itemSelected: _cambioNav,
+              itemSelected: _navChange,
             ),
     );
   }
 
-  Widget _contenidoInicio() {
+  Widget _homeContent() {
     return Expanded(
       child: Center(
         child: Stack(
@@ -479,7 +479,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   _totalPages = 1;
                 });
 
-                await _cargarActividades(inicial: true);
+                await _loadActivities(init: true);
               },
               child: ListView.builder(
                 controller: _scrollController,
@@ -487,30 +487,30 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 itemCount: _activities.length + 1,
                 itemBuilder: (context, index) {
                   if (index < _activities.length) {
-                    final actividad = _activities[index];
+                    final activity = _activities[index];
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 6,
                       ),
                       child: AppCard.activity(
-                        title: actividad.title,
-                        location: actividad.location!,
-                        startDate: actividad.startDate,
-                        imageUrl: actividad.coverImage,
+                        title: activity.title,
+                        location: activity.location!,
+                        startDate: activity.startDate,
+                        imageUrl: activity.coverImage,
                         onTap: () async {
-                          setState(() => _cargandoDetalleInicio = true);
+                          setState(() => _loadingHomeDetail = true);
                           final detalle =
                               await ActivityApiService.activityDetail(
-                                actividad.id,
+                                activity.id,
                               );
-                          setState(() => _cargandoDetalleInicio = false);
-                          _abrirDetalleActividad(detalle);
+                          setState(() => _loadingHomeDetail = false);
+                          _openActivityDetail(detalle);
                         },
-                        textBadge: actividad.activityCategory!,
+                        textBadge: activity.activityCategory!,
                         iconBadge: 'assets/iconos/actividad_etiquetas.svg',
-                        endDate: actividad.endDate,
-                        status: actividad.status
+                        endDate: activity.endDate,
+                        status: activity.status
                       ),
                     );
                   }
@@ -558,7 +558,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ),
       ),
       child: NavigationRail(
-        selectedIndex: _mostrandoPerfil ? null : _currentIndex,
+        selectedIndex: _showProfile ? null : _currentIndex,
         extended: esExtendido,
         backgroundColor: Colors.black,
         unselectedLabelTextStyle: const TextStyle(
@@ -570,7 +570,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           fontWeight: FontWeight.w600,
           fontSize: 14,
         ),
-        onDestinationSelected: _cambioNav,
+        onDestinationSelected: _navChange,
         leading: Padding(
           padding: EdgeInsets.symmetric(
             vertical: 20,
@@ -606,14 +606,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           _sidebarItem(
             'assets/iconos/guardados.svg',
             'Guardados',
-            desactivado: _isGuest,
+            inactive: _isGuest,
           ),
         ],
         trailing: SizedBox(
           width: esExtendido ? 256 : 72,
           child: Padding(
             padding: const EdgeInsets.only(bottom: 24.0),
-            child: _botonUsuarioSidebar(esExtendido),
+            child: _sidebarUserButton(esExtendido),
           ),
         ),
       ),
@@ -622,13 +622,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   NavigationRailDestination _sidebarItem(
     String path,
-    String titulo, {
-    bool desactivado = false,
+    String title, {
+    bool inactive = false,
   }) {
-    final opacidad = desactivado ? 0.3 : 1.0;
+    final opacity = inactive ? 0.3 : 1.0;
     return NavigationRailDestination(
       icon: Opacity(
-        opacity: opacidad,
+        opacity: opacity,
         child: SvgPicture.asset(
           path,
           width: 24,
@@ -637,7 +637,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ),
       ),
       selectedIcon: Opacity(
-        opacity: opacidad,
+        opacity: opacity,
         child: SvgPicture.asset(
           path,
           width: 30,
@@ -648,18 +648,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
         ),
       ),
-      label: Text(titulo),
+      label: Text(title),
     );
   }
 
-  Widget _botonUsuarioSidebar(bool esExtendido) {
-    final Widget separador = Column(
+  Widget _sidebarUserButton(bool isExpanded) {
+    final Widget separator = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
           padding: EdgeInsets.only(
-            left: esExtendido ? 16 : 8,
-            right: esExtendido ? 16 : 8,
+            left: isExpanded ? 16 : 8,
+            right: isExpanded ? 16 : 8,
           ),
           child: Divider(color: Colors.white.withOpacity(0.15), thickness: 1),
         ),
@@ -667,18 +667,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ],
     );
 
-    if (_isLoged) {
+    if (_isLogged) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          separador,
+          separator,
           Padding(
-            padding: EdgeInsets.only(left: esExtendido ? 12 : 12),
+            padding: EdgeInsets.only(left: isExpanded ? 12 : 12),
             child: InkWell(
               onTap: () {
                 setState(() {
-                  _mostrandoPerfil = true;
+                  _showProfile = true;
                   _showHomeDetail = false;
                   _activitySelectedDetail = null;
                   _showVenuesDetail = false;
@@ -699,10 +699,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       child: Center(
                         child: SvgPicture.asset(
                           'assets/iconos/perfil.svg',
-                          width: _mostrandoPerfil ? 30 : 24,
-                          height: _mostrandoPerfil ? 30 : 24,
+                          width: _showProfile ? 30 : 24,
+                          height: _showProfile ? 30 : 24,
                           colorFilter: ColorFilter.mode(
-                            _mostrandoPerfil
+                            _showProfile
                                 ? const Color.fromARGB(255, 166, 226, 70)
                                 : Colors.white,
                             BlendMode.srcIn,
@@ -710,7 +710,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                    if (esExtendido) ...[
+                    if (isExpanded) ...[
                       const SizedBox(width: 14),
                       SizedBox(
                         width: 110,
@@ -753,11 +753,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          separador,
+          separator,
           Padding(
-            padding: EdgeInsets.only(left: esExtendido ? 16 : 8),
+            padding: EdgeInsets.only(left: isExpanded ? 16 : 8),
             child: SizedBox(
-              width: esExtendido ? 224 : 56,
+              width: isExpanded ? 224 : 56,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -771,8 +771,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         width: 1,
                       ),
                       padding: EdgeInsets.symmetric(
-                        horizontal: esExtendido ? 20 : 0,
-                        vertical: esExtendido ? 16 : 12,
+                        horizontal: isExpanded ? 20 : 0,
+                        vertical: isExpanded ? 16 : 12,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -781,7 +781,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     ),
                     onPressed: () {
                       setState(() {
-                        _isLoged = false;
+                        _isLogged = false;
                         _isGuest = false;
                       });
                     },
@@ -795,7 +795,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             color: Color(0xFFA6E246),
                             size: 18,
                           ),
-                          if (esExtendido) ...[
+                          if (isExpanded) ...[
                             const SizedBox(width: 8),
                             const Text(
                               'Entrar',
@@ -815,10 +815,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     'Iniciar Sesión o Registrarse',
                     style: TextStyle(
                       color: Colors.grey,
-                      fontSize: esExtendido ? 11 : 9,
+                      fontSize: isExpanded ? 11 : 9,
                     ),
                     textAlign: TextAlign.center,
-                    maxLines: esExtendido ? 1 : 2,
+                    maxLines: isExpanded ? 1 : 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -832,9 +832,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return const SizedBox.shrink();
   }
 
-  void _cambioNav(int index) {
-    _mostrandoPerfil = false;
-    if (!_isLoged && !_isGuest) {
+  void _navChange(int index) {
+    _showProfile = false;
+    if (!_isLogged && !_isGuest) {
       if (!context.mounted) return;
       AlertModal.show(
         context,
@@ -846,7 +846,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (index == 4 && _isGuest) {
       setState(() {
         _isGuest = false;
-        _isLoged = false;
+        _isLogged = false;
         _currentIndex = 0;
         _showHomeDetail = false;
         _activitySelectedDetail = null;
@@ -873,21 +873,21 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       _searchSelectedDetail = null;
 
       if (index != 4) {
-        _mostrandoDetalleGuardado = false;
-        _guardadoDetalleSeleccionado = null;
-        _mostrandoGuardadosLista = false;
+        _showSavedDetail = false;
+        _savedSelectedDetail = null;
+        _showSavedList = false;
       }
     });
   }
 
-  Widget _bodyInicio() {
+  Widget _homeBody() {
     if (_showHomeDetail && _activitySelectedDetail != null) {
       return Column(
         children: [
           PageHeader(
             title: 'Información',
             subtitle: 'Detalle',
-            onBack: _volverAListadoInicio,
+            onBack: _backHomeList,
           ),
           Expanded(
             child: DetailPage.fromObject(objeto: _activitySelectedDetail!),
@@ -896,7 +896,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       );
     }
     return LoadingBar(
-      cargando: _cargandoDetalleInicio,
+      cargando: _loadingHomeDetail,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -908,39 +908,39 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
 
           switch (startStatus) {
-            UiState.cargando => Expanded(
+            UiState.loading => Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
                 itemCount: 4,
                 itemBuilder: (_, _) => const AppCardSkeleton(),
               ),
             ),
-            UiState.vacio => Expanded(child: emptyState()),
-            UiState.sinConexion => Expanded(
+            UiState.empty => Expanded(child: emptyState()),
+            UiState.noConnection => Expanded(
               child: errorState(
                 icon: Icons.wifi_off,
-                mensaje: mensajeErrorInicio,
-                onRetry: _cargarActividades,
+                mensaje: homeMessageError,
+                onRetry: _loadActivities,
               ),
             ),
             UiState.error => Expanded(
               child: errorState(
                 icon: Icons.error_outline,
-                mensaje: mensajeErrorInicio,
-                onRetry: _cargarActividades,
+                mensaje: homeMessageError,
+                onRetry: _loadActivities,
               ),
             ),
-            UiState.contenido => _contenidoInicio(),
+            UiState.content => _homeContent(),
           },
         ],
       ),
     );
   }
 
-  Widget _bodyEstablecimientos() {
+  Widget _venuesBody() {
     return Stack(
       children: [
-        _establecimientosPage,
+        _venuesPage,
         if (_showVenuesDetail &&
             _venuesSelectedDetail != null)
           Column(
@@ -948,7 +948,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               PageHeader(
                 title: 'Información',
                 subtitle: 'Detalle',
-                onBack: _volverAListadoEstablecimientos,
+                onBack: _backVenuesList,
               ),
               Expanded(
                 child: DetailPage.fromObject(
@@ -961,14 +961,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _bodyBuscar() {
+  Widget _searchBody() {
     if (_showSearchDetail && _searchSelectedDetail != null) {
       return Column(
         children: [
           PageHeader(
             title: 'Información',
             subtitle: 'Detalle',
-            onBack: _volverAListadoBuscar,
+            onBack: _backSearchList,
           ),
           Expanded(
             child: DetailPage.fromObject(objeto: _searchSelectedDetail!),
@@ -977,21 +977,21 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       );
     }
     return SearchPage(
-      onDetalleSeleccionado: _abrirDetalleBuscar,
-      selectedIndex: _buscarCategoriaIndex,
+      onSelectedDetail: _openSearchDetail,
+      selectedIndex: _indexCategorySearch,
       onIndexChanged: (index) {
-        _buscarCategoriaIndex = index;
+        _indexCategorySearch = index;
       },
     );
   }
 
-  Widget _bodyPerfil() {
+  Widget _profileBody() {
     return ProfilePage(
-      cerrarSesion: _cerrarSesion,
-      usuario: user,
-      onVolver: () {
+      logout: _logout,
+      user: user,
+      onBack: () {
         setState(() {
-          _mostrandoPerfil = false;
+          _showProfile = false;
         });
       },
     );

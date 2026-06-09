@@ -1,1 +1,1 @@
-enum UiState { cargando, contenido, vacio, error, sinConexion }
+enum UiState { loading, content, empty, error, noConnection }

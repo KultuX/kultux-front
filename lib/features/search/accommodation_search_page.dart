@@ -20,123 +20,122 @@ import 'package:kultux/core/utils/widget_states.dart';
 
 
 class AccommodationSearchPage extends StatefulWidget {
-  final Function(dynamic)? onDetalleSeleccionado;
-  const AccommodationSearchPage({super.key, this.onDetalleSeleccionado});
+  final Function(dynamic)? onSelectedDetail;
+  const AccommodationSearchPage({super.key, this.onSelectedDetail});
 
   @override
-  State<AccommodationSearchPage> createState() => _AccomodationSearchPageState();
+  State<AccommodationSearchPage> createState() => _AccommodationSearchPageState();
 }
 
-class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
-  late Future<List<Location>> futureLocalidad;
-  late Future<List<String>> futureCategorias;
+class _AccommodationSearchPageState extends State<AccommodationSearchPage> {
+  late Future<List<Location>> futureLocation;
+  late Future<List<String>> futureCategories;
 
-  String nombre = "";
-  String? categoria;
-  int? localidad;
+  String name = "";
+  String? category;
+  int? location;
 
-  List<Accommodation> alojamientos = [];
-  int paginaActual = 0;
-  int totalPaginas = 0;
+  List<Accommodation> accommodations = [];
+  int currentPage = 0;
+  int totalPages = 0;
 
-  bool cargando = false;
-  //bool cargandoInicial = true;
+  bool loading = false;
   Timer? _debounceTimer;
 
   final ScrollController controller = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  TextEditingController? _categoriaController;
-  TextEditingController? _localidadController;
+  TextEditingController? _controllerCategory;
+  TextEditingController? _controllerLocation;
 
-  UiState estado = UiState.cargando;
-  String mensajeError = '';
+  UiState status = UiState.loading;
+  String errorMessage = '';
 
-  Key _selectorLocalidadKey = UniqueKey();
+  Key _selectorLocationKey = UniqueKey();
 
-  bool _cargandoDetalle = false;
+  bool _loadingDetail = false;
 
   @override
   void initState() {
     super.initState();
 
-    futureLocalidad = LocationApiService.locationsNames();
-    futureCategorias = AccommodationApiService.accommodationCategories();
+    futureLocation = LocationApiService.locationsNames();
+    futureCategories = AccommodationApiService.accommodationCategories();
 
-    _cargaInicial();
+    _initLoad();
 
     controller.addListener(() {
       if (controller.position.pixels >=
           controller.position.maxScrollExtent - 200) {
-        _cargarMas();
+        _loadMore();
       }
     });
   }
 
-  Future<void> _resetYcargar() async {
+  Future<void> _resetAndLoad() async {
     await Future.microtask(() {});
-    paginaActual = 0;
-    totalPaginas = 0;
-    await _cargarMas();
+    currentPage = 0;
+    totalPages = 0;
+    await _loadMore();
   }
 
-  Future<void> _cargaInicial() async {
-    setState(() => estado = UiState.cargando);
+  Future<void> _initLoad() async {
+    setState(() => status = UiState.loading);
     await Future.microtask(() {});
-    await _resetYcargar();
+    await _resetAndLoad();
   }
 
-  Future<void> _cargarMas() async {
-    if (cargando) return;
-    if (paginaActual >= totalPaginas && paginaActual != 0) return;
+  Future<void> _loadMore() async {
+    if (loading) return;
+    if (currentPage >= totalPages && currentPage != 0) return;
 
     setState(() {
-      cargando = true;
-      if (paginaActual == 0) estado = UiState.cargando;
+      loading = true;
+      if (currentPage == 0) status = UiState.loading;
     });
 
     try {
       final pageResponse = await AccommodationApiService.accommodationsSearching(
-        name: nombre.isEmpty ? null : nombre,
-        category: categoria,
-        location: localidad,
-        page: paginaActual,
+        name: name.isEmpty ? null : name,
+        category: category,
+        location: location,
+        page: currentPage,
       );
 
       setState(() {
-        if (paginaActual == 0) alojamientos.clear();
-        alojamientos.addAll(pageResponse.content);
-        totalPaginas = pageResponse.totalPages;
-        paginaActual++;
-        estado = alojamientos.isEmpty ? UiState.vacio : UiState.contenido;
+        if (currentPage == 0) accommodations.clear();
+        accommodations.addAll(pageResponse.content);
+        totalPages = pageResponse.totalPages;
+        currentPage++;
+        status = accommodations.isEmpty ? UiState.empty : UiState.content;
       });
     } on SocketException {
       setState(() {
-        estado = UiState.sinConexion;
-        mensajeError = 'No hay conexión a internet';
+        status = UiState.noConnection;
+        errorMessage = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
       final uiError = statusCodeMapper(int.parse(e.message));
       setState(() {
-        estado = uiError.estado;
-        mensajeError = uiError.mensaje;
+        status = uiError.estado;
+        errorMessage = uiError.mensaje;
       });
     } catch (_) {
       setState(() {
-        estado = UiState.error;
-        mensajeError = 'Error inesperado';
+        status = UiState.error;
+        errorMessage = 'Error inesperado';
       });
     } finally {
-      cargando = false;
+      loading = false;
     }
   }
 
 
   @override
   Widget build(BuildContext context) {
-    return LoadingBar(cargando: _cargandoDetalle, child: _contenidoConEstado());
+    return LoadingBar(cargando: _loadingDetail, child: _contentStatus());
   }
 
-  Widget _contenidoConEstado() {
+  Widget _contentStatus() {
     return Stack(
       children: [
         CustomScrollView(
@@ -151,11 +150,11 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _filtros(),
+                child: _filters(),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            _sliverSegunEstado(),
+            _sliverStatus(),
           ],
         ),
         Positioned(
@@ -167,9 +166,9 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
     );
   }
 
-  Widget _sliverSegunEstado() {
-    switch (estado) {
-      case UiState.cargando:
+  Widget _sliverStatus() {
+    switch (status) {
+      case UiState.loading:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
                 (_, _) => const SkeletonCard(),
@@ -177,15 +176,15 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
           ),
         );
 
-      case UiState.vacio:
+      case UiState.empty:
         return SliverFillRemaining(child: emptyState());
 
-      case UiState.sinConexion:
+      case UiState.noConnection:
         return SliverFillRemaining(
           child: errorState(
             icon: Icons.wifi_off,
-            mensaje: mensajeError,
-            onRetry: _cargaInicial,
+            mensaje: errorMessage,
+            onRetry: _initLoad,
           ),
         );
 
@@ -193,17 +192,17 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
         return SliverFillRemaining(
           child: errorState(
             icon: Icons.error_outline,
-            mensaje: mensajeError,
-            onRetry: _cargaInicial,
+            mensaje: errorMessage,
+            onRetry: _initLoad,
           ),
         );
 
-      case UiState.contenido:
+      case UiState.content:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              if (index < alojamientos.length) {
-                final a = alojamientos[index];
+              if (index < accommodations.length) {
+                final a = accommodations[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -218,26 +217,26 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
                       a.accommodationCategory,
                     ),
                     onTap: () async {
-                      setState(() => _cargandoDetalle = true);
+                      setState(() => _loadingDetail = true);
                       try {
-                        final detalle = await AccommodationApiService.accommodationDetail(a.id);
-                        widget.onDetalleSeleccionado?.call(detalle);
+                        final detail = await AccommodationApiService.accommodationDetail(a.id);
+                        widget.onSelectedDetail?.call(detail);
                       } catch (e) {
                         if (!context.mounted) return;
                         AlertModal.show(context, message: 'No se han podido cargar los datos.', type: AlertTipe.error);
                       } finally {
-                        setState(() => _cargandoDetalle = false);
+                        setState(() => _loadingDetail = false);
                       }
                     },
                   ),
                 );
               }
 
-              if (cargando) {
+              if (loading) {
                 return const SkeletonCard();
               }
 
-              if (paginaActual >= totalPaginas) {
+              if (currentPage >= totalPages) {
                 return const Padding(
                   padding: EdgeInsets.all(20),
                   child: Center(
@@ -252,8 +251,8 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
               return const SizedBox.shrink();
             },
             childCount:
-                alojamientos.length +
-                (cargando || paginaActual >= totalPaginas ? 1 : 0),
+                accommodations.length +
+                (loading || currentPage >= totalPages ? 1 : 0),
           ),
         );
     }
@@ -278,42 +277,42 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
       textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 13)),
       constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
-        nombre = value;
+        name = value;
         _debounceTimer?.cancel();
         _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-          _resetYcargar();
+          _resetAndLoad();
         });
       },
     );
   }
 
-  Widget _filtros() {
+  Widget _filters() {
     return Row(
       children: [
-        Expanded(child: _selectorCategorias()),
+        Expanded(child: _categoriesSelector()),
         const SizedBox(width: 8),
-        Expanded(child: _selectorLocalidad()),
-        if (categoria != null || localidad != null || nombre.isNotEmpty) ...[
+        Expanded(child: _locationsSelector()),
+        if (category != null || location != null || name.isNotEmpty) ...[
           const SizedBox(width: 8),
-          _botonLimpiar(),
+          _resetButton(),
         ],
       ],
     );
   }
 
-  Widget _botonLimpiar() {
+  Widget _resetButton() {
     return GestureDetector(
       onTap: () {
         setState(() {
-          categoria = null;
-          localidad = null;
-          nombre = "";
-          _selectorLocalidadKey = UniqueKey();
+          category = null;
+          location = null;
+          name = "";
+          _selectorLocationKey = UniqueKey();
           _searchController.clear();
-          _categoriaController?.clear();
-          _localidadController?.clear();
+          _controllerCategory?.clear();
+          _controllerLocation?.clear();
         });
-        _resetYcargar();
+        _resetAndLoad();
       },
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -364,25 +363,25 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
     );
   }
 
-  Widget _selectorCategorias() {
+  Widget _categoriesSelector() {
     return FutureBuilder<List<String>>(
-      future: futureCategorias,
+      future: futureCategories,
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _shimmerLoader();
-        final categorias = snapshot.data!;
+        final categories = snapshot.data!;
         return Autocomplete<String>(
           optionsBuilder: (v) {
             if (v.text.isEmpty) return const Iterable<String>.empty();
-            return categorias.where(
+            return categories.where(
               (c) => c.toLowerCase().contains(v.text.toLowerCase()),
             );
           },
           onSelected: (s) {
-            setState(() => categoria = s);
-            _resetYcargar();
+            setState(() => category = s);
+            _resetAndLoad();
           },
           fieldViewBuilder: (context, ctrl, focusNode, _) {
-            _categoriaController = ctrl;
+            _controllerCategory = ctrl;
             return TextField(
               controller: ctrl,
               focusNode: focusNode,
@@ -390,11 +389,11 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
               decoration: _inputDeco(
                 label: 'Categoría',
                 icon: Icons.category,
-                hasValue: categoria != null,
+                hasValue: category != null,
                 onClear: () {
-                  setState(() => categoria = null);
+                  setState(() => category = null);
                   ctrl.clear();
-                  _resetYcargar();
+                  _resetAndLoad();
                 },
               ),
             );
@@ -427,7 +426,7 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
     );
   }
 
-  Widget _selectorLocalidad() {
+  Widget _locationsSelector() {
     return FutureBuilder<List<Location>>(
       future: LocationApiService.cache != null
           ? Future.value(LocationApiService.cache)
@@ -435,11 +434,11 @@ class _AccomodationSearchPageState extends State<AccommodationSearchPage> {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _shimmerLoader();
         return LocalitySelector(
-          key: _selectorLocalidadKey,
+          key: _selectorLocationKey,
           locations: snapshot.data!,
           onSelected: (loc) {
-            setState(() => localidad = loc?.ine);
-            _resetYcargar();
+            setState(() => location = loc?.ine);
+            _resetAndLoad();
           },
         );
       },

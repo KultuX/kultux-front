@@ -28,39 +28,37 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
-  List<PointMap> _puntos = [];
-  bool _cargandoMapa = true;
-  String? _errorMapa;
+  List<PointMap> _points = [];
+  bool _mapLoading = true;
+  String? _mapError;
 
-  PointMap? _localidadSeleccionada;
-  Activity? _actividadSeleccionada;
+  PointMap? _selectedLocation;
+  Activity? _selectedActivity;
 
-  static final _limites = LatLngBounds(LatLng(37.9, -8.4), LatLng(40.5, -4.0));
+  static final _limits = LatLngBounds(LatLng(37.9, -8.4), LatLng(40.5, -4.0));
 
   static List<List<LatLng>>? _extremaduraCache;
 
   @override
   void initState() {
     super.initState();
-    _cargarExtremadura();
-    _cargarDatos();
+    _loadExtremadura();
+    _loadData();
   }
 
-  Future<void> _cargarDatos() async {
+  Future<void> _loadData() async {
     try {
-      final localidades = await LocationApiService.locationsMap();
-      final ines = localidades.map((l) => l.ine).toList();
-      final totales = await ActivityApiService.activitiesTotalMap(
-        //ines: ines,
+      final locations = await LocationApiService.locationsMap();
+      final totals = await ActivityApiService.activitiesTotalMap(
         startDate: null,
         endDate:null
       );
 
       final Map<int, int> totalMap = {
-        for (final t in totales) t.ine!: t.total ?? 0,
+        for (final t in totals) t.ine!: t.total ?? 0,
       };
 
-      final puntos = localidades
+      final points = locations
           .where(
             (l) =>
                 l.lat != null &&
@@ -71,45 +69,47 @@ class _MapPageState extends State<MapPage> {
           .map(
             (l) => PointMap(
               ine: l.ine,
-              nombre: l.name,
-              coordenadas: LatLng(l.lat!, l.lon!),
-              totalActividades: totalMap[l.ine]!,
+              name: l.name,
+              coordinates: LatLng(l.lat!, l.lon!),
+              totalActivities: totalMap[l.ine]!,
             ),
           )
           .toList();
 
-      if (mounted)
+      if (mounted) {
         setState(() {
-          _puntos = puntos;
-          _cargandoMapa = false;
+          _points = points;
+          _mapLoading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
-          _errorMapa = e.toString();
-          _cargandoMapa = false;
+          _mapError = e.toString();
+          _mapLoading = false;
         });
+      }
     }
   }
 
-  void _abrirLocalidad(PointMap punto) => setState(() {
-    _localidadSeleccionada = punto;
-    _actividadSeleccionada = null;
+  void _openLocation(PointMap punto) => setState(() {
+    _selectedLocation = punto;
+    _selectedActivity = null;
   });
 
-  void _volverAlMapa() => setState(() {
-    _localidadSeleccionada = null;
-    _actividadSeleccionada = null;
+  void _backToMap() => setState(() {
+    _selectedLocation = null;
+    _selectedActivity = null;
   });
 
-  void _abrirDetalle(Activity actividad) =>
-      setState(() => _actividadSeleccionada = actividad);
+  void _openDetail(Activity activity) =>
+      setState(() => _selectedActivity = activity);
 
-  void _volverALista() => setState(() => _actividadSeleccionada = null);
+  void _backToList() => setState(() => _selectedActivity = null);
 
   List<List<LatLng>> _extremadura = [];
 
-  Future<void> _cargarExtremadura() async {
+  Future<void> _loadExtremadura() async {
     if (_extremaduraCache != null) {
       setState(() {
         _extremadura = _extremaduraCache!;
@@ -134,13 +134,14 @@ class _MapPageState extends State<MapPage> {
       }).toList();
     }).toList();
     _extremaduraCache = result;
-    if (mounted)
+    if (mounted) {
       setState(() {
         _extremadura = result;
       });
+    }
   }
 
-  void _resetMapa() {
+  void _mapReset() {
     _mapController.camera.center;
     _mapController.camera.zoom;
     _mapController.move(const LatLng(39.2, -6.15), 7.75);
@@ -148,8 +149,8 @@ class _MapPageState extends State<MapPage> {
   }
 
   LatLng _clampLatLng(LatLng p) {
-    final lat = p.latitude.clamp(_limites.south + 0.1, _limites.north - 0.1);
-    final lng = p.longitude.clamp(_limites.west + 0.1, _limites.east - 0.1);
+    final lat = p.latitude.clamp(_limits.south + 0.1, _limits.north - 0.1);
+    final lng = p.longitude.clamp(_limits.west + 0.1, _limits.east - 0.1);
 
     return LatLng(lat, lng);
   }
@@ -215,17 +216,17 @@ class _MapPageState extends State<MapPage> {
                 }).toList(),
               ),
 
-            if (!_cargandoMapa && _errorMapa == null)
+            if (!_mapLoading && _mapError == null)
               MarkerLayer(
-                markers: _puntos
+                markers: _points
                     .map(
                       (p) => Marker(
-                        point: p.coordenadas,
+                        point: p.coordinates,
                         width: 36,
                         height: 36,
                         alignment: Alignment(0, -1.0),
                         child: GestureDetector(
-                          onTap: () => _abrirLocalidad(p),
+                          onTap: () => _openLocation(p),
                           child: Container(
                             decoration: BoxDecoration(
                               color: const Color(0xFFA8D63F),
@@ -237,7 +238,7 @@ class _MapPageState extends State<MapPage> {
                             ),
                             alignment: Alignment.center,
                             child: Text(
-                              '${p.totalActividades}',
+                              '${p.totalActivities}',
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
@@ -257,17 +258,17 @@ class _MapPageState extends State<MapPage> {
           right: 20,
           child: FloatingActionButton(
             backgroundColor: const Color(0xFFA8D63F),
-            onPressed: _resetMapa,
+            onPressed: _mapReset,
             child: const Icon(Icons.my_location, color: Colors.black),
           ),
         ),
 
-        if (_cargandoMapa)
+        if (_mapLoading)
           const Center(
             child: CircularProgressIndicator(color: Color(0xFFA8D63F)),
           ),
 
-        if (_errorMapa != null)
+        if (_mapError != null)
           Container(
             color: Colors.white,
             child: errorState(
@@ -275,10 +276,10 @@ class _MapPageState extends State<MapPage> {
               mensaje: 'No hay conexión a internet',
               onRetry: () {
                 setState(() {
-                  _errorMapa = null;
-                  _cargandoMapa = true;
+                  _mapError = null;
+                  _mapLoading = true;
                 });
-                _cargarDatos();
+                _loadData();
               },
             ),
           ),
@@ -294,38 +295,38 @@ class _MapPageState extends State<MapPage> {
             ).animate(animation),
             child: FadeTransition(opacity: animation, child: child),
           ),
-          child: _actividadSeleccionada != null
+          child: _selectedActivity != null
               ? WebContainer(
                   key: const ValueKey('detalle_mapa'),
                   child: Column(
                     children: [
                       PageHeader(
-                        title: _localidadSeleccionada!.nombre,
+                        title: _selectedLocation!.name,
                         subtitle: 'Detalle',
-                        onBack: _volverALista,
+                        onBack: _backToList,
                       ),
                       Expanded(
                         child: DetailPage.fromObject(
-                          objeto: _actividadSeleccionada!,
+                          objeto: _selectedActivity!,
                         ),
                       ),
                     ],
                   ),
                 )
-              : _localidadSeleccionada != null
+              : _selectedLocation != null
               ? WebContainer(
                   key: const ValueKey('lista_mapa'),
                   child: Column(
                     children: [
                       PageHeader(
-                        title: _localidadSeleccionada!.nombre,
+                        title: _selectedLocation!.name,
                         subtitle: 'Actividades en',
-                        onBack: _volverAlMapa,
+                        onBack: _backToMap,
                       ),
                       Expanded(
                         child: ActivitiesList(
-                          punto: _localidadSeleccionada!,
-                          onDetalle: _abrirDetalle,
+                          point: _selectedLocation!,
+                          onDetail: _openDetail,
                         ),
                       ),
                     ],

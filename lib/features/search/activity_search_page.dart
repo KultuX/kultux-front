@@ -20,121 +20,121 @@ import '../../shared/widget/app_card.dart';
 
 
 class ActivitySearchPage extends StatefulWidget {
-  final Function(dynamic)? onDetalleSeleccionado;
-  const ActivitySearchPage({super.key, this.onDetalleSeleccionado});
+  final Function(dynamic)? onSelectedDetail;
+  const ActivitySearchPage({super.key, this.onSelectedDetail});
 
   @override
   State<ActivitySearchPage> createState() => _ActivitySearchPageState();
 }
 
 class _ActivitySearchPageState extends State<ActivitySearchPage> {
-  late Future<List<Location>> futureLocalidad;
-  late Future<List<String>> futureCategorias;
+  late Future<List<Location>> futureLocation;
+  late Future<List<String>> futureCategories;
 
-  String titulo = "";
-  String? categoria;
-  int? localidad;
-  DateTime? fecha;
+  String title = "";
+  String? category;
+  int? location;
+  DateTime? startDate;
 
-  List<Activity> actividades = [];
-  int paginaActual = 0;
-  int totalPaginas = 0;
+  List<Activity> activities = [];
+  int currentPage = 0;
+  int totalPages = 0;
 
-  bool cargando = false;
-  //bool cargandoInicial = true;
+  bool loading = false;
+
   Timer? _debounceTimer;
   final ScrollController controller = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  TextEditingController? _categoriaController;
-  TextEditingController? _localidadController;
+  TextEditingController? _controllerCategories;
+  TextEditingController? _controllerLocations;
 
-  Key _selectorLocalidadKey = UniqueKey();
+  Key _selectorLocationKey = UniqueKey();
 
-  UiState estado = UiState.cargando;
-  String mensajeError = '';
+  UiState status = UiState.loading;
+  String errorMessage = '';
 
-  bool _cargandoDetalle = false;
+  bool _loadingDetail = false;
 
   @override
   void initState() {
     super.initState();
-    futureCategorias = ActivityApiService.activityCategories();
-    futureLocalidad = LocationApiService.locationsNames();
-    _cargaInicial();
+    futureCategories = ActivityApiService.activityCategories();
+    futureLocation = LocationApiService.locationsNames();
+    _initLoad();
     controller.addListener(() {
       if (controller.position.pixels >=
           controller.position.maxScrollExtent - 200) {
-        _cargarMas();
+        _loadMore();
       }
     });
   }
 
-  Future<void> _resetYcargar() async {
+  Future<void> resetAndLoad() async {
     await Future.microtask(() {});
-    paginaActual = 0;
-    totalPaginas = 0;
-    await _cargarMas();
+    currentPage = 0;
+    totalPages = 0;
+    await _loadMore();
   }
 
-  Future<void> _cargarActividades() async {
-    await _resetYcargar();
+  Future<void> _loadActivities() async {
+    await resetAndLoad();
   }
 
-  Future<void> _cargaInicial() async {
+  Future<void> _initLoad() async {
     setState(() {
-      estado = UiState.cargando;
+      status = UiState.loading;
     });
     await Future.microtask(() {});
-    await _resetYcargar();
+    await resetAndLoad();
   }
 
-  Future<void> _cargarMas() async {
-    if (cargando) return;
+  Future<void> _loadMore() async {
+    if (loading) return;
 
-    if (paginaActual >= totalPaginas && paginaActual != 0) return;
+    if (currentPage >= totalPages && currentPage != 0) return;
     setState(() {
-      cargando = true;
-      if (paginaActual == 0) estado = UiState.cargando;
+      loading = true;
+      if (currentPage == 0) status = UiState.loading;
     });
     try {
       final pageResponse = await ActivityApiService.activitiesSearching(
-        title: titulo.isEmpty ? null : titulo,
-        category: categoria,
-        location: localidad,
-        startDate: fecha,
-        page: paginaActual,
+        title: title.isEmpty ? null : title,
+        category: category,
+        location: location,
+        startDate: startDate,
+        page: currentPage,
       );
       setState(() {
-        if (paginaActual == 0) actividades.clear();
-        actividades.addAll(pageResponse.content);
-        totalPaginas = pageResponse.totalPages;
-        paginaActual++;
-        estado = actividades.isEmpty ? UiState.vacio : UiState.contenido;
+        if (currentPage == 0) activities.clear();
+        activities.addAll(pageResponse.content);
+        totalPages = pageResponse.totalPages;
+        currentPage++;
+        status = activities.isEmpty ? UiState.empty : UiState.content;
       });
     } on SocketException {
       setState(() {
-        estado = UiState.sinConexion;
-        mensajeError = 'No hay conexion a internet';
+        status = UiState.noConnection;
+        errorMessage = 'No hay conexion a internet';
       });
     } on HttpException catch (e) {
       final uiError = statusCodeMapper(int.parse(e.message));
       setState(() {
-        estado = uiError.estado;
-        mensajeError = uiError.mensaje;
+        status = uiError.estado;
+        errorMessage = uiError.mensaje;
       });
     } catch (_) {
       setState(() {
-        estado = UiState.error;
-        mensajeError = 'Error inesperado';
+        status = UiState.error;
+        errorMessage = 'Error inesperado';
       });
     } finally {
-      cargando = false;
+      loading = false;
     }
   }
 
-  Widget _sliverSegunEstado() {
-    switch (estado) {
-      case UiState.cargando:
+  Widget _sliverStatus() {
+    switch (status) {
+      case UiState.loading:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
             (_, _) => const SkeletonCard(),
@@ -142,15 +142,15 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
           ),
         );
 
-      case UiState.vacio:
+      case UiState.empty:
         return SliverFillRemaining(child: emptyState());
 
-      case UiState.sinConexion:
+      case UiState.noConnection:
         return SliverFillRemaining(
           child: errorState(
             icon: Icons.wifi_off,
-            mensaje: mensajeError,
-            onRetry: _cargaInicial,
+            mensaje: errorMessage,
+            onRetry: _initLoad,
           ),
         );
 
@@ -158,17 +158,17 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
         return SliverFillRemaining(
           child: errorState(
             icon: Icons.error_outline,
-            mensaje: mensajeError,
-            onRetry: _cargaInicial,
+            mensaje: errorMessage,
+            onRetry: _initLoad,
           ),
         );
 
-      case UiState.contenido:
+      case UiState.content:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              if (index < actividades.length) {
-                final a = actividades[index];
+              if (index < activities.length) {
+                final a = activities[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -180,11 +180,11 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
                     startDate: a.startDate,
                     imageUrl: a.coverImage,
                     onTap: () async {
-                      setState(() => _cargandoDetalle = true);
+                      setState(() => _loadingDetail = true);
                       try {
-                        final detalle =
+                        final detail =
                             await ActivityApiService.activityDetail(a.id);
-                        widget.onDetalleSeleccionado?.call(detalle);
+                        widget.onSelectedDetail?.call(detail);
                       } catch (e) {
                         if (!context.mounted) return;
                         AlertModal.show(
@@ -193,7 +193,7 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
                           type: AlertTipe.error,
                         );
                       } finally {
-                        setState(() => _cargandoDetalle = false);
+                        setState(() => _loadingDetail = false);
                       }
                     },
                     textBadge: a.activityCategory!,
@@ -204,11 +204,11 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
                 );
               }
 
-              if (cargando) {
+              if (loading) {
                 return const SkeletonCard();
               }
 
-              if (paginaActual >= totalPaginas) {
+              if (currentPage >= totalPages) {
                 return const Padding(
                   padding: EdgeInsets.all(20),
                   child: Center(
@@ -223,14 +223,14 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
               return const SizedBox.shrink();
             },
             childCount:
-                actividades.length +
-                (cargando || paginaActual >= totalPaginas ? 1 : 0),
+                activities.length +
+                (loading || currentPage >= totalPages ? 1 : 0),
           ),
         );
     }
   }
 
-  Widget _contenidoConEstado() {
+  Widget _contentStatus() {
     return Stack(
       children: [
         CustomScrollView(
@@ -243,7 +243,7 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
                   children: [
                     Expanded(child: _searchBar()),
                     const SizedBox(width: 8),
-                    _selectorFecha(),
+                    _dateSelector(),
                   ],
                 ),
               ),
@@ -252,12 +252,12 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _filtros(),
+                child: _filters(),
               ),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            _sliverSegunEstado(),
+            _sliverStatus(),
           ],
         ),
         Positioned(
@@ -271,7 +271,7 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return LoadingBar(cargando: _cargandoDetalle, child: _contenidoConEstado());
+    return LoadingBar(cargando: _loadingDetail, child: _contentStatus());
   }
 
   Widget _searchBar() {
@@ -296,29 +296,29 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
       ),
       constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
-        titulo = value;
+        title = value;
         _debounceTimer?.cancel();
         _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-          _cargarActividades();
+          _loadActivities();
         });
       },
     );
   }
 
-  Widget _filtros() {
+  Widget _filters() {
     return Column(
       children: [
         Row(
           children: [
-            Expanded(child: _selectorCategorias()),
+            Expanded(child: _categoriesSelector()),
             const SizedBox(width: 8),
-            Expanded(child: _selectorLocalidad()),
-            if (categoria != null ||
-                localidad != null ||
-                fecha != null ||
-                titulo.isNotEmpty) ...[
+            Expanded(child: _locationsSelector()),
+            if (category != null ||
+                location != null ||
+                startDate != null ||
+                title.isNotEmpty) ...[
               const SizedBox(width: 8),
-              _botonLimpiar(),
+              _resetButton(),
             ],
           ],
         ),
@@ -326,20 +326,20 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
     );
   }
 
-  Widget _botonLimpiar() {
+  Widget _resetButton() {
     return GestureDetector(
       onTap: () {
         setState(() {
-          categoria = null;
-          localidad = null;
-          fecha = null;
-          titulo = "";
+          category = null;
+          location = null;
+          startDate = null;
+          title = "";
           _searchController.clear();
-          _selectorLocalidadKey = UniqueKey();
-          _localidadController?.clear();
-          _categoriaController?.clear();
+          _selectorLocationKey = UniqueKey();
+          _controllerLocations?.clear();
+          _controllerCategories?.clear();
         });
-        _cargarActividades();
+        _loadActivities();
       },
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -390,25 +390,25 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
     );
   }
 
-  Widget _selectorCategorias() {
+  Widget _categoriesSelector() {
     return FutureBuilder<List<String>>(
-      future: futureCategorias,
+      future: futureCategories,
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _shimmerLoader();
-        final categorias = snapshot.data!;
+        final categories = snapshot.data!;
         return Autocomplete<String>(
           optionsBuilder: (v) {
             if (v.text.isEmpty) return const Iterable<String>.empty();
-            return categorias.where(
+            return categories.where(
               (c) => c.toLowerCase().contains(v.text.toLowerCase()),
             );
           },
           onSelected: (s) {
-            setState(() => categoria = s);
-            _cargarActividades();
+            setState(() => category = s);
+            _loadActivities();
           },
           fieldViewBuilder: (context, ctrl, focusNode, _) {
-            _categoriaController = ctrl;
+            _controllerCategories = ctrl;
             return TextField(
               controller: ctrl,
               focusNode: focusNode,
@@ -416,11 +416,11 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
               decoration: _inputDeco(
                 label: 'Categoría',
                 icon: Icons.category,
-                hasValue: categoria != null,
+                hasValue: category != null,
                 onClear: () {
-                  setState(() => categoria = null);
+                  setState(() => category = null);
                   ctrl.clear();
-                  _cargarActividades();
+                  _loadActivities();
                 },
               ),
             );
@@ -453,7 +453,7 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
     );
   }
 
-  Widget _selectorLocalidad() {
+  Widget _locationsSelector() {
     return FutureBuilder<List<Location>>(
       future: LocationApiService.cache != null
           ? Future.value(LocationApiService.cache)
@@ -461,18 +461,18 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _shimmerLoader();
         return LocalitySelector(
-          key: _selectorLocalidadKey,
+          key: _selectorLocationKey,
           locations: snapshot.data!,
           onSelected: (loc) {
-            setState(() => localidad = loc?.ine);
-            _cargarActividades();
+            setState(() => location = loc?.ine);
+            _loadActivities();
           },
         );
       },
     );
   }
 
-  Widget _selectorFecha() {
+  Widget _dateSelector() {
     return GestureDetector(
       onTap: () async {
         final picked = await showDatePicker(
@@ -493,20 +493,20 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
           lastDate: DateTime(2030),
         );
         if (picked != null) {
-          setState(() => fecha = picked);
-          _cargarActividades();
+          setState(() => startDate = picked);
+          _loadActivities();
         }
       },
       child: Container(
         height: 40,
         width: 40,
         decoration: BoxDecoration(
-          color: fecha == null
+          color: startDate == null
               ? Colors.grey.shade100
               : const Color.fromARGB(30, 166, 226, 70),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: fecha == null
+            color: startDate == null
                 ? Colors.grey.shade300
                 : const Color.fromARGB(255, 166, 226, 70),
           ),
@@ -514,7 +514,7 @@ class _ActivitySearchPageState extends State<ActivitySearchPage> {
         child: Icon(
           Icons.calendar_today,
           size: 18,
-          color: fecha == null
+          color: startDate == null
               ? Colors.grey.shade600
               : const Color.fromARGB(255, 166, 226, 70),
         ),

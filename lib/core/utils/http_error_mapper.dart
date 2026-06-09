@@ -11,7 +11,7 @@ UiError statusCodeMapper(int statusCode) {
   switch (statusCode) {
     case 204:
     case 404:
-      return const UiError(UiState.vacio, 'No se han encontrado resultados');
+      return const UiError(UiState.empty, 'No se han encontrado resultados');
     case 400:
       return const UiError(UiState.error, 'Los datos no son correctos');
     case 401:

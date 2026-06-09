@@ -8,23 +8,20 @@ import 'package:kultux/shared/widget/legal_dialog.dart';
 import 'package:kultux/shared/widget/alert_modal.dart';
 import 'package:kultux/shared/widget/page_header.dart';
 
-const _verde = Color(0xFFA6E246);
-const _fondoPagina = Color(0xFFF1EFE9);
-const _fondoCard = Color(0xFFF8F7F4);
-const _texto = Color(0xFF1A1A1A);
-const _textoSuave = Color(0xFF6B6B6B);
-const _borde = Color(0xFFE0DDD6);
+import 'package:kultux/config/app_colors.dart';
+
+
 
 class ProfilePage extends StatefulWidget {
-  final VoidCallback cerrarSesion;
-  final User? usuario;
-  final VoidCallback onVolver;
+  final VoidCallback logout;
+  final User? user;
+  final VoidCallback onBack;
 
   const ProfilePage({
     super.key,
-    required this.cerrarSesion,
-    this.usuario,
-    required this.onVolver,
+    required this.logout,
+    this.user,
+    required this.onBack,
   });
 
   @override
@@ -32,9 +29,9 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _editandoPerfil = false;
+  bool _editingProfile = false;
 
-  final _opciones = {
+  final options = {
     'Editar perfil': ('assets/iconos/editar_perfil.svg', 'ajustes'),
     'Contacta con nosotros': (
       'assets/iconos/contactar_nosotros.svg',
@@ -53,36 +50,36 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: _fondoPagina,
+      color: AppColors.pageBg,
       child: Column(
         children: [
           PageHeader(
-            title: _editandoPerfil ? 'Editar perfil' : 'Perfil',
+            title: _editingProfile ? 'Editar perfil' : 'Perfil',
             subtitle: 'Mi cuenta',
-            onBack: _editandoPerfil
+            onBack: _editingProfile
                 ? () {
                     setState(() {
-                      _editandoPerfil = false;
+                      _editingProfile = false;
                     });
                   }
-                : widget.onVolver,
+                : widget.onBack,
           ),
 
-          Expanded(child: _buildContenido()),
+          Expanded(child: _buildContent()),
         ],
       ),
     );
   }
 
-  Widget _buildContenido() {
-    if (_editandoPerfil) {
+  Widget _buildContent() {
+    if (_editingProfile) {
       return EditProfilePage(
-        onVolver: () {
+        onBack: () {
           setState(() {
-            _editandoPerfil = false;
+            _editingProfile = false;
           });
         },
-        usuario: widget.usuario ?? User.activeUser,
+        user: widget.user ?? User.activeUser,
       );
     }
 
@@ -90,36 +87,36 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _TarjetaAvatar(),
-          _SeccionLabel('Ajustes'),
+          _ImageCard(),
+          _labelSection('Ajustes'),
 
-          ..._opciones.entries
+          ...options.entries
               .where((e) => e.value.$2 == 'ajustes')
               .map(
-                (e) => _OpcionTile(
+                (e) => _optionTile(
                   texto: e.key,
                   icono: e.value.$1,
-                  onTap: () => _manejarOpcion(e.key),
+                  onTap: () => _selectOption(e.key),
                 ),
               ),
 
-          _SeccionLabel('Soporte'),
+          _labelSection('Soporte'),
 
-          ..._opciones.entries
+          ...options.entries
               .where((e) => e.value.$2 == 'soporte')
               .map(
-                (e) => _OpcionTile(
+                (e) => _optionTile(
                   texto: e.key,
                   icono: e.value.$1,
-                  onTap: () => _manejarOpcion(e.key),
+                  onTap: () => _selectOption(e.key),
                 ),
               ),
 
           const SizedBox(height: 20),
 
-          _BotonesAccion(
-            onCerrar: _confirmarCerrarSesion,
-            onEliminar: _confirmarEliminarCuenta,
+          _actionButtons(
+            onClose: _confirmLogout,
+            onDelete: _confirmDeleteAccount,
           ),
 
           const SizedBox(height: 32),
@@ -128,37 +125,34 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _manejarOpcion(String texto) {
+  void _selectOption(String texto) {
     switch (texto) {
       case 'Editar perfil':
-        setState(() => _editandoPerfil = true);
+        setState(() => _editingProfile = true);
         return;
       case 'Contacta con nosotros':
-        _mostrarContacto();
+        _showContact();
         return;
       case 'Términos y condiciones':
         LegalDialog.show(context,isPrivacy: false);
-      //  TerminosCondicionesDialog.mostrar(context);
         return;
       case 'Política de privacidad':
         LegalDialog.show(context, isPrivacy: true);
-       // PrivacyDialog.show(context);
         return;
       default:
-        _mostrarProximamente();
         return;
     }
   }
 
-  Widget _TarjetaAvatar() {
-    final usuario = User.activeUser ?? widget.usuario;
+  Widget _ImageCard() {
+    final usuario = User.activeUser ?? widget.user;
     return Container(
       margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
       decoration: BoxDecoration(
-        color: _fondoCard,
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _borde),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
@@ -167,7 +161,7 @@ class _ProfilePageState extends State<ProfilePage> {
             height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: _verde, width: 3),
+              border: Border.all(color: AppColors.green, width: 3),
             ),
             child: ClipOval(
               child:
@@ -187,7 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
               fontFamily: 'RobotoCondensed',
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: _texto,
+              color: AppColors.text,
             ),
           ),
           const SizedBox(height: 2),
@@ -196,7 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
             style: const TextStyle(
               fontFamily: 'RobotoCondensed',
               fontSize: 13,
-              color: _textoSuave,
+              color: AppColors.textSoft,
             ),
           ),
         ],
@@ -204,7 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _SeccionLabel(String label) {
+  Widget _labelSection(String label) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 14, 16, 6),
       child: Text(
@@ -213,14 +207,14 @@ class _ProfilePageState extends State<ProfilePage> {
           fontFamily: 'RobotoCondensed',
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: _textoSuave,
+          color: AppColors.textSoft,
           letterSpacing: 0.8,
         ),
       ),
     );
   }
 
-  Widget _OpcionTile({
+  Widget _optionTile({
     required String texto,
     required String icono,
     required VoidCallback onTap,
@@ -231,9 +225,9 @@ class _ProfilePageState extends State<ProfilePage> {
         margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
-          color: _fondoCard,
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _borde),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -241,7 +235,7 @@ class _ProfilePageState extends State<ProfilePage> {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: _texto,
+                color: AppColors.text,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -249,7 +243,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   icono,
                   width: 16,
                   height: 16,
-                  colorFilter: const ColorFilter.mode(_verde, BlendMode.srcIn),
+                  colorFilter: const ColorFilter.mode(AppColors.green, BlendMode.srcIn),
                 ),
               ),
             ),
@@ -261,7 +255,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   fontFamily: 'RobotoCondensed',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: _texto,
+                  color: AppColors.text,
                 ),
               ),
             ),
@@ -269,7 +263,7 @@ class _ProfilePageState extends State<ProfilePage> {
               'assets/iconos/flecha_siguiente.svg',
               width: 16,
               height: 16,
-              colorFilter: const ColorFilter.mode(_textoSuave, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(AppColors.textSoft, BlendMode.srcIn),
             ),
           ],
         ),
@@ -277,9 +271,9 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _BotonesAccion({
-    required VoidCallback onCerrar,
-    required VoidCallback onEliminar,
+  Widget _actionButtons({
+    required VoidCallback onClose,
+    required VoidCallback onDelete,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -287,11 +281,11 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: onCerrar,
+              onTap: onClose,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: _verde,
+                  color: AppColors.green,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Center(
@@ -301,7 +295,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       fontFamily: 'RobotoCondensed',
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: _texto,
+                      color: AppColors.text,
                     ),
                   ),
                 ),
@@ -311,7 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(width: 10),
           Expanded(
             child: GestureDetector(
-              onTap: onEliminar,
+              onTap: onDelete,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
@@ -341,7 +335,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _mostrarContacto() async {
+  Future<void> _showContact() async {
     await showDialog(
       context: context,
       barrierDismissible: true,
@@ -350,14 +344,13 @@ class _ProfilePageState extends State<ProfilePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          // El insetPadding evita que se pegue a los bordes de la pantalla
           insetPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 40,
           ),
           child: SizedBox(
             width:
-                360, // Forzamos el ancho exacto de una pantalla móvil estándar
+                360,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -501,25 +494,25 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _confirmarCerrarSesion() async {
+  Future<void> _confirmLogout() async {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) {
         return Dialog(
-          backgroundColor: _fondoCard,
+          backgroundColor: AppColors.pageBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: const BorderSide(color: _borde),
+            side: const BorderSide(color: AppColors.border),
           ),
           child: SizedBox(
-            width: 360, // Encapsulamos el ancho aquí también
+            width: 360,
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.logout, size: 50, color: _verde),
+                  const Icon(Icons.logout, size: 50, color: AppColors.green),
                   const SizedBox(height: 12),
                   const Text(
                     'Cerrar sesión',
@@ -528,7 +521,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       fontFamily: 'RobotoCondensed',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: _texto,
+                      color: AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -538,7 +531,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(
                       fontFamily: 'RobotoCondensed',
                       fontSize: 13,
-                      color: _textoSuave,
+                      color: AppColors.textSoft,
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -551,7 +544,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               color: Colors.transparent,
-                              border: Border.all(color: _borde),
+                              border: Border.all(color: AppColors.border),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Center(
@@ -561,7 +554,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   fontFamily: 'RobotoCondensed',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: _texto,
+                                  color: AppColors.text,
                                 ),
                               ),
                             ),
@@ -573,12 +566,12 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: GestureDetector(
                           onTap: () {
                             Navigator.of(context).pop();
-                            widget.cerrarSesion();
+                            widget.logout();
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
-                              color: _verde,
+                              color: AppColors.green,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Center(
@@ -606,59 +599,19 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _mostrarProximamente() async {
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 166, 226, 70),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.construction, size: 60, color: Colors.black),
-              const SizedBox(height: 20),
-              const Text(
-                'Próximamente',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const CircularProgressIndicator(color: Colors.white),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'Cerrar',
-                  style: TextStyle(color: Colors.black),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _confirmarEliminarCuenta() async {
+  Future<void> _confirmDeleteAccount() async {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) {
         return Dialog(
-          backgroundColor: _fondoCard,
+          backgroundColor: AppColors.pageBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
             side: const BorderSide(color: Color(0xFFC62828)),
           ),
           child: SizedBox(
-            width: 360, // Mismo límite de ancho móvil
+            width: 360,
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
@@ -677,7 +630,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       fontFamily: 'RobotoCondensed',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: _texto,
+                      color: AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -687,7 +640,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(
                       fontFamily: 'RobotoCondensed',
                       fontSize: 13,
-                      color: _textoSuave,
+                      color: AppColors.textSoft,
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -700,7 +653,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               color: Colors.transparent,
-                              border: Border.all(color: _borde),
+                              border: Border.all(color: AppColors.border),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Center(
@@ -710,7 +663,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   fontFamily: 'RobotoCondensed',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: _texto,
+                                  color: AppColors.text,
                                 ),
                               ),
                             ),
@@ -722,7 +675,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: GestureDetector(
                           onTap: () async {
                             Navigator.of(context).pop();
-                            await _eliminarCuenta();
+                            await _deleteAccount();
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -755,13 +708,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _eliminarCuenta() async {
+  Future<void> _deleteAccount() async {
     try {
       await UserApiService.deleteUser(User.activeUser!.id!);
       await UserRepository.closeSession();
 
       if (!mounted) return;
-      widget.cerrarSesion();
+      widget.logout();
       AlertModal.show(
         context,
         message: 'Cuenta eliminada correctamente.',

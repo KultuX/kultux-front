@@ -19,243 +19,241 @@ import 'package:kultux/core/utils/app_icons.dart';
 
 import 'package:kultux/shared/widget/app_card.dart';
 
-class VenuesPage extends StatefulWidget {
-  final Function(dynamic objetoDetalle) onDetalleSeleccionado;
+import 'package:kultux/config/app_colors.dart';
+import 'package:kultux/shared/widget/skeleton_venues.dart';
 
-  const VenuesPage({super.key, required this.onDetalleSeleccionado});
+
+class VenuesPage extends StatefulWidget {
+  final Function(dynamic objetoDetalle) onSelectedDetail;
+
+  const VenuesPage({super.key, required this.onSelectedDetail});
 
   @override
   State<VenuesPage> createState() => _VenuesPageState();
 }
 
 class _VenuesPageState extends State<VenuesPage> {
-  static const _verde = Color(0xFFA6E246);
-  static const _fondoPagina = Color(0xFFF1EFE9);
-  static const _fondoCard = Color(0xFFF8F7F4);
-  static const _texto = Color(0xFF1A1A1A);
-  static const _textoSuave = Color(0xFF6B6B6B);
-  static const _borde = Color(0xFFE0DDD6);
 
-  List<Restaurant> _restaurantes = [];
-  List<Accommodation> _alojamientos = [];
-  UiState _estadoResumen = UiState.cargando;
-  String _mensajeErrorResumen = '';
 
-  List<Restaurant> _todosRestaurantes = [];
-  UiState _estadoRestaurantes = UiState.cargando;
-  String _mensajeErrorRestaurantes = '';
+  List<Restaurant> _restaurants = [];
+  List<Accommodation> _accommodations = [];
+  UiState _resumeStatus = UiState.loading;
+  String _errorMessageResume = '';
 
-  List<Accommodation> _todosAlojamientos = [];
-  UiState _estadoAlojamientos = UiState.cargando;
-  String _mensajeErrorAlojamientos = '';
+  List<Restaurant> _restaurantsAll = [];
+  UiState _restaurantsStatus = UiState.loading;
+  String _errorMessageRestaurants = '';
 
-  bool _mostrandoListadoRestaurantes = false;
-  bool _mostrandoListadoAlojamientos = false;
+  List<Accommodation> _accommodationsAll = [];
+  UiState _accommodationsStatus = UiState.loading;
+  String _errorMessageAccommodations = '';
 
-  bool _restaurantesCargados = false;
-  bool _alojamientosCargados = false;
+  bool _showRestaurantsList = false;
+  bool _showAccommodationsList = false;
 
-  int _pageRestaurantes = 0;
-  bool _hayMasRestaurantes = true;
-  bool _cargandoMasRestaurantes = false;
-  final ScrollController _scrollRestaurantes = ScrollController();
+  bool _loadRestaurants = false;
+  bool _loadAccommodations = false;
 
-  int _pageAlojamientos = 0;
-  bool _hayMasAlojamientos = true;
-  bool _cargandoMasAlojamientos = false;
-  final ScrollController _scrollAlojamientos = ScrollController();
+  int _restaurantsPages = 0;
+  bool _hasMoreRestaurants = true;
+  bool _loadingMoreRestaurants = false;
+  final ScrollController _scrollRestaurants = ScrollController();
 
-  bool _cargandoDetalle = false;
+  int _accommodationsPages = 0;
+  bool _hasMoreAccommodations = true;
+  bool _loadingMoreAccommodations = false;
+  final ScrollController _scrollAccommodations = ScrollController();
+
+  bool _loadingDetail = false;
 
   @override
   void initState() {
     super.initState();
-    _cargarResumen();
-    _scrollRestaurantes.addListener(() {
-      if (_scrollRestaurantes.position.pixels >=
-          _scrollRestaurantes.position.maxScrollExtent - 200) {
-        _cargarMasRestaurantes();
+    _loadResume();
+    _scrollRestaurants.addListener(() {
+      if (_scrollRestaurants.position.pixels >=
+          _scrollRestaurants.position.maxScrollExtent - 200) {
+        _loadMoreRestaurants();
       }
     });
-    _scrollAlojamientos.addListener(() {
-      if (_scrollAlojamientos.position.pixels >=
-          _scrollAlojamientos.position.maxScrollExtent - 200) {
-        _cargarMasAlojamientos();
+    _scrollAccommodations.addListener(() {
+      if (_scrollAccommodations.position.pixels >=
+          _scrollAccommodations.position.maxScrollExtent - 200) {
+        _loadMoreAccommodations();
       }
     });
   }
 
   @override
   void dispose() {
-    _scrollRestaurantes.dispose();
-    _scrollAlojamientos.dispose();
+    _scrollRestaurants.dispose();
+    _scrollAccommodations.dispose();
     super.dispose();
   }
 
-  Future<void> _cargarResumen() async {
-    setState(() => _estadoResumen = UiState.cargando);
+  Future<void> _loadResume() async {
+    setState(() => _resumeStatus = UiState.loading);
     try {
       final result =
           await VenuesApiService.venuesTrending();
       setState(() {
-        _restaurantes = result['restaurantes'] as List<Restaurant>;
-        _alojamientos = result['alojamientos'] as List<Accommodation>;
-        _estadoResumen = UiState.contenido;
+        _restaurants = result['restaurantes'] as List<Restaurant>;
+        _accommodations = result['alojamientos'] as List<Accommodation>;
+        _resumeStatus = UiState.content;
       });
     } on SocketException {
       setState(() {
-        _estadoResumen = UiState.sinConexion;
-        _mensajeErrorResumen = 'No hay conexión a internet';
+        _resumeStatus = UiState.noConnection;
+        _errorMessageResume = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
       final uiError = statusCodeMapper(int.parse(e.message));
       setState(() {
-        _estadoResumen = uiError.estado;
-        _mensajeErrorResumen = uiError.mensaje;
+        _resumeStatus = uiError.estado;
+        _errorMessageResume = uiError.mensaje;
       });
     } catch (e, stack) {
       setState(() {
-        _estadoResumen = UiState.error;
-        _mensajeErrorResumen = 'Error inesperado';
+        _resumeStatus = UiState.error;
+        _errorMessageResume = 'Error inesperado';
       });
     }
   }
 
-  Future<void> _cargarTodosRestaurantes() async {
-    if (_restaurantesCargados) return;
-    setState(() => _estadoRestaurantes = UiState.cargando);
+  Future<void> _loadAllRestaurants() async {
+    if (_loadRestaurants) return;
+    setState(() => _restaurantsStatus = UiState.loading);
     try {
-      final pagina = await RestaurantApiService.restaurantsTrending(
+      final page = await RestaurantApiService.restaurantsTrending(
         page: 0,
       );
-      print(pagina.toString());
       setState(() {
-        _todosRestaurantes = pagina.content;
-        _hayMasRestaurantes = pagina.number + 1 < pagina.totalPages;
-        _pageRestaurantes = 1;
-        _restaurantesCargados = true;
-        _estadoRestaurantes = pagina.content.isEmpty
-            ? UiState.vacio
-            : UiState.contenido;
+        _restaurantsAll = page.content;
+        _hasMoreRestaurants = page.number + 1 < page.totalPages;
+        _restaurantsPages = 1;
+        _loadRestaurants = true;
+        _restaurantsStatus = page.content.isEmpty
+            ? UiState.empty
+            : UiState.content;
       });
     } on SocketException {
       setState(() {
-        _estadoRestaurantes = UiState.sinConexion;
-        _mensajeErrorRestaurantes = 'No hay conexión a internet';
+        _restaurantsStatus = UiState.noConnection;
+        _errorMessageRestaurants = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
       final uiError = statusCodeMapper(int.parse(e.message));
       setState(() {
-        _estadoRestaurantes = uiError.estado;
-        _mensajeErrorRestaurantes = uiError.mensaje;
+        _restaurantsStatus = uiError.estado;
+        _errorMessageRestaurants = uiError.mensaje;
       });
     } catch (_) {
       setState(() {
-        _estadoRestaurantes = UiState.error;
-        _mensajeErrorRestaurantes = 'Error inesperado';
+        _restaurantsStatus = UiState.error;
+        _errorMessageRestaurants = 'Error inesperado';
       });
     }
   }
 
-  Future<void> _cargarMasRestaurantes() async {
-    if (!_hayMasRestaurantes || _cargandoMasRestaurantes) return;
-    setState(() => _cargandoMasRestaurantes = true);
+  Future<void> _loadMoreRestaurants() async {
+    if (!_hasMoreRestaurants || _loadingMoreRestaurants) return;
+    setState(() => _loadingMoreRestaurants = true);
     try {
-      final pagina = await RestaurantApiService.restaurantsTrending(
-        page: _pageRestaurantes,
+      final page = await RestaurantApiService.restaurantsTrending(
+        page: _restaurantsPages,
       );
       setState(() {
-        _todosRestaurantes.addAll(pagina.content);
-        _hayMasRestaurantes = pagina.number + 1 < pagina.totalPages;
-        _pageRestaurantes++;
+        _restaurantsAll.addAll(page.content);
+        _hasMoreRestaurants = page.number + 1 < page.totalPages;
+        _restaurantsPages++;
       });
     } catch (_) {
     } finally {
-      setState(() => _cargandoMasRestaurantes = false);
+      setState(() => _loadingMoreRestaurants = false);
     }
   }
 
-  Future<void> _cargarTodosAlojamientos() async {
-    if (_alojamientosCargados) return;
-    setState(() => _estadoAlojamientos = UiState.cargando);
+  Future<void> _loadAllAccomodations() async {
+    if (_loadAccommodations) return;
+    setState(() => _accommodationsStatus = UiState.loading);
     try {
       final pagina = await AccommodationApiService.accommodationTrending(
         page: 0,
       );
 
       setState(() {
-        _todosAlojamientos = pagina.content;
-        _hayMasAlojamientos = pagina.number + 1 < pagina.totalPages;
-        _pageAlojamientos = 1;
-        _alojamientosCargados = true;
-        _estadoAlojamientos = pagina.content.isEmpty
-            ? UiState.vacio
-            : UiState.contenido;
+        _accommodationsAll = pagina.content;
+        _hasMoreAccommodations = pagina.number + 1 < pagina.totalPages;
+        _accommodationsPages = 1;
+        _loadAccommodations = true;
+        _accommodationsStatus = pagina.content.isEmpty
+            ? UiState.empty
+            : UiState.content;
       });
     } on SocketException {
       setState(() {
-        _estadoAlojamientos = UiState.sinConexion;
-        _mensajeErrorAlojamientos = 'No hay conexión a internet';
+        _accommodationsStatus = UiState.noConnection;
+        _errorMessageAccommodations = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
       final uiError = statusCodeMapper(int.parse(e.message));
       setState(() {
-        _estadoAlojamientos = uiError.estado;
-        _mensajeErrorAlojamientos = uiError.mensaje;
+        _accommodationsStatus = uiError.estado;
+        _errorMessageAccommodations = uiError.mensaje;
       });
     } catch (_) {
       setState(() {
-        _estadoAlojamientos = UiState.error;
-        _mensajeErrorAlojamientos = 'Error inesperado';
+        _accommodationsStatus = UiState.error;
+        _errorMessageAccommodations = 'Error inesperado';
       });
     }
   }
 
-  Future<void> _cargarMasAlojamientos() async {
-    if (!_hayMasAlojamientos || _cargandoMasAlojamientos) return;
-    setState(() => _cargandoMasAlojamientos = true);
+  Future<void> _loadMoreAccommodations() async {
+    if (!_hasMoreAccommodations || _loadingMoreAccommodations) return;
+    setState(() => _loadingMoreAccommodations = true);
     try {
       final pagina = await AccommodationApiService.accommodationTrending(
-        page: _pageAlojamientos,
+        page: _accommodationsPages,
       );
       setState(() {
-        _todosAlojamientos.addAll(pagina.content);
-        _hayMasAlojamientos = pagina.number + 1 < pagina.totalPages;
-        _pageAlojamientos++;
+        _accommodationsAll.addAll(pagina.content);
+        _hasMoreAccommodations = pagina.number + 1 < pagina.totalPages;
+        _accommodationsPages++;
       });
     } catch (_) {
     } finally {
-      setState(() => _cargandoMasAlojamientos = false);
+      setState(() => _loadingMoreAccommodations = false);
     }
   }
 
-  void _abrirListadoRestaurantes() {
+  void _openRestaurantsList() {
     setState(() {
-      _mostrandoListadoRestaurantes = true;
-      _mostrandoListadoAlojamientos = false;
+      _showRestaurantsList = true;
+      _showAccommodationsList = false;
     });
-    _cargarTodosRestaurantes();
+    _loadAllRestaurants();
   }
 
-  void _abrirListadoAlojamientos() {
+  void _openAccommodationsList() {
     setState(() {
-      _mostrandoListadoAlojamientos = true;
-      _mostrandoListadoRestaurantes = false;
+      _showAccommodationsList = true;
+      _showRestaurantsList = false;
     });
-    _cargarTodosAlojamientos();
+    _loadAllAccomodations();
   }
 
-  void _volverResumen() {
+  void _backToResume() {
     setState(() {
-      _mostrandoListadoRestaurantes = false;
-      _mostrandoListadoAlojamientos = false;
+      _showRestaurantsList = false;
+      _showAccommodationsList = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return LoadingBar(
-      cargando: _cargandoDetalle,
+      cargando: _loadingDetail,
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         switchInCurve: Curves.easeInOutCubic,
@@ -267,15 +265,15 @@ class _VenuesPageState extends State<VenuesPage> {
           ).animate(animation),
           child: FadeTransition(opacity: animation, child: child),
         ),
-        child: _mostrandoListadoRestaurantes
+        child: _showRestaurantsList
             ? KeyedSubtree(
                 key: const ValueKey('lista_restaurantes'),
-                child: _buildListadoRestaurantes(),
+                child: _buildRestaurantsList(),
               )
-            : _mostrandoListadoAlojamientos
+            : _showAccommodationsList
             ? KeyedSubtree(
                 key: const ValueKey('lista_alojamientos'),
-                child: _buildListadoAlojamientos(),
+                child: _buildAccommodationsList(),
               )
             : KeyedSubtree(
                 key: const ValueKey('resumen'),
@@ -286,19 +284,19 @@ class _VenuesPageState extends State<VenuesPage> {
                       subtitle: 'Establecimientos',
                     ),
                     Expanded(
-                      child: switch (_estadoResumen) {
-                        UiState.cargando => _buildResumen(),
+                      child: switch (_resumeStatus) {
+                        UiState.loading => _buildResume(),
                         UiState.error => errorState(
                           icon: Icons.error_outline,
-                          mensaje: _mensajeErrorResumen,
-                          onRetry: _cargarResumen,
+                          mensaje: _errorMessageResume,
+                          onRetry: _loadResume,
                         ),
-                        UiState.sinConexion => errorState(
+                        UiState.noConnection => errorState(
                           icon: Icons.wifi_off,
-                          mensaje: _mensajeErrorResumen,
-                          onRetry: _cargarResumen,
+                          mensaje: _errorMessageResume,
+                          onRetry: _loadResume,
                         ),
-                        _ => _buildResumen(),
+                        _ => _buildResume(),
                       },
                     ),
                   ],
@@ -308,9 +306,9 @@ class _VenuesPageState extends State<VenuesPage> {
     );
   }
 
-  Widget _buildResumen() {
+  Widget _buildResume() {
     return Container(
-      color: _fondoPagina,
+      color: AppColors.pageBg,
       child: SingleChildScrollView(
         child: Column(
           children: [
@@ -318,22 +316,22 @@ class _VenuesPageState extends State<VenuesPage> {
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
               child: Column(
                 children: [
-                  _tarjetaEstablecimiento(
-                    tituloBloque: 'Restaurantes destacados',
-                    items: _restaurantes
+                  _venuesCard(
+                    titleSection: 'Restaurantes destacados',
+                    items: _restaurants
                         .map(
-                          (r) => _ItemEstablecimiento(
-                            titulo: r.name,
-                            imagenUrl: r.coverImage!,
+                          (r) => _VenueItem(
+                            name: r.name,
+                            imageUrl: r.coverImage!,
                             onTap: () async {
                               try {
-                                setState(() => _cargandoDetalle = true);
-                                final detalle =
+                                setState(() => _loadingDetail = true);
+                                final detail =
                                     await RestaurantApiService.restaurantDetail(
                                       r.id,
                                     );
-                                setState(() => _cargandoDetalle = false);
-                                widget.onDetalleSeleccionado(detalle);
+                                setState(() => _loadingDetail = false);
+                                widget.onSelectedDetail(detail);
                               } catch (e) {
                                 if (!context.mounted) return;
                                 AlertModal.show(
@@ -344,32 +342,32 @@ class _VenuesPageState extends State<VenuesPage> {
                                 );
                               } finally {
                                 setState(() {
-                                  _cargandoDetalle = false;
+                                  _loadingDetail = false;
                                 });
                               }
                             },
                           ),
                         )
                         .toList(),
-                    onVerMas: _abrirListadoRestaurantes,
+                    onShowMore: _openRestaurantsList,
                   ),
                   const SizedBox(height: 16),
-                  _tarjetaEstablecimiento(
-                    tituloBloque: 'Alojamientos destacados',
-                    items: _alojamientos
+                  _venuesCard(
+                    titleSection: 'Alojamientos destacados',
+                    items: _accommodations
                         .map(
-                          (a) => _ItemEstablecimiento(
-                            titulo: a.name,
-                            imagenUrl: a.coverImage!,
+                          (a) => _VenueItem(
+                            name: a.name,
+                            imageUrl: a.coverImage!,
                             onTap: () async {
                               try {
-                                setState(() => _cargandoDetalle = true);
-                                final detalle =
+                                setState(() => _loadingDetail = true);
+                                final detail =
                                     await AccommodationApiService.accommodationDetail(
                                       a.id,
                                     );
-                                setState(() => _cargandoDetalle = false);
-                                widget.onDetalleSeleccionado(detalle);
+                                setState(() => _loadingDetail = false);
+                                widget.onSelectedDetail(detail);
                               } catch (e) {
                                 if (!context.mounted) return;
                                 AlertModal.show(
@@ -380,14 +378,14 @@ class _VenuesPageState extends State<VenuesPage> {
                                 );
                               } finally {
                                 setState(() {
-                                  _cargandoDetalle = false;
+                                  _loadingDetail = false;
                                 });
                               }
                             },
                           ),
                         )
                         .toList(),
-                    onVerMas: _abrirListadoAlojamientos,
+                    onShowMore: _openAccommodationsList,
                   ),
                 ],
               ),
@@ -398,17 +396,17 @@ class _VenuesPageState extends State<VenuesPage> {
     );
   }
 
-  Widget _buildListadoRestaurantes() {
+  Widget _buildRestaurantsList() {
     return Column(
       children: [
         PageHeader(
           title: 'Restaurantes destacados',
           subtitle: 'Descubre',
-          onBack: _volverResumen,
+          onBack: _backToResume,
         ),
         Expanded(
-          child: switch (_estadoRestaurantes) {
-            UiState.cargando => ListView.builder(
+          child: switch (_restaurantsStatus) {
+            UiState.loading => ListView.builder(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
               itemCount: 4,
               itemBuilder: (_, __) => const Padding(
@@ -416,29 +414,29 @@ class _VenuesPageState extends State<VenuesPage> {
                 child: SkeletonCard(),
               ),
             ),
-            UiState.vacio => emptyState(),
-            UiState.sinConexion => errorState(
+            UiState.empty => emptyState(),
+            UiState.noConnection => errorState(
               icon: Icons.wifi_off,
-              mensaje: _mensajeErrorRestaurantes,
+              mensaje: _errorMessageRestaurants,
               onRetry: () {
-                _restaurantesCargados = false;
-                _cargarTodosRestaurantes();
+                _loadRestaurants = false;
+                _loadAllRestaurants();
               },
             ),
             UiState.error => errorState(
               icon: Icons.error_outline,
-              mensaje: _mensajeErrorRestaurantes,
+              mensaje: _errorMessageRestaurants,
               onRetry: () {
-                _restaurantesCargados = false;
-                _cargarTodosRestaurantes();
+                _loadRestaurants = false;
+                _loadAllRestaurants();
               },
             ),
-            UiState.contenido => ListView.builder(
-              controller: _scrollRestaurantes,
+            UiState.content => ListView.builder(
+              controller: _scrollRestaurants,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _todosRestaurantes.length,
+              itemCount: _restaurantsAll.length,
               itemBuilder: (context, index) {
-                final r = _todosRestaurantes[index];
+                final r = _restaurantsAll[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: AppCard.restaurant(
@@ -452,13 +450,13 @@ class _VenuesPageState extends State<VenuesPage> {
                     ),
                     onTap: () async {
                       try {
-                        setState(() => _cargandoDetalle = true);
-                        final detalle =
+                        setState(() => _loadingDetail = true);
+                        final detail =
                             await RestaurantApiService.restaurantDetail(
                               r.id,
                             );
-                        setState(() => _cargandoDetalle = false);
-                        widget.onDetalleSeleccionado(detalle);
+                        setState(() => _loadingDetail = false);
+                        widget.onSelectedDetail(detail);
                       } catch (e) {
                         if (!context.mounted) return;
                         AlertModal.show(
@@ -469,7 +467,7 @@ class _VenuesPageState extends State<VenuesPage> {
                         );
                       } finally {
                         setState(() {
-                          _cargandoDetalle = false;
+                          _loadingDetail = false;
                         });
                       }
                     },
@@ -486,17 +484,17 @@ class _VenuesPageState extends State<VenuesPage> {
     );
   }
 
-  Widget _buildListadoAlojamientos() {
+  Widget _buildAccommodationsList() {
     return Column(
       children: [
         PageHeader(
           title: 'Alojamientos destacados',
           subtitle: 'Descubre',
-          onBack: _volverResumen,
+          onBack: _backToResume,
         ),
         Expanded(
-          child: switch (_estadoAlojamientos) {
-            UiState.cargando => ListView.builder(
+          child: switch (_accommodationsStatus) {
+            UiState.loading => ListView.builder(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
               itemCount: 4,
               itemBuilder: (_, __) => const Padding(
@@ -504,29 +502,29 @@ class _VenuesPageState extends State<VenuesPage> {
                 child: SkeletonCard(),
               ),
             ),
-            UiState.vacio => emptyState(),
-            UiState.sinConexion => errorState(
+            UiState.empty => emptyState(),
+            UiState.noConnection => errorState(
               icon: Icons.wifi_off,
-              mensaje: _mensajeErrorAlojamientos,
+              mensaje: _errorMessageAccommodations,
               onRetry: () {
-                _alojamientosCargados = false;
-                _cargarTodosAlojamientos();
+                _loadAccommodations = false;
+                _loadAllAccomodations();
               },
             ),
             UiState.error => errorState(
               icon: Icons.error_outline,
-              mensaje: _mensajeErrorAlojamientos,
+              mensaje: _errorMessageAccommodations,
               onRetry: () {
-                _alojamientosCargados = false;
-                _cargarTodosAlojamientos();
+                _loadAccommodations = false;
+                _loadAllAccomodations();
               },
             ),
-            UiState.contenido => ListView.builder(
-              controller: _scrollAlojamientos,
+            UiState.content => ListView.builder(
+              controller: _scrollAccommodations,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _todosAlojamientos.length,
+              itemCount: _accommodationsAll.length,
               itemBuilder: (context, index) {
-                final a = _todosAlojamientos[index];
+                final a = _accommodationsAll[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: AppCard.accommodation(
@@ -540,13 +538,13 @@ class _VenuesPageState extends State<VenuesPage> {
                     ),
                     onTap: () async {
                       try {
-                        setState(() => _cargandoDetalle = true);
-                        final detalle =
+                        setState(() => _loadingDetail = true);
+                        final detail =
                             await AccommodationApiService.accommodationDetail(
                               a.id,
                             );
-                        setState(() => _cargandoDetalle = false);
-                        widget.onDetalleSeleccionado(detalle);
+                        setState(() => _loadingDetail = false);
+                        widget.onSelectedDetail(detail);
                       } catch (e) {
                         if (!context.mounted) return;
                         AlertModal.show(
@@ -557,7 +555,7 @@ class _VenuesPageState extends State<VenuesPage> {
                         );
                       } finally {
                         setState(() {
-                          _cargandoDetalle = false;
+                          _loadingDetail = false;
                         });
                       }
                     },
@@ -572,18 +570,18 @@ class _VenuesPageState extends State<VenuesPage> {
     );
   }
 
-  Widget _tarjetaEstablecimiento({
-    required String tituloBloque,
-    required List<_ItemEstablecimiento> items,
-    required VoidCallback onVerMas,
+  Widget _venuesCard({
+    required String titleSection,
+    required List<_VenueItem> items,
+    required VoidCallback onShowMore,
   }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: _fondoCard,
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _borde),
+        border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0C000000),
@@ -599,23 +597,23 @@ class _VenuesPageState extends State<VenuesPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                tituloBloque,
+                titleSection,
                 style: const TextStyle(
                   fontFamily: 'RobotoCondensed',
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: _texto,
+                  color: AppColors.text,
                 ),
               ),
               GestureDetector(
-                onTap: onVerMas,
+                onTap: onShowMore,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _verde,
+                    color: AppColors.green,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -624,7 +622,7 @@ class _VenuesPageState extends State<VenuesPage> {
                       fontFamily: 'RobotoCondensed',
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: _texto,
+                      color: AppColors.text,
                     ),
                   ),
                 ),
@@ -632,7 +630,7 @@ class _VenuesPageState extends State<VenuesPage> {
             ],
           ),
           const SizedBox(height: 12),
-          if (_estadoResumen == UiState.cargando)
+          if (_resumeStatus == UiState.loading)
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -643,7 +641,7 @@ class _VenuesPageState extends State<VenuesPage> {
                 mainAxisSpacing: 12,
                 childAspectRatio: 0.72,
               ),
-              itemBuilder: (_, __) => const SkeletonMiniTarjeta(),
+              itemBuilder: (_, __) => const SkeletonMiniVenues(),
             )
           else if (items.isEmpty)
             SizedBox(
@@ -662,14 +660,14 @@ class _VenuesPageState extends State<VenuesPage> {
                 childAspectRatio: 0.72,
               ),
               itemBuilder: (context, index) =>
-                  _miniTarjetaEstablecimiento(item: items[index]),
+                  _venuesCardMini(item: items[index]),
             ),
         ],
       ),
     );
   }
 
-  Widget _miniTarjetaEstablecimiento({required _ItemEstablecimiento item}) {
+  Widget _venuesCardMini({required _VenueItem item}) {
     return GestureDetector(
       onTap: item.onTap,
       child: Column(
@@ -679,7 +677,7 @@ class _VenuesPageState extends State<VenuesPage> {
             aspectRatio: 1,
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: _verde, width: 2),
+                border: Border.all(color: AppColors.green, width: 2),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: const [
                   BoxShadow(
@@ -691,7 +689,7 @@ class _VenuesPageState extends State<VenuesPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: imagenEstablecimiento(item.imagenUrl),
+                child: venueImage(item.imageUrl),
               ),
             ),
           ),
@@ -700,11 +698,11 @@ class _VenuesPageState extends State<VenuesPage> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
             decoration: BoxDecoration(
-              color: _texto,
+              color: AppColors.text,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              item.titulo,
+              item.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -721,7 +719,7 @@ class _VenuesPageState extends State<VenuesPage> {
     );
   }
 
-  Widget imagenEstablecimiento(String? url) {
+  Widget venueImage(String? url) {
     if (url == null || url.trim().isEmpty) {
       return Container(
         color: Colors.grey.shade200,
@@ -757,87 +755,14 @@ class _VenuesPageState extends State<VenuesPage> {
   }
 }
 
-class _ItemEstablecimiento {
-  final String titulo;
-  final String imagenUrl;
+class _VenueItem {
+  final String name;
+  final String imageUrl;
   final VoidCallback? onTap;
 
-  const _ItemEstablecimiento({
-    required this.titulo,
-    required this.imagenUrl,
+  const _VenueItem({
+    required this.name,
+    required this.imageUrl,
     this.onTap,
   });
-}
-
-class SkeletonMiniTarjeta extends StatefulWidget {
-  const SkeletonMiniTarjeta({super.key});
-
-  @override
-  State<SkeletonMiniTarjeta> createState() => _SkeletonMiniTarjetaState();
-}
-
-class _SkeletonMiniTarjetaState extends State<SkeletonMiniTarjeta>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
-    _anim = Tween<double>(
-      begin: -1,
-      end: 2,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Widget _shimmer({double? width, double? height, BorderRadius? radius}) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: radius ?? BorderRadius.circular(4),
-          gradient: LinearGradient(
-            stops: const [0.0, 0.5, 1.0],
-            colors: const [
-              Color(0xFFE8E8E8),
-              Color(0xFFF5F5F5),
-              Color(0xFFE8E8E8),
-            ],
-            transform: SlideGradient(_anim.value),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AspectRatio(
-          aspectRatio: 1,
-          child: _shimmer(radius: BorderRadius.circular(12)),
-        ),
-        const SizedBox(height: 5),
-        _shimmer(
-          width: double.infinity,
-          height: 20,
-          radius: BorderRadius.circular(6),
-        ),
-      ],
-    );
-  }
 }

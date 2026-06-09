@@ -6,12 +6,12 @@ import 'package:kultux/features/search/accommodation_search_page.dart';
 import 'package:kultux/shared/widget/page_header.dart';
 
 class SearchPage extends StatefulWidget {
-  final Function(dynamic)? onDetalleSeleccionado;
+  final Function(dynamic)? onSelectedDetail;
   final int selectedIndex;
   final Function(int) onIndexChanged;
   const SearchPage({
     super.key,
-    this.onDetalleSeleccionado,
+    this.onSelectedDetail,
     required this.selectedIndex,
     required this.onIndexChanged,
   });
@@ -23,7 +23,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   late int _selectedIndex = 0;
 
-  final List<String> _categorias = [
+  final List<String> _categories = [
     "Actividades",
     "Restaurantes",
     "Alojamientos",
@@ -40,7 +40,7 @@ class _SearchPageState extends State<SearchPage> {
     return Column(
       children: [
         PageHeader(
-          title: 'Buscar ${_categorias[_selectedIndex]}',
+          title: 'Buscar ${_categories[_selectedIndex]}',
           subtitle: 'Conoce Extremadura',
           showRightImage: true,
         ),
@@ -52,7 +52,7 @@ class _SearchPageState extends State<SearchPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
-              _categorias.length,
+              _categories.length,
               (index) => GestureDetector(
                 onTap: () => setState(() {
                   _selectedIndex = index;
@@ -70,7 +70,7 @@ class _SearchPageState extends State<SearchPage> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    _categorias[index],
+                    _categories[index],
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -94,15 +94,15 @@ class _SearchPageState extends State<SearchPage> {
     switch (_selectedIndex) {
       case 0:
         return ActivitySearchPage(
-          onDetalleSeleccionado: widget.onDetalleSeleccionado,
+          onSelectedDetail: widget.onSelectedDetail,
         );
       case 1:
         return RestaurantSearchPage(
-          onDetalleSeleccionado: widget.onDetalleSeleccionado,
+          onSelectedDetail: widget.onSelectedDetail,
         );
       case 2:
         return AccommodationSearchPage(
-          onDetalleSeleccionado: widget.onDetalleSeleccionado,
+          onSelectedDetail: widget.onSelectedDetail,
         );
       default:
         return const SizedBox.shrink();

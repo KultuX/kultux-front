@@ -40,10 +40,10 @@ class _SplashPageState extends State<SplashPage> {
           _preloadGeoJson(),
         ],
         eagerError: false,
-      ); // Evitamos que se paralicen el resto de cargas en caso de que falle al guna de estas peticiones
+      );
 
       final page = results[0] as Pages<Activity>;
-      final usuarioGuardado = results[6] as User?;
+      final user = results[6] as User?;
 
       await Future.wait(
         page.content
@@ -64,7 +64,7 @@ class _SplashPageState extends State<SplashPage> {
           builder: (_) => MyHomePage(
             startActivities: page.content,
             totalPages: page.totalPages,
-            startUser: usuarioGuardado,
+            startUser: user,
           ),
         ),
       );

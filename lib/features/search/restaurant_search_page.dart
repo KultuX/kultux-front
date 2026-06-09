@@ -16,127 +16,126 @@ import 'package:kultux/core/utils/ui_state.dart';
 import 'package:kultux/core/utils/http_error_mapper.dart';
 import 'package:kultux/core/utils/widget_states.dart';
 
-import '../../shared/widget/app_card.dart';
+import 'package:kultux/shared/widget/app_card.dart';
 
 
 
 class RestaurantSearchPage extends StatefulWidget {
-  final Function(dynamic)? onDetalleSeleccionado;
-  const RestaurantSearchPage({super.key, this.onDetalleSeleccionado});
+  final Function(dynamic)? onSelectedDetail;
+  const RestaurantSearchPage({super.key, this.onSelectedDetail});
 
   @override
   State<RestaurantSearchPage> createState() => _RestaurantSearchPageState();
 }
 
 class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
-  late Future<List<Location>> futureLocalidad;
-  late Future<List<String>> futureCategorias;
+  late Future<List<Location>> futureLocations;
+  late Future<List<String>> futureCategories;
 
-  String nombre = "";
-  String? categoria;
-  int? localidad;
-  bool? soloAbiertos;
+  String name = "";
+  String? category;
+  int? location;
+  bool? onlyOpen;
 
-  List<Restaurant> restaurantes = [];
-  int paginaActual = 0;
-  int totalPaginas = 0;
+  List<Restaurant> restaurants = [];
+  int currentPage = 0;
+  int totalPages = 0;
 
-  bool cargando = false;
-  //bool cargandoInicial = true;
+  bool loading = false;
   Timer? _debounceTimer;
 
   final ScrollController controller = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  TextEditingController? _categoriaController;
-  TextEditingController? _localidadController;
+  TextEditingController? _controllerCategories;
+  TextEditingController? _controllerLocations;
 
-  UiState estado = UiState.cargando;
-  String mensajeError = '';
+  UiState status = UiState.loading;
+  String errorMessage = '';
 
-  Key _selectorLocalidadKey = UniqueKey();
+  Key _selectorLocationsKey = UniqueKey();
 
-  bool _cargandoDetalle = false;
+  bool _loadingDetail = false;
 
   @override
   void initState() {
     super.initState();
-    futureLocalidad = LocationApiService.locationsNames();
-    futureCategorias = RestaurantApiService.restaurantsCategories();
-    _cargaInicial();
+    futureLocations = LocationApiService.locationsNames();
+    futureCategories = RestaurantApiService.restaurantsCategories();
+    _initLoad();
 
     controller.addListener(() {
       if (controller.position.pixels >=
           controller.position.maxScrollExtent - 200) {
-        _cargarMas();
+        _loadMore();
       }
     });
   }
 
-  Future<void> _resetYcargar() async {
+  Future<void> _resetAndLoad() async {
     await Future.microtask(() {});
-    paginaActual = 0;
-    totalPaginas = 0;
-    await _cargarMas();
+    currentPage = 0;
+    totalPages = 0;
+    await _loadMore();
   }
 
-  Future<void> _cargaInicial() async {
-    setState(() => estado = UiState.cargando);
+  Future<void> _initLoad() async {
+    setState(() => status = UiState.loading);
     await Future.microtask(() {});
-    await _resetYcargar();
+    await _resetAndLoad();
   }
 
-  Future<void> _cargarMas() async {
-    if (cargando) return;
-    if (paginaActual >= totalPaginas && paginaActual != 0) return;
+  Future<void> _loadMore() async {
+    if (loading) return;
+    if (currentPage >= totalPages && currentPage != 0) return;
 
     setState(() {
-      cargando = true;
-      if (paginaActual == 0) estado = UiState.cargando;
+      loading = true;
+      if (currentPage == 0) status = UiState.loading;
     });
 
     try {
       final pageResponse = await RestaurantApiService.restaurantsSearching(
-        name: nombre.isEmpty ? null : nombre,
-        category: categoria,
-        location: localidad,
-        onlyOpen: soloAbiertos,
-        page: paginaActual,
+        name: name.isEmpty ? null : name,
+        category: category,
+        location: location,
+        onlyOpen: onlyOpen,
+        page: currentPage,
       );
 
       setState(() {
-        if (paginaActual == 0) restaurantes.clear();
-        restaurantes.addAll(pageResponse.content);
-        totalPaginas = pageResponse.totalPages;
-        paginaActual++;
-        estado = restaurantes.isEmpty ? UiState.vacio : UiState.contenido;
+        if (currentPage == 0) restaurants.clear();
+        restaurants.addAll(pageResponse.content);
+        totalPages = pageResponse.totalPages;
+        currentPage++;
+        status = restaurants.isEmpty ? UiState.empty : UiState.content;
       });
     } on SocketException {
       setState(() {
-        estado = UiState.sinConexion;
-        mensajeError = 'No hay conexión a internet';
+        status = UiState.noConnection;
+        errorMessage = 'No hay conexión a internet';
       });
     } on HttpException catch (e) {
       final uiError = statusCodeMapper(int.parse(e.message));
       setState(() {
-        estado = uiError.estado;
-        mensajeError = uiError.mensaje;
+        status = uiError.estado;
+        errorMessage = uiError.mensaje;
       });
     } catch (e) {
       setState(() {
-        estado = UiState.error;
-        mensajeError = 'Error inesperado $e';
+        status = UiState.error;
+        errorMessage = 'Error inesperado $e';
       });
     } finally {
-      cargando = false;
+      loading = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return LoadingBar(cargando: _cargandoDetalle, child: _contenidoConEstado());
+    return LoadingBar(cargando: _loadingDetail, child: _contentStatus());
   }
 
-  Widget _contenidoConEstado() {
+  Widget _contentStatus() {
     return Stack(
       children: [
         CustomScrollView(
@@ -149,7 +148,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                   children: [
                     Expanded(child: _searchBar()),
                     const SizedBox(width: 8),
-                    _chipAbiertoAhora(),
+                    _openNowChip(),
                   ],
                 ),
               ),
@@ -157,11 +156,11 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _filtros(),
+                child: _filters(),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            _sliverSegunEstado(),
+            _sliverStatus(),
           ],
         ),
         Positioned(
@@ -173,9 +172,9 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     );
   }
 
-  Widget _sliverSegunEstado() {
-    switch (estado) {
-      case UiState.cargando:
+  Widget _sliverStatus() {
+    switch (status) {
+      case UiState.loading:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
             (_, _) => const SkeletonCard(),
@@ -183,7 +182,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
           ),
         );
 
-      case UiState.vacio:
+      case UiState.empty:
         return SliverFillRemaining(
           child: Center(
             child: Column(
@@ -200,12 +199,12 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
           ),
         );
 
-      case UiState.sinConexion:
+      case UiState.noConnection:
         return SliverFillRemaining(
           child: errorState(
             icon: Icons.wifi_off,
-            mensaje: mensajeError,
-            onRetry: _cargaInicial,
+            mensaje: errorMessage,
+            onRetry: _initLoad,
           ),
         );
 
@@ -213,17 +212,17 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
         return SliverFillRemaining(
           child: errorState(
             icon: Icons.error_outline,
-            mensaje: mensajeError,
-            onRetry: _cargaInicial,
+            mensaje: errorMessage,
+            onRetry: _initLoad,
           ),
         );
 
-      case UiState.contenido:
+      case UiState.content:
         return SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              if (index < restaurantes.length) {
-                final r = restaurantes[index];
+              if (index < restaurants.length) {
+                final r = restaurants[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -240,13 +239,13 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                     isOpen: r.isOpen!,
                     location: r.location,
                     onTap: () async {
-                      setState(() => _cargandoDetalle = true);
+                      setState(() => _loadingDetail = true);
                       try {
                         final detalle =
                             await RestaurantApiService.restaurantDetail(
                               r.id,
                             );
-                        widget.onDetalleSeleccionado?.call(detalle);
+                        widget.onSelectedDetail?.call(detalle);
                       } catch (e) {
                         if (!context.mounted) return;
                         AlertModal.show(
@@ -255,18 +254,18 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
                           type: AlertTipe.error,
                         );
                       } finally {
-                        setState(() => _cargandoDetalle = false);
+                        setState(() => _loadingDetail = false);
                       }
                     },
                   ),
                 );
               }
 
-              if (cargando) {
+              if (loading) {
                 return const SkeletonCard();
               }
 
-              if (paginaActual >= totalPaginas) {
+              if (currentPage >= totalPages) {
                 return const Padding(
                   padding: EdgeInsets.all(20),
                   child: Center(
@@ -281,8 +280,8 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
               return const SizedBox.shrink();
             },
             childCount:
-                restaurantes.length +
-                (cargando || paginaActual >= totalPaginas ? 1 : 0),
+                restaurants.length +
+                (loading || currentPage >= totalPages ? 1 : 0),
           ),
         );
     }
@@ -307,29 +306,29 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
       textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 13)),
       constraints: const BoxConstraints(minHeight: 40, maxHeight: 40),
       onChanged: (value) {
-        nombre = value;
+        name = value;
         _debounceTimer?.cancel();
         _debounceTimer = Timer(const Duration(milliseconds: 400), () {
-          _resetYcargar();
+          _resetAndLoad();
         });
       },
     );
   }
 
-  Widget _filtros() {
+  Widget _filters() {
     return Column(
       children: [
         Row(
           children: [
-            Expanded(child: _selectorCategorias()),
+            Expanded(child: _categoriesSelector()),
             const SizedBox(width: 8),
-            Expanded(child: _selectorLocalidad()),
-            if (categoria != null ||
-                localidad != null ||
-                soloAbiertos == true ||
-                nombre.isNotEmpty) ...[
+            Expanded(child: _locationsSelector()),
+            if (category != null ||
+                location != null ||
+                onlyOpen == true ||
+                name.isNotEmpty) ...[
               const SizedBox(width: 8),
-              _botonLimpiar(),
+              _resetButton(),
             ],
           ],
         ),
@@ -337,20 +336,20 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     );
   }
 
-  Widget _botonLimpiar() {
+  Widget _resetButton() {
     return GestureDetector(
       onTap: () {
         setState(() {
-          categoria = null;
-          localidad = null;
-          soloAbiertos = null;
-          nombre = "";
-          _selectorLocalidadKey = UniqueKey();
+          category = null;
+          location = null;
+          onlyOpen = null;
+          name = "";
+          _selectorLocationsKey = UniqueKey();
           _searchController.clear();
-          _localidadController?.clear();
-          _categoriaController?.clear();
+          _controllerLocations?.clear();
+          _controllerCategories?.clear();
         });
-        _resetYcargar();
+        _resetAndLoad();
       },
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -401,9 +400,9 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     );
   }
 
-  Widget _selectorCategorias() {
+  Widget _categoriesSelector() {
     return FutureBuilder<List<String>>(
-      future: futureCategorias,
+      future: futureCategories,
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _shimmerLoader();
         final categorias = snapshot.data!;
@@ -415,11 +414,11 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
             );
           },
           onSelected: (s) {
-            setState(() => categoria = s);
-            _resetYcargar();
+            setState(() => category = s);
+            _resetAndLoad();
           },
           fieldViewBuilder: (context, ctrl, focusNode, _) {
-            _categoriaController = ctrl;
+            _controllerCategories = ctrl;
             return TextField(
               controller: ctrl,
               focusNode: focusNode,
@@ -427,11 +426,11 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
               decoration: _inputDeco(
                 label: 'Categoría',
                 icon: Icons.category,
-                hasValue: categoria != null,
+                hasValue: category != null,
                 onClear: () {
-                  setState(() => categoria = null);
+                  setState(() => category = null);
                   ctrl.clear();
-                  _resetYcargar();
+                  _resetAndLoad();
                 },
               ),
             );
@@ -464,7 +463,7 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     );
   }
 
-  Widget _selectorLocalidad() {
+  Widget _locationsSelector() {
     return FutureBuilder<List<Location>>(
       future: LocationApiService.cache != null
           ? Future.value(LocationApiService.cache)
@@ -472,11 +471,11 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return _shimmerLoader();
         return LocalitySelector(
-          key: _selectorLocalidadKey,
+          key: _selectorLocationsKey,
           locations: snapshot.data!,
           onSelected: (loc) {
-            setState(() => localidad = loc?.ine);
-            _resetYcargar();
+            setState(() => location = loc?.ine);
+            _resetAndLoad();
           },
         );
       },
@@ -493,8 +492,8 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
     );
   }
 
-  Widget _chipAbiertoAhora() {
-    final bool seleccionado = soloAbiertos == true;
+  Widget _openNowChip() {
+    final bool seleccionado = onlyOpen == true;
 
     return InkWell(
       splashColor: const Color.fromARGB(40, 166, 226, 70),
@@ -502,9 +501,9 @@ class _RestaurantSearchPageState extends State<RestaurantSearchPage> {
       borderRadius: BorderRadius.circular(10),
       onTap: () {
         setState(() {
-          soloAbiertos = seleccionado ? null : true;
+          onlyOpen = seleccionado ? null : true;
         });
-        _resetYcargar();
+        _resetAndLoad();
       },
       child: Container(
         height: 40,

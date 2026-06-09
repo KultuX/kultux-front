@@ -2,14 +2,14 @@ import 'package:latlong2/latlong.dart';
 
 class PointMap {
   final int ine;
-  final String nombre;
-  final LatLng coordenadas;
-  final int totalActividades;
+  final String name;
+  final LatLng coordinates;
+  final int totalActivities;
 
   const PointMap({
     required this.ine,
-    required this.nombre,
-    required this.coordenadas,
-    required this.totalActividades,
+    required this.name,
+    required this.coordinates,
+    required this.totalActivities,
   });
 }
